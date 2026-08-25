@@ -641,11 +641,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTargetOutline() {
         if (state.stage === 'paint') return;
         ctx.save();
-        ctx.strokeStyle = 'rgba(185,255,102,.92)';
-        ctx.lineWidth = 2.3;
-        ctx.setLineDash([9, 8]);
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = 'rgba(185,255,102,.5)';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         ctx.beginPath();
         state.target.forEach((radius, index) => {
             const x = sampleX(index);
@@ -654,6 +651,17 @@ document.addEventListener('DOMContentLoaded', () => {
             else ctx.lineTo(x, y);
         });
         for (let index = SAMPLE_COUNT - 1; index >= 0; index -= 1) ctx.lineTo(sampleX(index), CENTER_Y + state.target[index]);
+
+        // A dark halo separates the requested form from both pale wood and the tool.
+        ctx.strokeStyle = 'rgba(7, 9, 6, .94)';
+        ctx.lineWidth = 7;
+        ctx.setLineDash([]);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#c8ff71';
+        ctx.lineWidth = 3.2;
+        ctx.shadowBlur = 11;
+        ctx.shadowColor = 'rgba(185, 255, 102, .9)';
         ctx.stroke();
         ctx.restore();
     }
@@ -664,9 +672,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.save();
         if (state.stage === 'carve') {
             ctx.translate(x, y);
-            // Keep the handle outside the workpiece so it never hides the wood
-            // beneath the cutting edge.
-            ctx.rotate(y < CENTER_Y ? Math.PI + .22 : -.22);
+            // Keep the handle outside the workpiece so the guide remains visible.
+            ctx.rotate(y < CENTER_Y ? Math.PI - .22 : .22);
             ctx.fillStyle = '#dce3dc';
             ctx.strokeStyle = '#11140f';
             ctx.lineWidth = 3;
@@ -720,9 +727,10 @@ document.addEventListener('DOMContentLoaded', () => {
         state.lastTime = time;
         renderBackground(time);
         renderWood(time);
-        renderTargetOutline();
         renderParticles(delta);
         renderToolCursor();
+        // The requested profile is the player's primary guide, so it stays on top.
+        renderTargetOutline();
         requestAnimationFrame(render);
     }
 

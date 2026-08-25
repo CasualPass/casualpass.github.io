@@ -35,7 +35,7 @@ Cloud mode keeps a local mirror for fast/offline play. Changes are pushed after 
 
 1. Create a Supabase project.
 2. Open **SQL Editor** and run [`supabase/schema.sql`](supabase/schema.sql). It creates the profile table and Row Level Security policies that restrict every row to its authenticated user.
-3. In **Authentication → Email Templates**, make the sign-in template display `{{ .Token }}` so players receive a numeric OTP rather than only a magic link.
+3. In **Authentication → Email Templates**, make both **Confirm signup** and **Magic Link / OTP** display `{{ .Token }}`. This gives first-time and returning players a numeric OTP instead of relying only on a link.
 4. Copy the project URL and **publishable** (or legacy `anon`) key into `cloud-config.js` and set `enabled: true`:
 
    ```js
