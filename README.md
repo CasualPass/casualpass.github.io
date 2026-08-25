@@ -1,4 +1,9 @@
 # CasualPass 🎮
+
+<p align="center">
+  <img src="ai-generated.svg" alt="AI generated" width="240">
+</p>
+
 CasualPass is a premium, ad-free, and AI-enhanced casual gaming platform built for a seamless web experience.
 
 ## ✨ Key Features
