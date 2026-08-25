@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#151712">
+    <meta name="description" content="CasualPass Wood Turning: hedef şekli tornala, zımparala, boya ve CasualMoney kazan.">
+    <title>Wood Turning — CasualPass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared-settings.css?v=3">
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="../shared-settings.js?v=3"></script>
+</head>
+
+<body class="theme-liquid" data-stage="carve">
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+    <div class="workshop-grain" aria-hidden="true"></div>
+
+    <header class="workshop-nav">
+        <a class="back-link" href="../index.html" aria-label="Oyunlara dön"><span aria-hidden="true">←</span><b>Oyunlar</b></a>
+        <a class="game-brand" href="../index.html"><span>CP</span><strong>WOOD TURNING</strong></a>
+        <button class="wallet-button" id="wallet-button" type="button">
+            <span class="wallet-coin" aria-hidden="true">C</span>
+            <span><small>CASUALMONEY</small><strong id="top-balance">0 CM</strong></span>
+        </button>
+    </header>
+
+    <main class="workshop-layout">
+        <aside class="order-panel panel">
+            <div class="panel-label"><span>SİPARİŞ KARTI</span><b id="order-number">#001</b></div>
+            <div class="client-row">
+                <div class="client-avatar" id="client-avatar">MK</div>
+                <div><small>MÜŞTERİ</small><strong id="client-name">Mina Kaya</strong></div>
+            </div>
+
+            <div class="target-card">
+                <div class="target-heading"><span>İSTENEN FORM</span><strong id="target-name">Nordik Vazo</strong></div>
+                <canvas id="target-canvas" width="280" height="190" aria-label="Hedef şekil önizlemesi"></canvas>
+                <p id="target-note">Dengeli bir gövde ve ince bir boyun istiyorum.</p>
+            </div>
+
+            <div class="accuracy-card">
+                <div class="accuracy-ring" id="accuracy-ring" style="--score: 0">
+                    <span><strong id="accuracy-value">0</strong>%</span>
+                </div>
+                <div><small>CANLI BENZERLİK</small><strong id="accuracy-label">Ham kütük</strong><p>Kesik çizgiyi takip et.</p></div>
+            </div>
+
+            <ol class="stage-list" aria-label="Üretim aşamaları">
+                <li class="active" data-step="carve"><span>1</span><div><strong>Şekillendir</strong><small>Fazla ahşabı al</small></div></li>
+                <li data-step="sand"><span>2</span><div><strong>Zımparala</strong><small>Yüzeyi pürüzsüzleştir</small></div></li>
+                <li data-step="paint"><span>3</span><div><strong>Boya</strong><small>Rengini tamamla</small></div></li>
+            </ol>
+        </aside>
+
+        <section class="lathe-panel panel">
+            <div class="lathe-header">
+                <div>
+                    <p class="panel-label" id="stage-kicker">AŞAMA 01 / 03</p>
+                    <h1 id="stage-title">Formu ortaya çıkar.</h1>
+                    <p id="stage-description">Keskiyi ahşabın kenarına getirip hedef çizgisi boyunca sürükle.</p>
+                </div>
+                <div class="lathe-status"><span class="status-light"></span><div><small>TORNA</small><strong>1250 RPM</strong></div></div>
+            </div>
+
+            <div class="canvas-wrap" id="canvas-wrap">
+                <canvas id="lathe-canvas" width="1000" height="560" tabindex="0" aria-label="Ahşap torna çalışma alanı"></canvas>
+                <div class="gesture-hint" id="gesture-hint"><span aria-hidden="true">↔</span><p>Ahşabın üstünde basılı tut ve sürükle</p></div>
+            </div>
+
+            <div class="tool-dock">
+                <div class="tool-group carve-tools" id="carve-tools">
+                    <span class="tool-label">KESKİ</span>
+                    <button class="tool-button active" data-tool="rough" type="button"><i class="tool-icon tool-icon--rough"></i><span><strong>Kaba</strong><small>Geniş kesim</small></span></button>
+                    <button class="tool-button" data-tool="detail" type="button"><i class="tool-icon tool-icon--detail"></i><span><strong>Detay</strong><small>İnce kesim</small></span></button>
+                    <button class="tool-button" data-tool="round" type="button"><i class="tool-icon tool-icon--round"></i><span><strong>Oluk</strong><small>Yumuşak geçiş</small></span></button>
+                </div>
+
+                <div class="tool-group sand-tools" id="sand-tools" hidden>
+                    <span class="tool-label">ZIMPARA BOYUTU</span>
+                    <label class="range-control"><span>Küçük</span><input id="sander-size" type="range" min="8" max="34" value="20"><span>Büyük</span></label>
+                    <div class="coverage-chip"><span>YÜZEY</span><strong id="sand-coverage">0%</strong></div>
+                </div>
+
+                <div class="tool-group paint-tools" id="paint-tools" hidden>
+                    <span class="tool-label">AKTİF BOYA</span>
+                    <div class="paint-palette" id="paint-palette" aria-label="Sahip olunan boyalar"></div>
+                    <div class="coverage-chip"><span>KAPLAMA</span><strong id="paint-coverage">0%</strong></div>
+                </div>
+
+                <div class="dock-actions">
+                    <button class="reset-button" id="reset-stage" type="button">Sıfırla</button>
+                    <button class="next-button" id="next-stage" type="button"><span>Zımparaya geç</span><b aria-hidden="true">→</b></button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="studio-panel panel">
+            <div class="profile-compact" id="profile-compact">
+                <div class="compact-avatar" id="compact-avatar">?</div>
+                <div><small>OYUNCU</small><strong id="compact-name">Profil gerekli</strong><span id="compact-status">Kazanç için giriş yap</span></div>
+                <button id="profile-action" type="button">Aç</button>
+            </div>
+
+            <section class="office-card">
+                <div class="office-illustration" aria-hidden="true"><span class="desk"></span><span class="lamp"></span><span class="plant">✦</span></div>
+                <p class="panel-label">ATÖLYE SEVİYESİ</p>
+                <h2 id="office-name">Garaj Tezgâhı</h2>
+                <div class="office-multiplier"><span>KAZANÇ ÇARPANI</span><strong id="office-multiplier">x1,00</strong></div>
+                <button class="upgrade-button" id="upgrade-office" type="button"><span>Ofisi geliştir</span><b id="upgrade-cost">450 CM</b></button>
+            </section>
+
+            <section class="paint-store">
+                <div class="store-heading"><div><p class="panel-label">BOYA RAFI</p><h2>Yeni renkler</h2></div><span id="paint-count">2/8</span></div>
+                <div class="paint-list" id="paint-store-list"></div>
+            </section>
+
+            <section class="career-card">
+                <p class="panel-label">ATÖLYE KAYDI</p>
+                <div><span>Tamamlanan iş</span><strong id="jobs-count">0</strong></div>
+                <div><span>En iyi benzerlik</span><strong id="best-score">0%</strong></div>
+                <div><span>Toplam kazanç</span><strong id="total-earned">0 CM</strong></div>
+            </section>
+        </aside>
+    </main>
+
+    <div class="modal-overlay" id="login-modal" aria-hidden="true">
+        <div class="game-modal login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+            <button class="modal-close" data-close="login-modal" type="button" aria-label="Kapat">×</button>
+            <span class="modal-icon">CP</span>
+            <p class="panel-label">YEREL OYUNCU PROFİLİ</p>
+            <h2 id="login-title">Kazancını sakla.</h2>
+            <p>CasualMoney ve atölye ilerlemen bu cihazda kullanıcı adına bağlı tutulur.</p>
+            <form id="login-form" novalidate>
+                <label for="game-username">Kullanıcı adı</label>
+                <div class="username-field"><span>@</span><input id="game-username" minlength="3" maxlength="20" autocomplete="username" placeholder="ahsapustasi" required></div>
+                <p class="form-error" id="login-error" role="alert"></p>
+                <button class="next-button full-width" type="submit"><span>Profili aç</span><b>→</b></button>
+            </form>
+            <small class="security-note">GitHub Pages statik olduğu için güvenli OTP bu sürümde yoktur; gerçek OTP için harici doğrulama servisi gerekir.</small>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal" aria-hidden="true">
+        <div class="game-modal result-modal" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="confetti" id="confetti" aria-hidden="true"></div>
+            <p class="panel-label">SİPARİŞ TAMAMLANDI</p>
+            <h2 id="result-title">Eline sağlık, usta.</h2>
+            <div class="result-score"><strong id="result-score">0</strong><span>%</span><small>GENEL İŞ PUANI</small></div>
+            <div class="result-breakdown">
+                <div><span>Şekil benzerliği</span><strong id="result-shape">0%</strong></div>
+                <div><span>Yüzey hazırlığı</span><strong id="result-sand">0%</strong></div>
+                <div><span>Boya kaplaması</span><strong id="result-paint">0%</strong></div>
+            </div>
+            <div class="reward-box" id="reward-box"><span class="wallet-coin">C</span><div><small>KAZANILAN</small><strong><span id="reward-value">0</span> CasualMoney</strong></div><em id="reward-multiplier">x1,00 ofis çarpanı</em></div>
+            <button class="guest-warning" id="guest-warning" type="button" hidden>Bu işin kazancını almak için profil aç →</button>
+            <div class="result-actions">
+                <button class="next-button" id="new-order" type="button"><span>Yeni sipariş</span><b>↻</b></button>
+                <a href="../index.html">Oyunlara dön</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="game-toast" role="status" aria-live="polite"></div>
+
+    <audio id="global-click-sound" src="https://cdn.freesound.org/previews/415/415096_7413867-lq.mp3" preload="none"></audio>
+    <audio id="global-pop-sound" src="https://cdn.freesound.org/previews/242/242501_4414128-lq.mp3" preload="none"></audio>
+    <script src="../casual-profile.js?v=3"></script>
+    <script src="script.js?v=3"></script>
+</body>
+
+</html>

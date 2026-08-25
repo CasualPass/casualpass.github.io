@@ -8,6 +8,15 @@
     --cp-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
+.background-container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    contain: strict;
+}
+
 /* Liquid Theme variables */
 body.theme-liquid {
     --cp-bg: #0f111a;
@@ -208,5 +217,16 @@ body.disable-effects * {
     100% {
         transform: translate(0, 0) scale(1) rotate(360deg);
         border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    }
+}
+
+@media (max-width: 620px) {
+    .background-container .blob {
+        animation: none;
+    }
+
+    .background-container .blob-2 {
+        right: 0;
+        transform: none;
     }
 }
