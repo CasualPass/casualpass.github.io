@@ -203,6 +203,29 @@
         });
     }
 
+    function replaceFromCloud(cloudProfile) {
+        if (!cloudProfile || typeof cloudProfile !== 'object') {
+            throw new Error('Bulut profili geçersiz.');
+        }
+
+        const candidateName = cloudProfile.displayName || cloudProfile.id;
+        const validation = validateUsername(candidateName);
+        if (!validation.valid) throw new Error(validation.message);
+
+        const store = loadStore();
+        const profile = cleanProfile({
+            ...cloudProfile,
+            id: validation.id,
+            displayName: validation.displayName,
+            updatedAt: cloudProfile.updatedAt || new Date().toISOString()
+        });
+        store.profiles[validation.id] = profile;
+        saveStore(store);
+        localStorage.setItem(SESSION_KEY, validation.id);
+        emit(profile);
+        return profile;
+    }
+
     function formatMoney(value) {
         return new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.floor(Number(value) || 0)));
     }
@@ -219,6 +242,7 @@
         buyPaint,
         selectPaint,
         upgradeOffice,
+        replaceFromCloud,
         formatMoney
     });
 })();

@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
-    <script src="shared-settings.js?v=3"></script>
+    <link rel="stylesheet" href="style.css?v=5">
+    <script src="shared-settings.js?v=5"></script>
 </head>
 
 <body class="theme-liquid">
@@ -186,6 +186,33 @@
             <button class="modal-close" data-close-modal="profile-modal" type="button" aria-label="Kapat">×</button>
             <p class="modal-kicker">CASUALPASS KİMLİĞİ</p>
             <h2 id="profile-title">Oyuncu profilin</h2>
+            <section class="cloud-card" id="cloud">
+                <div class="cloud-heading">
+                    <span class="cloud-icon" aria-hidden="true">↻</span>
+                    <div><strong>Cihazlar arası senkron</strong><small id="cloud-status-text">Durum kontrol ediliyor…</small></div>
+                    <span class="cloud-badge" id="cloud-badge">YEREL</span>
+                </div>
+                <div class="cloud-setup-note" id="cloud-setup-note" hidden>
+                    <p>Bulut bağlantısı kuruluma hazır. <code>cloud-config.js</code> içine Supabase URL ve publishable key eklenince e-posta OTP açılır.</p>
+                </div>
+                <form id="cloud-auth-form" class="cloud-auth-form" hidden novalidate>
+                    <div class="cloud-fields">
+                        <label for="cloud-username">Kullanıcı adı<input id="cloud-username" minlength="3" maxlength="20" autocomplete="username" placeholder="ahsapustasi" required></label>
+                        <label for="cloud-email">E-posta<input id="cloud-email" type="email" autocomplete="email" placeholder="sen@ornek.com" required></label>
+                    </div>
+                    <button class="cloud-action" id="send-otp-btn" type="button">OTP gönder</button>
+                    <div class="otp-step" id="otp-step" hidden>
+                        <label for="cloud-otp">E-postadaki kod<input id="cloud-otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="000000"></label>
+                        <button class="primary-btn" type="submit">Doğrula ve senkronla</button>
+                    </div>
+                    <p class="form-error" id="cloud-error" role="alert"></p>
+                </form>
+                <div class="cloud-connected" id="cloud-connected" hidden>
+                    <div><small>BAĞLI HESAP</small><strong id="cloud-email-label">—</strong><span id="cloud-last-sync">Senkron bekleniyor</span></div>
+                    <button class="cloud-action" id="sync-now-btn" type="button">Şimdi eşitle</button>
+                    <button class="text-btn cloud-signout" id="cloud-signout-btn" type="button">Bulut oturumunu kapat</button>
+                </div>
+            </section>
             <div id="signed-out-panel">
                 <p class="modal-description">CasualMoney kazanmak ve atölye ilerlemeni bu cihazda saklamak için bir kullanıcı adı seç.</p>
                 <form id="profile-form" novalidate>
@@ -237,8 +264,10 @@
 
     <audio id="global-click-sound" src="https://cdn.freesound.org/previews/415/415096_7413867-lq.mp3" preload="none"></audio>
     <audio id="global-pop-sound" src="https://cdn.freesound.org/previews/242/242501_4414128-lq.mp3" preload="none"></audio>
-    <script src="casual-profile.js?v=3"></script>
-    <script src="script.js?v=3"></script>
+    <script src="cloud-config.js?v=5"></script>
+    <script src="casual-profile.js?v=5"></script>
+    <script src="casual-cloud.js?v=5"></script>
+    <script src="script.js?v=5"></script>
 </body>
 
 </html>

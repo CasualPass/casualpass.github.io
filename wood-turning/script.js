@@ -805,11 +805,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderProfile() {
         const profile = CasualProfile.current();
         const office = CasualProfile.offices[(profile?.officeLevel || 1) - 1];
+        const cloud = typeof CasualCloud !== 'undefined' ? CasualCloud.getState() : { authenticated: false };
         elements.topBalance.textContent = `${CasualProfile.formatMoney(profile?.balance || 0)} CM`;
         elements.compactAvatar.textContent = profile ? initials(profile.displayName) : '?';
         elements.compactName.textContent = profile ? `@${profile.displayName}` : 'Profil gerekli';
-        elements.compactStatus.textContent = profile ? office.name : 'Kazanç için giriş yap';
-        elements.profileAction.textContent = profile ? 'Çık' : 'Aç';
+        elements.compactStatus.textContent = cloud.authenticated ? 'Bulut senkron açık' : (profile ? office.name : 'Kazanç için giriş yap');
+        elements.profileAction.textContent = cloud.authenticated ? 'Bulut' : (profile ? 'Çık' : 'Aç');
         elements.officeName.textContent = office.name;
         elements.officeMultiplier.textContent = formatMultiplier(office.multiplier);
         elements.upgradeCost.textContent = office.upgradeCost === null ? 'MAKS.' : `${CasualProfile.formatMoney(office.upgradeCost)} CM`;
@@ -959,7 +960,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elements.profileAction.addEventListener('click', () => {
-        if (CasualProfile.current()) {
+        const cloud = typeof CasualCloud !== 'undefined' ? CasualCloud.getState() : { authenticated: false };
+        if (cloud.authenticated) {
+            window.location.href = '../index.html#cloud';
+        } else if (CasualProfile.current()) {
             CasualProfile.logout();
             renderProfile();
             showToast('Oturum kapatıldı.');
@@ -1036,8 +1040,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('casualprofilechange', renderProfile);
+    window.addEventListener('casualcloudchange', renderProfile);
 
     renderProfile();
+    CasualCloud.ready.then(renderProfile);
     beginOrder();
     requestAnimationFrame(render);
 

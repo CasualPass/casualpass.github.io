@@ -855,6 +855,7 @@ input[type="range"] {
 .form-error { min-height: 1.4rem; padding-top: .3rem; color: #ff927f; font-size: .7rem; }
 .full-width { width: 100%; }
 .security-note { display: block; margin-top: 1rem; color: var(--cp-text-muted); font-size: .65rem; line-height: 1.45; }
+.security-note a { color: var(--lime); }
 
 .result-modal {
     width: min(620px, 100%);

@@ -20,13 +20,39 @@ Wood Turning uses a canvas-based radial profile model. The live similarity score
 
 CasualMoney rewards grow non-linearly as the final score approaches 100. Players can use the currency to unlock paint colours and upgrade their office. Each office level increases the reward multiplier for later Wood Turning jobs.
 
-Player profiles, balances, owned paints and office progress are stored in `localStorage` by `casual-profile.js`. CasualMoney is intentionally enabled only for Wood Turning in this version.
+Player profiles, balances, owned paints and office progress are mirrored in `localStorage` by `casual-profile.js`. CasualMoney is intentionally enabled only for Wood Turning in this version.
 
-## Authentication note
+## Cross-device sync and email OTP
 
-GitHub Pages serves static files and cannot safely issue or verify one-time passwords by itself. This version therefore uses a clearly labelled, device-local username profile instead of pretending to provide secure OTP authentication.
+GitHub Pages serves static files and cannot safely issue or verify one-time passwords by itself. CasualPass therefore supports two explicit modes:
 
-Production OTP and cross-device sync require an external authentication/data service such as Supabase Auth, Firebase Authentication or a small serverless API. `casual-profile.js` keeps profile/economy logic separate so that its storage adapter can be replaced later.
+- **Local mode:** username profile stored only in the current browser.
+- **Cloud mode:** username + Supabase email OTP, with the profile synced between devices.
+
+Cloud mode keeps a local mirror for fast/offline play. Changes are pushed after every economy update and pulled on sign-in, reconnect and tab focus. If two offline devices change the same profile before reconnecting, the newest profile timestamp wins.
+
+### Supabase setup
+
+1. Create a Supabase project.
+2. Open **SQL Editor** and run [`supabase/schema.sql`](supabase/schema.sql). It creates the profile table and Row Level Security policies that restrict every row to its authenticated user.
+3. In **Authentication → Email Templates**, make the sign-in template display `{{ .Token }}` so players receive a numeric OTP rather than only a magic link.
+4. Copy the project URL and **publishable** (or legacy `anon`) key into `cloud-config.js` and set `enabled: true`:
+
+   ```js
+   window.CASUALPASS_CLOUD = Object.freeze({
+       enabled: true,
+       supabaseUrl: 'https://YOUR_PROJECT.supabase.co',
+       supabasePublishableKey: 'YOUR_PUBLISHABLE_KEY',
+       table: 'casual_profiles',
+       sdkUrl: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm'
+   });
+   ```
+
+5. Add the final GitHub Pages URL to the allowed site/redirect URLs in Supabase Auth settings.
+
+The publishable key is intended for browser apps; RLS protects access to database rows. Never add a Supabase `service_role` key to this repository.
+
+This setup securely isolates each player's row, but the game score is still calculated by client-side JavaScript. If CasualMoney becomes competitive or redeemable, move reward calculation to a validated Supabase Edge Function or database RPC.
 
 ## Run locally
 
