@@ -3,6 +3,8 @@
 
     const STORE_KEY = 'casualPassEconomyV1';
     const SESSION_KEY = 'casualPassSessionV1';
+    const ACCOUNT_COOKIE = 'casualPassAccountV1';
+    const ACCOUNT_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
     const SCHEMA_VERSION = 1;
 
     const paints = {
@@ -43,6 +45,32 @@
 
     function canonicalUsername(value) {
         return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('tr-TR');
+    }
+
+    function readAccountCookie() {
+        const prefix = `${ACCOUNT_COOKIE}=`;
+        const entry = document.cookie.split(';').map((item) => item.trim()).find((item) => item.startsWith(prefix));
+        if (!entry) return '';
+        try {
+            return decodeURIComponent(entry.slice(prefix.length));
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function writeAccountCookie(id) {
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(id)}; Max-Age=${ACCOUNT_COOKIE_MAX_AGE}; Path=/; SameSite=Lax${secure}`;
+    }
+
+    function clearAccountCookie() {
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `${ACCOUNT_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax${secure}`;
+    }
+
+    function rememberSession(id) {
+        localStorage.setItem(SESSION_KEY, id);
+        writeAccountCookie(id);
     }
 
     function validateUsername(value) {
@@ -105,10 +133,14 @@
     }
 
     function current() {
-        const id = canonicalUsername(localStorage.getItem(SESSION_KEY));
-        if (!id) return null;
+        const cookieId = canonicalUsername(readAccountCookie());
+        const storedId = canonicalUsername(localStorage.getItem(SESSION_KEY));
         const store = loadStore();
+        const id = store.profiles[cookieId] ? cookieId : storedId;
+        if (!id) return null;
         if (!store.profiles[id]) return null;
+        if (!cookieId) writeAccountCookie(id);
+        if (storedId !== id) localStorage.setItem(SESSION_KEY, id);
         return cleanProfile(store.profiles[id]);
     }
 
@@ -124,13 +156,14 @@
 
         store.profiles[validation.id] = profile;
         saveStore(store);
-        localStorage.setItem(SESSION_KEY, validation.id);
+        rememberSession(validation.id);
         emit(profile);
         return profile;
     }
 
     function logout() {
         localStorage.removeItem(SESSION_KEY);
+        clearAccountCookie();
         emit(null);
     }
 
@@ -221,7 +254,7 @@
         });
         store.profiles[validation.id] = profile;
         saveStore(store);
-        localStorage.setItem(SESSION_KEY, validation.id);
+        rememberSession(validation.id);
         emit(profile);
         return profile;
     }
