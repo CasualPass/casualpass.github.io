@@ -664,7 +664,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.save();
         if (state.stage === 'carve') {
             ctx.translate(x, y);
-            ctx.rotate(y < CENTER_Y ? -.22 : Math.PI + .22);
+            // Keep the handle outside the workpiece so it never hides the wood
+            // beneath the cutting edge.
+            ctx.rotate(y < CENTER_Y ? Math.PI + .22 : -.22);
             ctx.fillStyle = '#dce3dc';
             ctx.strokeStyle = '#11140f';
             ctx.lineWidth = 3;
