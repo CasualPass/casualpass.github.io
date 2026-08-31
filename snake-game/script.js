@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let trail = [];
     let tail = 5;
     let score = 0;
-    let highScore = localStorage.getItem('cp_snake_highscore') || 0;
+    let highScore = getCookieValue('cp_snake_highscore') || 0;
     let gameLoop;
     let isGameOver = false;
     let gameStarted = false;
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isGameOver = true;
         if (score > highScore) {
             highScore = score;
-            localStorage.setItem('cp_snake_highscore', highScore);
+            setCookieValue('cp_snake_highscore', String(highScore));
             highScoreElem.textContent = highScore;
         }
         overlay.classList.remove("hidden");

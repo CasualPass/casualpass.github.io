@@ -1,273 +1,102 @@
 <!doctype html>
 <html lang="tr">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#10120f">
-    <meta name="description" content="Reklamsız, hafif ve özenli mini oyunlar. CasualPass ile kısa molanı oyuna çevir.">
-    <title>CasualPass — Molanı oyuna çevir</title>
+    <meta name="description" content="CasualPass — çerez tabanlı profilinle anında oynayabileceğin reklamsız mini oyunlar.">
+    <title>CasualPass — Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
-    <script src="shared-settings.js?v=5"></script>
+    <link rel="stylesheet" href="shared-settings.css?v=6">
+    <link rel="stylesheet" href="style.css?v=6">
+    <script src="shared-settings.js?v=6"></script>
 </head>
-
 <body class="theme-liquid">
     <a class="skip-link" href="#games">Oyunlara geç</a>
     <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
 
-    <nav class="top-nav" aria-label="Ana navigasyon">
-        <a class="brand" href="index.html" aria-label="CasualPass ana sayfa">
+    <header class="topbar">
+        <a class="brand" href="index.html" aria-label="CasualPass dashboard">
             <span class="brand-mark" aria-hidden="true">CP</span>
-            <span class="brand-word">Casual<span>Pass</span></span>
+            <span>CasualPass</span>
         </a>
-
-        <div class="nav-actions">
-            <button class="money-chip" id="money-chip" type="button" aria-label="CasualMoney ve profil">
-                <span class="coin" aria-hidden="true">C</span>
-                <span id="nav-balance">0</span>
-                <span class="money-label">CM</span>
-            </button>
-            <button class="profile-btn" id="profile-btn" type="button">
-                <span class="profile-dot" aria-hidden="true"></span>
-                <span id="profile-button-label">Profil aç</span>
-            </button>
-            <button id="settings-btn" class="icon-btn" type="button" aria-label="Ayarları aç">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.86l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-1.86-.34 1.7 1.7 0 0 0-1.05 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.05-1.56 1.7 1.7 0 0 0-1.86.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.05H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.9a1.7 1.7 0 0 0-.34-1.86l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 9 4.55 1.7 1.7 0 0 0 10.05 3V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.1 4.6a1.7 1.7 0 0 0 1.86-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.7 1.7 0 0 0-.34 1.86A1.7 1.7 0 0 0 21 10h.09a2 2 0 1 1 0 4H21A1.7 1.7 0 0 0 19.4 15z"></path>
-                </svg>
+        <div class="topbar-actions">
+            <span class="cookie-state"><i aria-hidden="true"></i> Yalnızca bu tarayıcı</span>
+            <button class="session-button" id="session-button" type="button">
+                <span class="session-avatar" id="session-avatar">?</span>
+                <span id="session-button-label">Oturumu başlat</span>
             </button>
         </div>
-    </nav>
+    </header>
 
-    <main>
-        <section class="hero dashboard-section">
-            <div class="hero-copy reveal">
-                <p class="eyebrow"><span></span> CASUAL ARCADE · SEZON 01</p>
-                <h1>Kısa mola.<br><em>Ciddi eğlence.</em></h1>
-                <p class="hero-lead">Reklam yok, pay-to-win yok, gereksiz menü yok. Sadece aç, oyna ve ustalığını geliştir.</p>
-                <div class="hero-actions">
-                    <a class="primary-btn" href="#games">Oyun seç <span aria-hidden="true">↘</span></a>
-                    <button class="secondary-btn" id="hero-profile-btn" type="button">CasualMoney profilini aç</button>
-                </div>
-                <div class="trust-row" aria-label="Platform özellikleri">
-                    <span><b>05</b> mini oyun</span>
-                    <span><b>0</b> reklam</span>
-                    <span><b>∞</b> tekrar</span>
-                </div>
+    <main class="dashboard">
+        <section class="welcome-panel" aria-labelledby="dashboard-title">
+            <div class="welcome-copy">
+                <p class="eyebrow">CASUALPASS DASHBOARD</p>
+                <h1 id="dashboard-title">Aç, seç, <em>oyna.</em></h1>
+                <p>Hesap ve bekleme yok. Oyun seç, CasualMoney kazan, temalarını aç.</p>
             </div>
-
-            <div class="hero-machine reveal" aria-label="CasualPass oyun vitrini">
-                <div class="machine-top">
-                    <span>NOW IN THE WORKSHOP</span>
-                    <span class="live-light">CANLI</span>
-                </div>
-                <div class="machine-screen">
-                    <div class="screen-grid" aria-hidden="true"></div>
-                    <svg class="lathe-hero" viewBox="0 0 620 300" role="img" aria-label="Torna tezgâhında şekillenen ahşap parça">
-                        <defs>
-                            <linearGradient id="woodHero" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#f2c779"></stop>
-                                <stop offset=".5" stop-color="#b96d32"></stop>
-                                <stop offset="1" stop-color="#71401f"></stop>
-                            </linearGradient>
-                            <filter id="softGlow"><feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur><feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
-                        </defs>
-                        <path class="hero-wood" d="M112 92 C165 92 170 116 218 112 C270 107 266 67 320 72 C373 77 370 123 422 119 C465 116 470 97 512 97 L512 203 C470 203 465 184 422 181 C370 177 373 223 320 228 C266 233 270 193 218 188 C170 184 165 208 112 208 Z" fill="url(#woodHero)"></path>
-                        <g fill="none" stroke="#f6d79c" opacity=".38">
-                            <path d="M140 98 C178 111 179 190 140 202"></path><path d="M205 113 C235 131 236 169 205 187"></path><path d="M303 75 C336 113 336 187 303 225"></path><path d="M405 120 C438 137 438 163 405 180"></path><path d="M476 102 C495 127 495 173 476 198"></path>
-                        </g>
-                        <circle cx="536" cy="150" r="9" fill="#b9ff66" filter="url(#softGlow)"></circle>
-                        <path d="M55 150H112M512 150h52" stroke="#d9ddd1" stroke-width="10" stroke-linecap="round"></path>
-                        <path d="M358 248l22-72 28 9-24 76z" fill="#d7dfd8"></path><path d="M371 261l-13 29h43l-17-29z" fill="#b9ff66"></path>
-                    </svg>
-                    <div class="screen-hud">
-                        <div><small>SİPARİŞ</small><strong>Nordik Vazo</strong></div>
-                        <div class="accuracy-orb"><strong>94</strong><span>%</span></div>
-                    </div>
-                </div>
-                <div class="machine-footer">
-                    <span class="machine-knob"></span>
-                    <div><strong>WOOD TURNING</strong><small>Şekillendir · Zımparala · Boya</small></div>
-                    <a href="wood-turning/index.html" aria-label="Wood Turning oyna">OYNA →</a>
-                </div>
-            </div>
+            <section class="balance-card" aria-label="CasualMoney bakiyesi">
+                <span class="balance-coin" aria-hidden="true">C</span>
+                <div><small>CASUALMONEY</small><strong id="balance-value">0</strong></div>
+                <button id="daily-bonus-button" type="button">Günlük ödül</button>
+            </section>
         </section>
 
-        <section class="dashboard-section games-section" id="games">
-            <div class="section-heading reveal">
-                <div>
-                    <p class="eyebrow"><span></span> OYUN KÜTÜPHANESİ</p>
-                    <h2>Modunu seç.</h2>
-                </div>
-                <p>İster iki dakikalık refleks molası, ister sabır isteyen bir ustalık işi.</p>
+        <section class="metric-grid" aria-label="Oyuncu durumu">
+            <article class="metric"><span class="metric-icon purple" aria-hidden="true">◷</span><div><small>Oturum ödülü</small><strong id="session-reward-value">+15 CM</strong></div></article>
+            <article class="metric"><span class="metric-icon green" aria-hidden="true">↗</span><div><small>Toplam kazanç</small><strong id="earned-value">0 CM</strong></div></article>
+            <article class="metric"><span class="metric-icon orange" aria-hidden="true">◎</span><div><small>Oynanan oyun</small><strong id="plays-value">0</strong></div></article>
+            <article class="metric"><span class="metric-icon blue" aria-hidden="true">◐</span><div><small>Aktif tema</small><strong id="active-theme-value">Liquid</strong></div></article>
+        </section>
+
+        <section class="panel games-panel" id="games" aria-labelledby="games-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">OYUNLAR</p><h2 id="games-title">Birini seç, tak diye oyna.</h2></div>
+                <p>Beş oyun aynı ekranda.</p>
             </div>
-
-            <a href="wood-turning/index.html" class="featured-game reveal">
-                <div class="featured-visual">
-                    <span class="new-badge">YENİ OYUN</span>
-                    <div class="order-stamp"><small>HEDEF</small><strong>≥ 90%</strong></div>
-                    <div class="wood-preview" aria-hidden="true">
-                        <span class="wood-axis"></span>
-                        <span class="wood-piece"></span>
-                        <span class="wood-tool"></span>
-                    </div>
-                </div>
-                <div class="featured-copy">
-                    <p class="game-number">01 / USTALIK</p>
-                    <h3>Wood<br>Turning</h3>
-                    <p>Müşterinin istediği forma yaklaş, yüzeyi zımparala ve kendi paletinle boya. Yakınlığın arttıkça kazancın da artar.</p>
-                    <div class="game-tags"><span>Dokun & sürükle</span><span>CasualMoney</span><span>1 oyuncu</span></div>
-                    <span class="play-link">Atölyeyi aç <b>↗</b></span>
-                </div>
-            </a>
-
             <div class="game-grid">
-                <a href="snake-game/index.html" class="game-card game-card--lime reveal">
-                    <div class="card-top"><span class="game-number">02</span><span class="card-arrow">↗</span></div>
-                    <div class="mini-art snake-art" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
-                    <div><p class="game-kicker">REFLEKS</p><h3>Snake</h3><p>Yemi kap, duvarı unutma ve kişisel rekorunu uzat.</p></div>
-                </a>
-                <a href="2048-game/index.html" class="game-card game-card--orange reveal">
-                    <div class="card-top"><span class="game-number">03</span><span class="card-arrow">↗</span></div>
-                    <div class="mini-art tiles-art" aria-hidden="true"><span>2</span><span>0</span><span>4</span><span>8</span></div>
-                    <div><p class="game-kicker">ZEKA</p><h3>2048</h3><p>Taşları kaydır, eşleri birleştir ve 2048'e ulaş.</p></div>
-                </a>
-                <a href="xox-game/index.html" class="game-card game-card--pink reveal">
-                    <div class="card-top"><span class="game-number">04</span><span class="card-arrow">↗</span></div>
-                    <div class="mini-art xox-art" aria-hidden="true"><span>×</span><span>○</span><span>×</span></div>
-                    <div><p class="game-kicker">STRATEJİ</p><h3>XOX</h3><p>Arkadaşına ya da CasualXOX motoruna karşı üçlüyü kur.</p></div>
-                </a>
-                <a href="chess-game/index.html" class="game-card game-card--blue reveal">
-                    <div class="card-top"><span class="game-number">05</span><span class="card-arrow">↗</span></div>
-                    <div class="mini-art chess-art" aria-hidden="true">♞</div>
-                    <div><p class="game-kicker">TAKTİK</p><h3>Chess</h3><p>CasualFish motoruna karşı hamleni hesapla.</p></div>
-                </a>
+                <a class="game-card wood-card" href="wood-turning/index.html"><span class="game-index">01</span><span class="game-art wood-art" aria-hidden="true"><i></i><b></b></span><span><small>USTALIK</small><strong>Wood Turning</strong><em>Şekillendir · Zımparala · Kazan</em></span></a>
+                <a class="game-card snake-card" href="snake-game/index.html"><span class="game-index">02</span><span class="game-art snake-art" aria-hidden="true"><i></i><i></i><i></i><b></b></span><span><small>REFLEKS</small><strong>Snake</strong><em>Yemi kap, rekoru uzat</em></span></a>
+                <a class="game-card tile-card" href="2048-game/index.html"><span class="game-index">03</span><span class="game-art tile-art" aria-hidden="true"><b>2</b><b>0</b><b>4</b><b>8</b></span><span><small>ZEKA</small><strong>2048</strong><em>Taşları birleştir</em></span></a>
+                <a class="game-card xox-card" href="xox-game/index.html"><span class="game-index">04</span><span class="game-art xox-art" aria-hidden="true">× <b>○</b> ×</span><span><small>STRATEJİ</small><strong>XOX</strong><em>Üçlüyü ilk sen kur</em></span></a>
+                <a class="game-card chess-card" href="chess-game/index.html"><span class="game-index">05</span><span class="game-art chess-art" aria-hidden="true">♞</span><span><small>TAKTİK</small><strong>Chess</strong><em>CasualFish'e karşı oyna</em></span></a>
             </div>
         </section>
 
-        <section class="dashboard-section economy-section reveal">
-            <div class="economy-copy">
-                <p class="eyebrow"><span></span> CASUALMONEY</p>
-                <h2>Ustalık, atölyeni büyütür.</h2>
-                <p>Wood Turning siparişlerindeki benzerlik puanın kazancını belirler. Yeni boyalar aç, ofisini geliştir ve sonraki işlerden daha fazla kazan.</p>
-            </div>
-            <div class="economy-flow" aria-label="CasualMoney ilerleme sistemi">
-                <div><span>01</span><strong>Şekli yakala</strong><small>%100'e yaklaş</small></div>
-                <i aria-hidden="true">→</i>
-                <div><span>02</span><strong>CM kazan</strong><small>Puanın kadar</small></div>
-                <i aria-hidden="true">→</i>
-                <div><span>03</span><strong>Atölyeyi büyüt</strong><small>Çarpanı yükselt</small></div>
-            </div>
-        </section>
+        <section class="lower-grid">
+            <section class="panel themes-panel" aria-labelledby="themes-title">
+                <div class="section-heading compact">
+                    <div><p class="eyebrow">CASUALMONEY MAĞAZASI</p><h2 id="themes-title">Temalar</h2></div>
+                    <span class="balance-badge"><b>C</b><span id="theme-balance-value">0</span></span>
+                </div>
+                <div class="theme-grid" id="theme-grid"></div>
+            </section>
 
-        <section class="dashboard-section stats-section" id="stats-section">
-            <div class="section-heading reveal">
-                <div><p class="eyebrow"><span></span> OYUNCU KAYDI</p><h2>Son durum.</h2></div>
-                <p>Bu cihazda tuttuğun oyun istatistikleri.</p>
-            </div>
-            <div class="stats-grid" id="stats-grid"></div>
+            <section class="panel activity-panel" aria-labelledby="activity-title">
+                <div class="section-heading compact">
+                    <div><p class="eyebrow">SON HAREKETLER</p><h2 id="activity-title">Bugün</h2></div>
+                    <button id="clear-activity-button" class="text-button" type="button">Temizle</button>
+                </div>
+                <ul class="activity-list" id="activity-list"><li class="empty-activity">İlk ödülün burada görünecek.</li></ul>
+            </section>
         </section>
     </main>
 
-    <footer>
-        <a class="brand brand--footer" href="index.html"><span class="brand-mark">CP</span><span class="brand-word">Casual<span>Pass</span></span></a>
-        <p>Reklamsız. Pay-to-win'siz. Gereksiz ciddiyetsiz.</p>
-        <span>© 2026 CasualPass</span>
-    </footer>
-
-    <div id="profile-modal" class="modal-overlay" aria-hidden="true">
-        <div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
-            <button class="modal-close" data-close-modal="profile-modal" type="button" aria-label="Kapat">×</button>
-            <p class="modal-kicker">CASUALPASS KİMLİĞİ</p>
-            <h2 id="profile-title">Oyuncu profilin</h2>
-            <section class="cloud-card" id="cloud">
-                <div class="cloud-heading">
-                    <span class="cloud-icon" aria-hidden="true">↻</span>
-                    <div><strong>Cihazlar arası senkron</strong><small id="cloud-status-text">Durum kontrol ediliyor…</small></div>
-                    <span class="cloud-badge" id="cloud-badge">YEREL</span>
-                </div>
-                <div class="cloud-setup-note" id="cloud-setup-note" hidden>
-                    <p>Bulut bağlantısı kuruluma hazır. <code>cloud-config.js</code> içine Supabase URL ve publishable key eklenince e-posta OTP açılır.</p>
-                </div>
-                <form id="cloud-auth-form" class="cloud-auth-form" hidden novalidate>
-                    <div class="cloud-fields">
-                        <label for="cloud-username">Kullanıcı adı<input id="cloud-username" minlength="3" maxlength="20" autocomplete="username" placeholder="ahsapustasi" required></label>
-                        <label for="cloud-email">E-posta<input id="cloud-email" type="email" autocomplete="email" placeholder="sen@ornek.com" required></label>
-                    </div>
-                    <button class="cloud-action" id="send-otp-btn" type="button">OTP gönder</button>
-                    <div class="otp-step" id="otp-step" hidden>
-                        <label for="cloud-otp">E-postadaki kod<input id="cloud-otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="000000"></label>
-                        <button class="primary-btn" type="submit">Doğrula ve senkronla</button>
-                    </div>
-                    <p class="form-error" id="cloud-error" role="alert"></p>
-                </form>
-                <div class="cloud-connected" id="cloud-connected" hidden>
-                    <div><small>BAĞLI HESAP</small><strong id="cloud-email-label">—</strong><span id="cloud-last-sync">Senkron bekleniyor</span></div>
-                    <button class="cloud-action" id="sync-now-btn" type="button">Şimdi eşitle</button>
-                    <button class="text-btn cloud-signout" id="cloud-signout-btn" type="button">Bulut oturumunu kapat</button>
-                </div>
-            </section>
-            <div id="signed-out-panel">
-                <p class="modal-description">CasualMoney kazanmak ve atölye ilerlemeni bu cihazda saklamak için bir kullanıcı adı seç.</p>
-                <form id="profile-form" novalidate>
-                    <label for="username-input">Kullanıcı adı</label>
-                    <div class="input-row"><span>@</span><input id="username-input" name="username" minlength="3" maxlength="20" autocomplete="username" placeholder="ör. ahsapustasi" required></div>
-                    <p class="form-error" id="profile-error" role="alert"></p>
-                    <button class="primary-btn full-btn" type="submit">Profili aç</button>
-                </form>
-                <div class="local-note"><span aria-hidden="true">⌁</span><p><strong>GitHub Pages modu</strong> Bu profil ve bakiye yalnızca bu tarayıcıda saklanır. Güvenli OTP için harici bir kimlik doğrulama servisi gerekir.</p></div>
-            </div>
-            <div id="signed-in-panel" hidden>
-                <div class="profile-summary">
-                    <div class="avatar" id="profile-avatar">CP</div>
-                    <div><small>OYUNCU</small><strong id="profile-name">—</strong><span id="profile-office">—</span></div>
-                </div>
-                <div class="profile-numbers">
-                    <div><small>BAKİYE</small><strong><span id="profile-balance">0</span> CM</strong></div>
-                    <div><small>EN İYİ TORNA</small><strong id="profile-best">0%</strong></div>
-                </div>
-                <a class="primary-btn full-btn" href="wood-turning/index.html">Atölyeye git</a>
-                <button class="text-btn" id="logout-btn" type="button">Bu cihazdaki oturumu kapat</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="modal-overlay" aria-hidden="true">
-        <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-            <div class="modal-header">
-                <div><p class="modal-kicker">DENEYİM</p><h2 id="settings-title">Ayarlar</h2></div>
-                <button class="modal-close" data-close-modal="settings-modal" type="button" aria-label="Kapat">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-item"><div><h3>Ses</h3><p>Oyun ve arayüz sesleri</p></div><label class="toggle"><input type="checkbox" id="setting-sound"><span class="slider"></span></label></div>
-                <div class="setting-item"><div><h3>Görsel efektler</h3><p>Hareketler ve parçacıklar</p></div><label class="toggle"><input type="checkbox" id="setting-effects"><span class="slider"></span></label></div>
-                <div class="setting-item setting-item--column">
-                    <div><h3>Arka plan teması</h3><p>Tüm CasualPass oyunlarına uygulanır</p></div>
-                    <div class="theme-options">
-                        <button class="theme-option" data-theme="liquid" type="button"><span class="theme-preview liquid"><i></i></span><b>Liquid</b></button>
-                        <button class="theme-option" data-theme="paper" type="button"><span class="theme-preview paper"></span><b>Paper</b></button>
-                        <button class="theme-option" data-theme="neon" type="button"><span class="theme-preview neon"></span><b>Neon</b></button>
-                        <button class="theme-option" data-theme="retro" type="button"><span class="theme-preview retro"></span><b>Retro</b></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>İlerleme yalnızca bu tarayıcının çerezlerinde saklanır.</small></footer>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <audio id="global-click-sound" src="https://cdn.freesound.org/previews/415/415096_7413867-lq.mp3" preload="none"></audio>
-    <audio id="global-pop-sound" src="https://cdn.freesound.org/previews/242/242501_4414128-lq.mp3" preload="none"></audio>
-    <script src="cloud-config.js?v=5"></script>
-    <script src="casual-profile.js?v=6"></script>
-    <script src="casual-cloud.js?v=5"></script>
-    <script src="script.js?v=5"></script>
-</body>
+    <template id="theme-template">
+        <article class="theme-card">
+            <span class="theme-preview" aria-hidden="true"><i></i><i></i><i></i></span>
+            <div><strong class="theme-name"></strong><small class="theme-description"></small></div>
+            <button class="theme-action" type="button"></button>
+        </article>
+    </template>
 
+    <script src="casual-profile.js?v=7"></script>
+    <script src="script.js?v=7"></script>
+</body>
 </html>

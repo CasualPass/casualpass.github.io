@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let cells = [];   // 4x4 grid of tile objects or null
     let score = 0;
-    let bestScore = parseInt(localStorage.getItem('cp_2048_best') || '0');
+    let bestScore = parseInt(getCookieValue('cp_2048_best') || '0', 10);
     let gameOver = false;
     let won = false;
     let moving = false;
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreEl.textContent = score;
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem('cp_2048_best', bestScore);
+                setCookieValue('cp_2048_best', String(bestScore));
                 bestScoreEl.textContent = bestScore;
             }
 

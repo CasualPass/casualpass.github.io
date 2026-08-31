@@ -1,72 +1,38 @@
 # CasualPass 🎮
 
-CasualPass is an ad-free collection of lightweight browser games. The interface is built with vanilla HTML, CSS and JavaScript, so it can be deployed directly to GitHub Pages without a build step.
+CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak beş oyunu tek ekranda sunar:
 
-## Games
+- **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
+- **Snake:** Yemi kapıp rekorunu uzat.
+- **2048:** Taşları birleştirip en yüksek skora ulaş.
+- **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
+- **Chess:** CasualFish motoruna karşı hamleni hesapla.
 
-- **Wood Turning:** Carve a customer's target profile, sand the surface, paint the finished piece and receive a 0–100 job score.
-- **Chess:** Play against the CasualFish engine at multiple difficulty levels.
-- **Snake:** Configure the board and speed, then chase a new high score.
-- **Tic Tac Toe (XOX):** Play locally or against the Minimax-based CasualXOX engine.
-- **2048:** Merge tiles and reach 2048.
+## Çerez tabanlı profil ve CasualMoney
 
-## Wood Turning and CasualMoney
+CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullanılmaz. Oturum, kullanıcı profili, CasualMoney, Wood Turning ilerlemesi, satın alınan temalar, oyun istatistikleri ve yüksek skorlar yalnızca birinci taraf tarayıcı çerezlerinde saklanır.
 
-Wood Turning uses a canvas-based radial profile model. The live similarity score compares the player's current radius samples with the requested target; over-cutting receives an additional penalty. The final job score combines:
+- Oturumu başlatmak günde bir kez **15 CM** verir.
+- Günlük ödül günde bir kez **20 CM** verir.
+- Wood Turning tamamlanan işin puanına göre CasualMoney kazandırır.
+- `Liquid` varsayılan temadır; `Paper` (30 CM), `Neon` (180 CM) ve `Retro` (300 CM) temaları CasualMoney ile açılır.
+- Çerezleri silmek profil, bakiye ve ilerlemeyi de siler. Bu bilerek seçilmiş, yalnızca-çerez tasarımının sonucudur.
 
-- shape similarity: 82%
-- sanding coverage: 10%
-- paint coverage: 8%
+Çerezlerdeki veriler kullanıcı tarafından değiştirilebilir. Bu nedenle CasualMoney gerçek para, rekabetçi skor veya güvenlik gerektiren satın alma akışları için uygun değildir.
 
-CasualMoney rewards grow non-linearly as the final score approaches 100. Players can use the currency to unlock paint colours and upgrade their office. Each office level increases the reward multiplier for later Wood Turning jobs.
+## Yerelde çalıştırma
 
-Player profiles, balances, owned paints and office progress are mirrored in `localStorage` by `casual-profile.js`. CasualMoney is intentionally enabled only for Wood Turning in this version.
-
-## Cross-device sync and email OTP
-
-GitHub Pages serves static files and cannot safely issue or verify one-time passwords by itself. CasualPass therefore supports two explicit modes:
-
-- **Local mode:** username profile stored only in the current browser.
-- **Cloud mode:** username + Supabase email OTP, with the profile synced between devices.
-
-Cloud mode keeps a local mirror for fast/offline play. Changes are pushed after every economy update and pulled on sign-in, reconnect and tab focus. If two offline devices change the same profile before reconnecting, the newest profile timestamp wins.
-
-### Supabase setup
-
-1. Create a Supabase project.
-2. Open **SQL Editor** and run [`supabase/schema.sql`](supabase/schema.sql). It creates the profile table and Row Level Security policies that restrict every row to its authenticated user.
-3. In **Authentication → Email Templates**, make both **Confirm signup** and **Magic Link / OTP** display `{{ .Token }}`. This gives first-time and returning players a numeric OTP instead of relying only on a link.
-4. Copy the project URL and **publishable** (or legacy `anon`) key into `cloud-config.js` and set `enabled: true`:
-
-   ```js
-   window.CASUALPASS_CLOUD = Object.freeze({
-       enabled: true,
-       supabaseUrl: 'https://YOUR_PROJECT.supabase.co',
-       supabasePublishableKey: 'YOUR_PUBLISHABLE_KEY',
-       table: 'casual_profiles',
-       sdkUrl: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm'
-   });
-   ```
-
-5. Add the final GitHub Pages URL to the allowed site/redirect URLs in Supabase Auth settings.
-
-The publishable key is intended for browser apps; RLS protects access to database rows. Never add a Supabase `service_role` key to this repository.
-
-This setup securely isolates each player's row, but the game score is still calculated by client-side JavaScript. If CasualMoney becomes competitive or redeemable, move reward calculation to a validated Supabase Edge Function or database RPC.
-
-## Run locally
-
-No dependencies or build command are required:
+Herhangi bir bağımlılık ya da build komutu gerekmez:
 
 ```bash
-python3 -m http.server 4173
+python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
-Then open `http://127.0.0.1:4173/`.
+Ardından `http://127.0.0.1:4173/` adresini aç.
 
-## Deploy to GitHub Pages
+## GitHub Pages
 
-In the repository settings, choose **Pages → Deploy from a branch**, select the `main` branch and the root folder. All links are relative and work under the repository subpath.
+Repository ayarlarında **Pages → Deploy from a branch** seçeneğinden `main` dalını ve kök dizini seç. Tüm oyun bağlantıları görecelidir; repo alt yolu altında da çalışır.
 
 ## License
 

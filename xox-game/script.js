@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* --- LEADERBOARD LOGIC --- */
     function getLeaderboard() {
-        return JSON.parse(localStorage.getItem('cp_xox_leaderboard') || '{}');
+        return JSON.parse(getCookieValue('cp_xox_leaderboard') || '{}');
     }
 
     function saveToLeaderboard(winnerName) {
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lb[winnerName]) lb[winnerName] = 0;
         lb[winnerName] += 1;
 
-        localStorage.setItem('cp_xox_leaderboard', JSON.stringify(lb));
+        setCookieValue('cp_xox_leaderboard', JSON.stringify(lb));
     }
 
     function renderLeaderboard() {
