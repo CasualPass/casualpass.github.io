@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Snake Game</title>
+    <title>Snake — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js"></script>
+    <script src="../casual-cheats.js"></script>
 </head>
 
 <body class="theme-liquid">
     <!-- Dynamic Background via Shared Settings -->
-    <div id="global-bg-container" class="background-container"></div>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
     <a href="../index.html" class="back-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -21,19 +23,19 @@
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Back to Games</span>
+        <span>Oyunlara Dön</span>
     </a>
 
     <main class="game-container">
         <header>
             <h1 class="glow-text">Snake</h1>
-            <div class="scores" id="scores">
+            <div class="scores" id="scores" role="status" aria-live="polite">
                 <div class="score-card">
-                    <span class="player-label">Score</span>
+                    <span class="player-label">Skor</span>
                     <span class="score-value" id="score">0</span>
                 </div>
                 <div class="score-card personal-best">
-                    <span class="player-label">High Score</span>
+                    <span class="player-label">Rekor</span>
                     <span class="score-value" id="high-score">0</span>
                 </div>
             </div>
@@ -43,11 +45,11 @@
         <div id="config-menu" class="config-menu">
             <h2>Oyun Ayarları</h2>
 
-            <div class="preset-buttons">
-                <button class="preset-btn" data-preset="kolay">Kolay</button>
-                <button class="preset-btn active" data-preset="normal">Normal</button>
-                <button class="preset-btn" data-preset="zor">Zor</button>
-                <button class="preset-btn" data-preset="asiri-zor">Aşırı Zor</button>
+            <div class="preset-buttons" role="group" aria-label="Hazır ayarlar">
+                <button class="preset-btn" type="button" aria-pressed="false" data-preset="kolay">Kolay</button>
+                <button class="preset-btn active" type="button" aria-pressed="true" data-preset="normal">Normal</button>
+                <button class="preset-btn" type="button" aria-pressed="false" data-preset="zor">Zor</button>
+                <button class="preset-btn" type="button" aria-pressed="false" data-preset="asiri-zor">Aşırı Zor</button>
             </div>
 
             <div class="custom-settings">
@@ -70,21 +72,21 @@
                 </div>
             </div>
 
-            <button class="btn start-btn" id="start-game-btn">
+            <button class="btn start-btn" id="start-game-btn" type="button">
                 <span class="btn-text">Oyuna Başla</span>
             </button>
         </div>
 
         <div class="board-wrapper hidden" id="board-wrapper">
-            <canvas id="game-canv" width="400" height="400"></canvas>
+            <canvas id="game-canv" width="400" height="400" role="img" aria-label="Yılan oyun alanı"></canvas>
 
             <!-- Game Over Overlay -->
             <div id="game-over-overlay" class="overlay hidden">
-                <h2 class="game-over-text">Oyun Bitti</h2>
-                <button class="btn reset-btn" id="restart-btn">
+                <h2 class="game-over-text" id="game-over-title">Oyun Bitti</h2>
+                <button class="btn reset-btn" id="restart-btn" type="button">
                     <span class="btn-text">Tekrar Oyna</span>
                 </button>
-                <button class="btn text-btn" id="back-to-menu-btn"
+                <button class="btn text-btn" id="back-to-menu-btn" type="button"
                     style="margin-top: 10px; background: transparent; border: none; font-size: 0.9rem;">
                     Ayarlara Dön
                 </button>
@@ -92,14 +94,14 @@
         </div>
 
         <!-- Mobile Controls (hidden on desktop via css) -->
-        <div class="mobile-controls">
-            <button class="d-pad up" data-dir="UP">▲</button>
+        <div class="mobile-controls" role="group" aria-label="Yön tuşları">
+            <button class="d-pad up" type="button" data-dir="UP" aria-label="Yukarı">▲</button>
             <div class="d-pad-middle">
-                <button class="d-pad left" data-dir="LEFT">◀</button>
+                <button class="d-pad left" type="button" data-dir="LEFT" aria-label="Sola">◀</button>
                 <div class="d-pad-center"></div>
-                <button class="d-pad right" data-dir="RIGHT">▶</button>
+                <button class="d-pad right" type="button" data-dir="RIGHT" aria-label="Sağa">▶</button>
             </div>
-            <button class="d-pad down" data-dir="DOWN">▼</button>
+            <button class="d-pad down" type="button" data-dir="DOWN" aria-label="Aşağı">▼</button>
         </div>
     </main>
 

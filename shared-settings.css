@@ -230,3 +230,9 @@ body.disable-effects * {
         transform: none;
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .blob {
+        animation: none;
+    }
+}

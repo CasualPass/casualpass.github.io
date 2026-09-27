@@ -5,6 +5,10 @@
     const SESSION_COOKIE = 'casualpass_session_v2';
     const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
     const MAX_ACTIVITIES = 5;
+    const SESSION_REWARD = 15;
+    const DAILY_REWARD = 20;
+    const REBIRTH_BASE = 500;
+    const MAX_REBIRTHS = 8;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -41,6 +45,11 @@
     function setCookie(name, value, maxAge = COOKIE_MAX_AGE) {
         const secure = window.location.protocol === 'https:' ? '; Secure' : '';
         document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+    }
+
+    function cheatsActive() {
+        const cheats = window.CasualCheats;
+        return Boolean(cheats && typeof cheats.active === 'function' && cheats.active());
     }
 
     function readProfile() {
@@ -86,11 +95,28 @@
             selectedTheme: 'liquid',
             dailyBonusDate: '',
             sessionRewardDate: '',
+            rebirths: 0,
+            lifetimeEarned: 0,
             activities: [],
             woodTurning: { jobs: 0, bestScore: 0, totalEarned: 0, lastReward: 0 },
             createdAt: now,
             updatedAt: now
         };
+    }
+
+    function lifetimeEarnedOf(safe) {
+        if (safe.lifetimeEarned == null || safe.lifetimeEarned === '') {
+            return Math.max(0, Math.floor(Number(safe.woodTurning?.totalEarned) || 0));
+        }
+        return Math.max(0, Math.floor(Number(safe.lifetimeEarned) || 0));
+    }
+
+    function rebirthCountOf(profile) {
+        return Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(profile?.rebirths) || 0)));
+    }
+
+    function earnMultiplier(profile) {
+        return 2 ** rebirthCountOf(profile);
     }
 
     function cleanProfile(profile) {
@@ -112,6 +138,8 @@
             selectedTheme: ownedThemes.includes(safe.selectedTheme) ? safe.selectedTheme : 'liquid',
             dailyBonusDate: String(safe.dailyBonusDate || ''),
             sessionRewardDate: String(safe.sessionRewardDate || ''),
+            rebirths: Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(safe.rebirths) || 0))),
+            lifetimeEarned: lifetimeEarnedOf(safe),
             activities,
             woodTurning: {
                 jobs: Math.max(0, Math.floor(Number(safe.woodTurning?.jobs) || 0)),
@@ -145,7 +173,7 @@
         const profile = stored?.id === validation.id ? cleanProfile(stored) : makeProfile(validation.displayName, validation.id);
         profile.displayName = profile.displayName || validation.displayName;
         profile.updatedAt = new Date().toISOString();
-        writeProfile(profile);
+        if (!cheatsActive()) writeProfile(profile);
         setCookie(SESSION_COOKIE, profile.id);
         applyTheme(profile.selectedTheme);
         emit(profile);
@@ -162,9 +190,19 @@
         profile.activities = profile.activities.slice(0, MAX_ACTIVITIES);
     }
 
-    function update(mutator) {
+    function grant(draft, baseAmount, label) {
+        const reward = Math.max(0, Math.floor(Number(baseAmount) || 0)) * earnMultiplier(draft);
+        if (!reward) return 0;
+        draft.balance += reward;
+        draft.lifetimeEarned += reward;
+        addActivity(draft, label, reward);
+        return reward;
+    }
+
+    function update(mutator, options) {
         const active = current();
         if (!active) throw new Error('Bu işlem için önce oturumu başlatmalısın.');
+        if (cheatsActive() && !(options && options.alwaysPersist)) return active;
         const draft = cleanProfile(active);
         mutator(draft);
         draft.updatedAt = new Date().toISOString();
@@ -175,28 +213,28 @@
     }
 
     function startSession() {
+        if (cheatsActive()) return { profile: current(), granted: false, reward: 0 };
         let profile = current();
         if (!profile) profile = login('CasualOyuncu');
         const granted = profile.sessionRewardDate !== todayKey();
         if (!granted) return { profile, granted: false, reward: 0 };
-        const reward = 15;
+        let reward = 0;
         profile = update((draft) => {
-            draft.balance += reward;
+            reward = grant(draft, SESSION_REWARD, 'Oturum ödülü');
             draft.sessionRewardDate = todayKey();
-            addActivity(draft, 'Oturum ödülü', reward);
         });
         return { profile, granted: true, reward };
     }
 
     function claimDailyBonus() {
+        if (cheatsActive()) return { profile: current(), granted: false, reward: 0 };
         if (!current()) throw new Error('Günlük ödül için önce oturumu başlat.');
         const alreadyClaimed = current().dailyBonusDate === todayKey();
         if (alreadyClaimed) return { profile: current(), granted: false, reward: 0 };
-        const reward = 20;
+        let reward = 0;
         const profile = update((draft) => {
-            draft.balance += reward;
+            reward = grant(draft, DAILY_REWARD, 'Günlük ödül');
             draft.dailyBonusDate = todayKey();
-            addActivity(draft, 'Günlük ödül', reward);
         });
         return { profile, granted: true, reward };
     }
@@ -209,21 +247,21 @@
     }
 
     function awardWoodTurning(result) {
+        if (cheatsActive()) return { profile: current(), reward: 0 };
         const score = Math.min(100, Math.max(0, Math.round(Number(result?.score) || 0)));
         let reward = 0;
         const profile = update((draft) => {
-            reward = rewardForScore(score, draft.officeLevel);
-            draft.balance += reward;
+            reward = grant(draft, rewardForScore(score, draft.officeLevel), 'Wood Turning ödülü');
             draft.woodTurning.jobs += 1;
             draft.woodTurning.bestScore = Math.max(draft.woodTurning.bestScore, score);
             draft.woodTurning.totalEarned += reward;
             draft.woodTurning.lastReward = reward;
-            addActivity(draft, 'Wood Turning ödülü', reward);
         });
         return { profile, reward };
     }
 
     function buyPaint(paintId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
         const paint = paints[paintId];
         if (!paint) throw new Error('Boya bulunamadı.');
         return update((draft) => {
@@ -237,6 +275,7 @@
     }
 
     function selectPaint(paintId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
         if (!paints[paintId]) throw new Error('Boya bulunamadı.');
         return update((draft) => {
             if (!draft.ownedPaints.includes(paintId)) throw new Error('Önce bu boyayı satın almalısın.');
@@ -245,6 +284,7 @@
     }
 
     function buyTheme(themeId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
         const theme = themes[themeId];
         if (!theme) throw new Error('Tema bulunamadı.');
         const profile = update((draft) => {
@@ -261,6 +301,7 @@
     }
 
     function selectTheme(themeId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
         if (!themes[themeId]) throw new Error('Tema bulunamadı.');
         const profile = update((draft) => {
             if (!draft.ownedThemes.includes(themeId)) throw new Error('Önce bu temayı satın almalısın.');
@@ -271,6 +312,7 @@
     }
 
     function upgradeOffice() {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar ilerleme kaydedilmez.');
         return update((draft) => {
             const office = offices[draft.officeLevel - 1];
             if (!office || office.upgradeCost === null) throw new Error('Ofisin zaten en yüksek seviyede.');
@@ -285,6 +327,60 @@
         return update((draft) => { draft.activities = []; });
     }
 
+    function rebirthStatus(profile) {
+        const source = profile || current();
+        const rebirths = rebirthCountOf(source);
+        const balance = Math.max(0, Math.floor(Number(source?.balance) || 0));
+        const multiplier = 2 ** rebirths;
+        const required = REBIRTH_BASE * multiplier;
+        const maxed = rebirths >= MAX_REBIRTHS;
+        return {
+            rebirths,
+            multiplier,
+            nextMultiplier: maxed ? multiplier : multiplier * 2,
+            balance,
+            required,
+            ready: !maxed && balance >= required,
+            maxed
+        };
+    }
+
+    function rebirth() {
+        if (cheatsActive()) throw new Error('Hile açıkken yeniden doğuş kaydedilmez.');
+        if (!current()) throw new Error('Yeniden doğmak için önce oturumu başlat.');
+        const status = rebirthStatus(current());
+        if (status.maxed) throw new Error('Yeniden doğuş sınırına ulaştın.');
+        if (!status.ready) throw new Error(`Yeniden doğmak için kasada ${formatMoney(status.required)} CM olmalı.`);
+        const profile = update((draft) => {
+            draft.rebirths += 1;
+            draft.balance = 0;
+            draft.activities = [];
+            addActivity(draft, `Yeniden doğuş · kazanç x${earnMultiplier(draft)}`, 0);
+        });
+        return profile;
+    }
+
+    function spend(amount, label) {
+        const cost = Math.max(0, Math.floor(Number(amount) || 0));
+        if (!current()) login('CasualOyuncu');
+        // Cheat code purchases always persist, even when cheats are already active.
+        return update((draft) => {
+            if (draft.balance < cost) throw new Error('Yeterli CasualMoney yok.');
+            draft.balance -= cost;
+            addActivity(draft, label, -cost);
+        }, { alwaysPersist: true });
+    }
+
+    function unlockAll() {
+        if (!current()) login('CasualOyuncu');
+        return update((draft) => {
+            draft.ownedPaints = Object.keys(paints);
+            draft.ownedThemes = Object.keys(themes);
+            draft.officeLevel = offices.length;
+            draft.selectedPaint = draft.selectedPaint || 'honey';
+        });
+    }
+
     function formatMoney(value) {
         return new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.floor(Number(value) || 0)));
     }
@@ -292,6 +388,7 @@
     window.CasualProfile = Object.freeze({
         paints, themes, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
         validateUsername, rewardForScore, awardWoodTurning, buyPaint, selectPaint, buyTheme, selectTheme,
-        upgradeOffice, clearActivities, formatMoney
+        upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
+        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS
     });
 })();

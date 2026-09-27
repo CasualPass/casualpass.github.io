@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium XOX Game</title>
+    <title>XOX — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js"></script>
+    <script src="../casual-cheats.js"></script>
 </head>
 
 <body class="theme-liquid">
     <!-- Dynamic Background via Shared Settings -->
-    <div id="global-bg-container" class="background-container"></div>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
     <a href="../index.html" class="back-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -21,29 +23,29 @@
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Back to Games</span>
+        <span>Oyunlara Dön</span>
     </a>
 
     <main class="game-container">
         <header>
-            <h1 class="glow-text">Tic Tac Toe</h1>
+            <h1 class="glow-text">XOX</h1>
         </header>
 
         <!-- Pre-Game Lobby / Config Menu -->
         <div id="config-menu" class="config-menu">
-            <h2>Lobby</h2>
+            <h2>Lobi</h2>
 
             <div class="auth-section" id="auth-section">
                 <input type="text" id="player-name-input" placeholder="Kullanıcı Adı" class="custom-input">
                 <div class="preset-buttons">
-                    <button class="preset-btn active" id="btn-guest">Misafir Girişi</button>
-                    <button class="preset-btn" id="btn-login" style="border-color: var(--cp-accent);">Giriş Yap</button>
+                    <button type="button" class="preset-btn active" id="btn-guest">Misafir Girişi</button>
+                    <button type="button" class="preset-btn" id="btn-login" style="border-color: var(--cp-accent);">Giriş Yap</button>
                 </div>
             </div>
 
             <div class="player-info hidden" id="player-info">
                 Hoş geldin, <span id="display-player-name" style="color: var(--cp-accent); font-weight: bold;"></span>!
-                <button id="btn-logout" class="icon-btn"
+                <button type="button" id="btn-logout" class="icon-btn"
                     style="width:30px;height:30px;font-size:12px;margin-left:10px;">X</button>
             </div>
 
@@ -51,8 +53,8 @@
                 <div class="setting-row">
                     <label>Oyun Modu</label>
                     <div class="preset-buttons" style="grid-template-columns: 1fr 1fr;">
-                        <button class="preset-btn active" id="mode-bot">Bot'a Karşı</button>
-                        <button class="preset-btn" id="mode-local">2 Oyuncu (Lokal)</button>
+                        <button type="button" class="preset-btn active" id="mode-bot">Bot'a Karşı</button>
+                        <button type="button" class="preset-btn" id="mode-local">2 Oyuncu (Lokal)</button>
                     </div>
                 </div>
 
@@ -67,19 +69,19 @@
                 <div class="setting-row" id="bot-difficulty-row">
                     <label>Bot Zorluğu</label>
                     <div class="preset-buttons" style="grid-template-columns: 1fr 1fr 1fr;">
-                        <button class="preset-btn active" data-difficulty="easy">Kolay</button>
-                        <button class="preset-btn" data-difficulty="medium">Orta</button>
-                        <button class="preset-btn" data-difficulty="impossible">İmkansız</button>
+                        <button type="button" class="preset-btn active" data-difficulty="easy">Kolay</button>
+                        <button type="button" class="preset-btn" data-difficulty="medium">Orta</button>
+                        <button type="button" class="preset-btn" data-difficulty="impossible">İmkansız</button>
                     </div>
                 </div>
             </div>
 
-            <button class="btn start-btn" id="start-game-btn" style="width: 100%;">
+            <button type="button" class="btn start-btn" id="start-game-btn" style="width: 100%;">
                 <span class="btn-text">Oyuna Başla</span>
             </button>
 
             <!-- Leaderboard Trigger -->
-            <button class="btn text-btn" id="show-leaderboard-btn"
+            <button type="button" class="btn text-btn" id="show-leaderboard-btn"
                 style="background: transparent; border: none; font-size: 0.9rem; margin-top: 10px;">
                 🏆 Liderlik Tablosu
             </button>
@@ -89,16 +91,16 @@
             style="width: 100%; display: flex; flex-direction: column; align-items: center;">
             <div class="scores" id="scores" style="margin-bottom: 1.5rem;">
                 <div class="score-card x-score active">
-                    <span class="player-label" id="label-x">Player X</span>
+                    <span class="player-label" id="label-x">Oyuncu X</span>
                     <span class="score-value" id="score-x">0</span>
                 </div>
                 <div class="score-card o-score">
-                    <span class="player-label" id="label-o">Player O</span>
+                    <span class="player-label" id="label-o">Oyuncu O</span>
                     <span class="score-value" id="score-o">0</span>
                 </div>
             </div>
 
-            <div class="status-display" id="status">Player X's Turn</div>
+            <div class="status-display" id="status">Sıra: Oyuncu X</div>
 
             <div class="board" id="board">
                 <div class="cell" data-index="0"></div>
@@ -112,10 +114,10 @@
                 <div class="cell" data-index="8"></div>
             </div>
 
-            <button class="btn reset-btn" id="reset-btn" style="margin-top: 1rem;">
+            <button type="button" class="btn reset-btn" id="reset-btn" style="margin-top: 1rem;">
                 <span class="btn-text">Tekrar Oyna</span>
             </button>
-            <button class="btn text-btn" id="back-to-lobby-btn"
+            <button type="button" class="btn text-btn" id="back-to-lobby-btn"
                 style="background: transparent; border: none; font-size: 0.9rem; margin-top: 10px;">
                 Lobiye Dön
             </button>
@@ -129,7 +131,7 @@
                     style="max-height: 250px; overflow-y: auto; margin: 1rem 0; text-align: left;">
                     <!-- Rows populated via JS -->
                 </div>
-                <button class="btn" id="close-leaderboard-btn">Kapat</button>
+                <button type="button" class="btn" id="close-leaderboard-btn">Kapat</button>
             </div>
         </div>
     </main>

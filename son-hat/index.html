@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#8ec6ea">
+    <title>Son Hat Beta — CasualPass</title>
+    <link rel="stylesheet" href="../shared-settings.css">
+    <link rel="stylesheet" href="style.css?v=5">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js"></script>
+    <script src="../casual-cheats.js"></script>
+</head>
+<body>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+    <div class="war">
+        <canvas id="lane" width="1280" height="720" aria-label="Sokak savunması"></canvas>
+        <header class="hud">
+            <a class="back" href="../index.html">Geri</a>
+            <div class="res-row" aria-label="Ganimet">
+                <span class="res wood" id="res-wood"><i aria-hidden="true"></i><small>Tahta</small><b>0</b></span>
+                <span class="res iron" id="res-iron"><i aria-hidden="true"></i><small>Demir</small><b>0</b></span>
+                <span class="res coin" id="res-coin"><i aria-hidden="true"></i><small>Para</small><b>0</b></span>
+            </div>
+            <b class="beta-badge">Son Hat · Beta</b>
+            <strong id="zone-label">İlk Sokak</strong>
+            <button type="button" id="base-toggle">Hatta çek</button>
+        </header>
+        <button type="button" class="mod left" id="weapon-btn" data-hold="weapon">
+            <span class="ring" id="weapon-fill" style="--p:0"></span>
+            <span class="gun g0" id="gun"></span>
+            <span id="weapon-name">Tabanca</span>
+            <span id="weapon-fraction">0/7</span>
+            <span id="weapon-cost"></span>
+        </button>
+        <button type="button" class="mod right" id="recruit-btn" data-hold="recruit">
+            <span class="pips" id="pips"></span>
+            <b class="plus">+1</b>
+            <span class="bar"><i id="recruit-fill"></i></span>
+            <span id="squad-label">3 kişilik birlik</span>
+            <span id="recruit-fraction">0/5</span>
+            <span id="recruit-cost"></span>
+        </button>
+        <div class="hero" aria-hidden="true"><span class="face"></span><span class="lv" id="lv">1</span><strong id="power">30</strong></div>
+        <p class="lane-status" id="lane-status" role="status" aria-live="polite"></p>
+        <div class="result hidden" id="result"></div>
+        <section id="base" class="base hidden"></section>
+        <p class="hint" id="hint">A/D · ← → · sürükle — düz ateş; sandıkta beklemek riskli.</p>
+        <div class="toast" id="toast" role="status"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -195,6 +195,7 @@ header {
 }
 
 .preset-btn {
+    min-height: 44px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
@@ -372,6 +373,7 @@ canvas {
 
 /* Primary Button */
 .btn {
+    min-height: 44px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     border-top: 1px solid var(--glass-highlight);
@@ -400,6 +402,19 @@ canvas {
     transform: translateY(1px);
 }
 
+/* Keyboard focus */
+button:focus-visible,
+a:focus-visible,
+input[type=range]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.toggle input:focus-visible+.slider {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
 /* Mobile Controls (hidden by default) */
 .mobile-controls {
     display: none;
@@ -417,6 +432,8 @@ canvas {
 .d-pad {
     width: 60px;
     height: 60px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);

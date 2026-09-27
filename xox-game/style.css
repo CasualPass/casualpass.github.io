@@ -43,6 +43,7 @@ body {
     text-decoration: none;
     font-weight: 600;
     padding: 0.8rem 1.5rem;
+    min-height: 44px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 30px;
@@ -50,6 +51,14 @@ body {
     transition: all 0.3s ease;
     z-index: 50;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--cp-accent);
+    outline-offset: 3px;
 }
 
 .back-btn:hover {
@@ -492,5 +501,16 @@ header {
     .game-container {
         padding: 1.5rem;
         width: 95%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back-btn:hover,
+    .icon-btn:hover,
+    .preset-btn:hover,
+    .cell:hover:not(.occupied),
+    .btn:hover {
+        transform: none;
+        transition: none;
     }
 }

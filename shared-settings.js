@@ -18,6 +18,12 @@ function setCookieValue(name, value) {
     document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${CP_COOKIE_AGE}; Path=/; SameSite=Lax${secure}`;
 }
 
+/** True while any cheat code is active; persistence is blocked in that case. */
+function cheatsActive() {
+    const cheats = window.CasualCheats;
+    return Boolean(cheats && typeof cheats.active === 'function' && cheats.active());
+}
+
 function loadSettings() {
     try {
         const saved = JSON.parse(getCookieValue(CP_SETTINGS_COOKIE) || '{}');
@@ -73,10 +79,13 @@ function getGameStats() {
 }
 
 function saveGameStats(stats) {
+    // A cheat session keeps the last legitimate statistics in the cookie.
+    if (cheatsActive()) return;
     setCookieValue(CP_STATS_COOKIE, JSON.stringify(stats));
 }
 
 function recordGameResult(gameName, result) {
+    if (cheatsActive()) return;
     const stats = getGameStats();
     if (!stats[gameName]) stats[gameName] = { played: 0, won: 0, highScore: 0, totalScore: 0 };
     const game = stats[gameName];

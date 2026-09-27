@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreElem = document.getElementById("score");
     const highScoreElem = document.getElementById("high-score");
     const overlay = document.getElementById("game-over-overlay");
+    const overlayTitle = document.getElementById("game-over-title");
     const restartBtn = document.getElementById("restart-btn");
 
     // Grid details
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let trail = [];
     let tail = 5;
     let score = 0;
-    let highScore = getCookieValue('cp_snake_highscore') || 0;
+    let highScore = Number(getCookieValue('cp_snake_highscore')) || 0;
     let gameLoop;
     let isGameOver = false;
     let gameStarted = false;
@@ -52,7 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update Initial High Score
     highScoreElem.textContent = highScore;
 
+    function cheatImmortal() {
+        const cheats = window.CasualCheats;
+        return Boolean(cheats && typeof cheats.immortal === 'function' && cheats.immortal());
+    }
+
+    function cheatPlus() {
+        const cheats = window.CasualCheats;
+        return Number(cheats && typeof cheats.plus === 'function' ? cheats.plus() : 0) > 0;
+    }
+
     // Reset & Start Game
+    function stopLoop() {
+        if (gameLoop) {
+            clearInterval(gameLoop);
+            gameLoop = null;
+        }
+    }
+
     function initGame() {
         // Apply Configs
         tileCount = parseInt(gridSizeInput.value);
@@ -67,11 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreElem.textContent = score;
         isGameOver = false;
         gameStarted = false;
+        overlayTitle.textContent = "Oyun Bitti";
         overlay.classList.add("hidden");
 
         spawnFood();
-
-        if (gameLoop) clearInterval(gameLoop);
+        stopLoop();
         gameLoop = setInterval(update, 1000 / fps);
     }
 
@@ -83,11 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let headX = snake[0].x + velocity.x;
         let headY = snake[0].y + velocity.y;
 
-        // Boundary Wrap (pass through walls)
         // Boundary Wrap or Death
         if (headX < 0 || headX > tileCount - 1 || headY < 0 || headY > tileCount - 1) {
-            if (wallDeath) {
-                gameOver();
+            if (wallDeath && !cheatImmortal()) {
+                finish(false);
                 return;
             } else {
                 if (headX < 0) headX = tileCount - 1;
@@ -101,28 +118,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Process only if moving
         if (gameStarted) {
-            // Self Collision Check
-            for (let i = 0; i < snake.length; i++) {
-                if (snake[i].x === headX && snake[i].y === headY) {
-                    gameOver();
-                    return;
+            const eating = headX === food.x && headY === food.y;
+            // The tail cell frees up on this tick, so it is only solid when the snake grows.
+            const solidCount = eating ? snake.length : snake.length - 1;
+            // Immortal mode never ends the run, not even while the snake is growing.
+            if (!cheatImmortal()) {
+                for (let i = 0; i < solidCount; i++) {
+                    if (snake[i].x === headX && snake[i].y === headY) {
+                        finish(false);
+                        return;
+                    }
                 }
             }
 
             snake.unshift(newHead);
 
             // Check food collision
-            if (headX === food.x && headY === food.y) {
+            if (eating) {
                 score += 10;
                 scoreElem.textContent = score;
-                tail++;
-                spawnFood();
+                tail = Math.min(tileCount * tileCount - (cheatImmortal() ? 1 : 0), tail + 1);
                 playEatSound();
-            } else {
-                // If we didn't eat, pop the tail to keep length consistent
+                if (!spawnFood()) {
+                    if (!cheatImmortal()) {
+                        draw();
+                        finish(true);
+                        return;
+                    }
+                    snake.pop();
+                    spawnFood();
+                }
+            } else if (!cheatPlus()) {
                 while (snake.length > tail) {
                     snake.pop();
                 }
+            } else {
+                tail = Math.min(tileCount * tileCount - (cheatImmortal() ? 1 : 0), tail + 1);
+                while (snake.length > tail) snake.pop();
             }
         }
 
@@ -182,36 +214,39 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.shadowBlur = 0; // cleanup
     }
 
-    // Spawn Apple away from snake
+    // Spawn Apple on a random free cell. Returns false only when the board is full.
     function spawnFood() {
-        let valid = false;
-        while (!valid) {
-            food.x = Math.floor(Math.random() * tileCount);
-            food.y = Math.floor(Math.random() * tileCount);
-
-            valid = true;
-            for (let i = 0; i < snake.length; i++) {
-                if (snake[i].x === food.x && snake[i].y === food.y) {
-                    valid = false;
-                    break;
-                }
+        const occupied = new Set(snake.map((segment) => `${segment.x},${segment.y}`));
+        const free = [];
+        for (let x = 0; x < tileCount; x++) {
+            for (let y = 0; y < tileCount; y++) {
+                if (!occupied.has(`${x},${y}`)) free.push(x * tileCount + y);
             }
         }
+        if (!free.length) return false;
+        const cell = free[Math.floor(Math.random() * free.length)];
+        food.x = Math.floor(cell / tileCount);
+        food.y = cell % tileCount;
+        return true;
     }
 
-    function gameOver() {
+    function finish(won) {
+        if (isGameOver) return;
         isGameOver = true;
+        stopLoop();
         if (score > highScore) {
             highScore = score;
-            setCookieValue('cp_snake_highscore', String(highScore));
+            // A cheat score is display only; the stored high score stays untouched.
+            if (!cheatsActive()) setCookieValue('cp_snake_highscore', String(highScore));
             highScoreElem.textContent = highScore;
         }
+        overlayTitle.textContent = won ? "Tahtayı doldurdun!" : "Oyun Bitti";
         overlay.classList.remove("hidden");
-        playDieSound();
+        if (!won) playDieSound();
 
         // Record stats
         if (typeof recordGameResult === 'function') {
-            recordGameResult('Snake', { won: false, score: score });
+            recordGameResult('Snake', { won, score: score });
         }
     }
 
@@ -247,9 +282,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dir === 'RIGHT' && velocity.x !== -1) { velocity.x = 1; velocity.y = 0; }
     }
 
+    const ARROW_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+
+    function isFormControl(node) {
+        return node instanceof HTMLElement
+            && (node.isContentEditable || /^(input|select|textarea|option)$/i.test(node.tagName));
+    }
+
     document.addEventListener("keydown", (e) => {
+        // Sliders, toggles and the menu itself keep their own arrow/WASD keys.
+        if (isFormControl(e.target) || boardWrapper.classList.contains("hidden")) return;
+
         // Prevent default scrolling for arrows
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (ARROW_KEYS.includes(e.key)) {
             e.preventDefault();
         }
 
@@ -305,8 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateActivePreset(presetName) {
         presetBtns.forEach(b => {
-            if (b.getAttribute("data-preset") === presetName) b.classList.add("active");
-            else b.classList.remove("active");
+            const isActive = b.getAttribute("data-preset") === presetName;
+            b.classList.toggle("active", isActive);
+            b.setAttribute("aria-pressed", String(isActive));
         });
     }
 
@@ -344,8 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.add("hidden");
         boardWrapper.classList.add("hidden");
         configMenu.classList.remove("hidden");
-        if (gameLoop) clearInterval(gameLoop);
+        stopLoop();
     });
+
+    window.addEventListener('casual-cheat-set', (event) => {
+        score = event.detail.n;
+        scoreElem.textContent = score;
+    });
+    setInterval(() => {
+        if (!window.CasualCheats || !gameStarted || isGameOver) return;
+        // Fractional rates and one-point interval modes share the same tick API.
+        const gain = window.CasualCheats.tick();
+        if (!gain) return;
+        score = Number((score + gain).toFixed(3));
+        scoreElem.textContent = score;
+    }, 1000);
 
     restartBtn.addEventListener("click", () => {
         playUiClickSound();

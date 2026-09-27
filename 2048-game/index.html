@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2048 - CasualPass</title>
+    <title>2048 — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js"></script>
+    <script src="../casual-cheats.js"></script>
 </head>
 
 <body class="theme-liquid">
     <!-- Dynamic Background via Shared Settings -->
-    <div id="global-bg-container" class="background-container"></div>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
     <a href="../index.html" class="back-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -21,7 +23,7 @@
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Back to Games</span>
+        <span>Oyunlara Dön</span>
     </a>
 
     <main class="game-container">
@@ -29,11 +31,11 @@
             <h1 class="glow-text">2048</h1>
             <div class="scores">
                 <div class="score-card">
-                    <span class="player-label">Score</span>
+                    <span class="player-label">Skor</span>
                     <span class="score-value" id="score">0</span>
                 </div>
                 <div class="score-card personal-best">
-                    <span class="player-label">Best</span>
+                    <span class="player-label">Rekor</span>
                     <span class="score-value" id="best-score">0</span>
                 </div>
             </div>
@@ -48,27 +50,27 @@
             <div id="game-over-overlay" class="overlay hidden">
                 <h2 class="game-over-text" id="game-over-text">Oyun Bitti!</h2>
                 <p class="final-score-text">Skor: <span id="final-score">0</span></p>
-                <button class="btn" id="restart-btn">Tekrar Oyna</button>
-                <button class="btn text-btn" id="back-to-menu-btn"
+                <button type="button" class="btn" id="restart-btn">Tekrar Oyna</button>
+                <button type="button" class="btn text-btn" id="back-to-menu-btn"
                     style="margin-top: 10px; background: transparent; border: none; font-size: 0.9rem;">
-                    Menuye Don
+                    Menüye Dön
                 </button>
             </div>
         </div>
 
         <div class="game-controls">
-            <button class="btn" id="new-game-btn">Yeni Oyun</button>
+        <button type="button" class="btn" id="new-game-btn">Yeni Oyun</button>
         </div>
 
         <!-- Mobile Controls -->
         <div class="mobile-controls">
-            <button class="d-pad up" data-dir="up">&#9650;</button>
+            <button type="button" class="d-pad up" data-dir="up" aria-label="Yukarı">&#9650;</button>
             <div class="d-pad-middle">
-                <button class="d-pad left" data-dir="left">&#9664;</button>
+                <button type="button" class="d-pad left" data-dir="left" aria-label="Sola">&#9664;</button>
                 <div class="d-pad-center"></div>
-                <button class="d-pad right" data-dir="right">&#9654;</button>
+                <button type="button" class="d-pad right" data-dir="right" aria-label="Sağa">&#9654;</button>
             </div>
-            <button class="d-pad down" data-dir="down">&#9660;</button>
+            <button type="button" class="d-pad down" data-dir="down" aria-label="Aşağı">&#9660;</button>
         </div>
     </main>
 

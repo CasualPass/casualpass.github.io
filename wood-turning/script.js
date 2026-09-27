@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         particles: [],
         activeTool: 'rough',
         guestPaint: 'honey',
+        cheatPaint: null,
         pointer: { down: false, inside: false, x: 0, y: 0 },
         gestureUsed: false,
         stageSnapshot: null,
@@ -131,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextStage: document.getElementById('next-stage'),
         resetStage: document.getElementById('reset-stage'),
         sandCoverage: document.getElementById('sand-coverage'),
+        sanderSize: document.getElementById('sander-size'),
         paintCoverage: document.getElementById('paint-coverage'),
         paintPalette: document.getElementById('paint-palette'),
         topBalance: document.getElementById('top-balance'),
@@ -201,16 +203,28 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.play().catch(() => {});
     }
 
+    const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    let lastFocused = null;
+
     function openModal(modal) {
+        lastFocused = document.activeElement;
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+        const preferred = modal.querySelector('[data-initial-focus]');
+        const target = preferred
+            || Array.from(modal.querySelectorAll(FOCUSABLE)).find((node) => !node.hidden && !node.disabled);
+        if (target) setTimeout(() => target.focus(), 40);
     }
 
     function closeModal(modal) {
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
         if (!document.querySelector('.modal-overlay.active')) document.body.style.overflow = '';
+        const restore = lastFocused;
+        lastFocused = null;
+        if (restore && restore !== document.body && document.contains(restore)
+            && !restore.closest('[aria-hidden="true"]')) restore.focus();
     }
 
     function sampleX(index) {
@@ -380,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function selectedPaint() {
         const profile = CasualProfile.current();
-        const id = profile?.selectedPaint || state.guestPaint;
+        const id = window.CasualCheats?.features() && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
         return CasualProfile.paints[id] || CasualProfile.paints.honey;
     }
 
@@ -423,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function sandAt(index, radial, point) {
         if (Math.abs(radial - state.current[index]) > 38) return;
-        const size = Number(document.getElementById('sander-size').value);
+        const size = Number(elements.sanderSize.value);
         const radius = Math.max(4, Math.round(size * .55));
         const snapshot = state.current.slice();
 
@@ -689,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillRect(-16, 70, 32, 72);
             ctx.strokeRect(-16, 70, 32, 72);
         } else {
-            const radius = state.stage === 'sand' ? Number(document.getElementById('sander-size').value) : 28;
+            const radius = state.stage === 'sand' ? Number(elements.sanderSize.value) : 28;
             ctx.strokeStyle = state.stage === 'paint' ? selectedPaint().color : '#f0d29a';
             ctx.lineWidth = 3;
             ctx.setLineDash([5, 5]);
@@ -736,8 +750,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPaintPalette() {
         const profile = CasualProfile.current();
-        const owned = profile?.ownedPaints || ['natural', 'honey'];
-        const active = profile?.selectedPaint || state.guestPaint;
+        const allOpen = Boolean(window.CasualCheats?.features());
+        const owned = allOpen ? Object.keys(CasualProfile.paints) : profile?.ownedPaints || ['natural', 'honey'];
+        const active = allOpen && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
         elements.paintPalette.replaceChildren();
         owned.forEach((paintId) => {
             const paint = CasualProfile.paints[paintId];
@@ -756,7 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function choosePaint(paintId) {
         const profile = CasualProfile.current();
         try {
-            if (profile) CasualProfile.selectPaint(paintId);
+            if (window.CasualCheats?.features()) state.cheatPaint = paintId;
+            else if (profile) CasualProfile.selectPaint(paintId);
             else state.guestPaint = paintId;
             renderPaintPalette();
             renderProfile();
@@ -768,8 +784,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPaintStore(profile) {
-        const owned = profile?.ownedPaints || ['natural', 'honey'];
-        const active = profile?.selectedPaint || state.guestPaint;
+        const allOpen = Boolean(window.CasualCheats?.features());
+        const owned = allOpen ? Object.keys(CasualProfile.paints) : profile?.ownedPaints || ['natural', 'honey'];
+        const active = allOpen && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
         elements.paintCount.textContent = `${owned.length}/${Object.keys(CasualProfile.paints).length}`;
         elements.paintStoreList.replaceChildren();
 
@@ -792,17 +809,18 @@ document.addEventListener('DOMContentLoaded', () => {
             button.append(swatch, copy, price);
 
             button.addEventListener('click', () => {
-                const currentProfile = CasualProfile.current();
-                if (!currentProfile) {
+                if (allOpen) { choosePaint(paint.id); return; }
+                if (!CasualProfile.current()) {
                     if (isOwned) choosePaint(paint.id);
                     else openLogin();
                     return;
                 }
+                const alreadyOwned = CasualProfile.current().ownedPaints.includes(paint.id);
                 try {
-                    if (currentProfile.ownedPaints.includes(paint.id)) CasualProfile.selectPaint(paint.id);
+                    if (alreadyOwned) CasualProfile.selectPaint(paint.id);
                     else CasualProfile.buyPaint(paint.id);
                     renderProfile();
-                    showToast(currentProfile.ownedPaints.includes(paint.id) ? `${paint.name} seçildi.` : `${paint.name} satın alındı.`);
+                    showToast(alreadyOwned ? `${paint.name} seçildi.` : `${paint.name} satın alındı.`);
                     playSound('pop');
                 } catch (error) {
                     showToast(error.message);
@@ -834,7 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function openLogin() {
         elements.loginError.textContent = '';
         openModal(elements.loginModal);
-        setTimeout(() => elements.username.focus(), 40);
     }
 
     function finishOrder() {
@@ -876,7 +893,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.resultSand.textContent = `${result.sand}%`;
         elements.resultPaint.textContent = `${result.paint}%`;
         elements.rewardValue.textContent = CasualProfile.formatMoney(result.reward);
-        elements.rewardMultiplier.textContent = `${formatMultiplier(office.multiplier)} ofis çarpanı`;
+        const rebirth = CasualProfile.earnMultiplier(profile);
+        elements.rewardMultiplier.textContent = rebirth > 1 ? `${formatMultiplier(office.multiplier)} ofis · x${rebirth} yeniden doğuş` : `${formatMultiplier(office.multiplier)} ofis çarpanı`;
         elements.guestWarning.hidden = result.awarded;
     }
 
@@ -1046,6 +1064,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('casualprofilechange', renderProfile);
+    window.addEventListener('casual-cheat', () => {
+        if (!window.CasualCheats?.features()) state.cheatPaint = null;
+        renderPaintPalette();
+        renderProfile();
+    });
 
     renderProfile();
     beginOrder();

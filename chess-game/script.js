@@ -240,6 +240,24 @@ function snapPieceBack() {
 function tryMove(from, to, animate = true) {
     const moveAttempt = gameEngine.move({ from, to, promotion: 'q' });
     if (moveAttempt) {
+        if (isImmortalEnabled() && gameEngine.in_checkmate() && (!isVersusBot || matesWhite())) {
+            gameEngine.undo();
+            selectedSquare = null;
+            renderPieces();
+            const hasNonMatingMove = gameEngine.moves({ verbose: true }).some((candidate) => {
+                gameEngine.move(candidate);
+                const mate = gameEngine.in_checkmate();
+                gameEngine.undo();
+                return !mate;
+            });
+            if (hasNonMatingMove) updateImmortalStatus();
+            else {
+                gameActive = false;
+                overlay.classList.remove('hidden');
+                gameOverText.textContent = 'BERABERE · Ölümsüzlük mat hamlelerini engelledi';
+            }
+            return false;
+        }
         if (typeof playClickSound === 'function') playClickSound();
         selectedSquare = null;
         renderPiecesWithoutRebuilding(); // Clear selections
@@ -259,6 +277,20 @@ function tryMove(from, to, animate = true) {
         return true;
     }
     return false;
+}
+
+function isImmortalEnabled() {
+    return Boolean(window.CasualCheats && CasualCheats.immortal());
+}
+
+function matesWhite() {
+    return gameEngine.in_checkmate() && gameEngine.turn() === 'w';
+}
+
+function updateImmortalStatus() {
+    const turn = gameEngine.turn();
+    statusDisplay.className = `status-display ${turn === 'w' ? 'turn-white' : 'turn-black'}`;
+    statusDisplay.textContent = `Ölümsüzlük: Beyaz şah mat edilemez. Sıra: ${turn === 'w' ? 'Beyaz' : 'Siyah'}`;
 }
 
 /**
@@ -309,7 +341,7 @@ function renderPiecesWithoutRebuilding() {
  * Handle interaction logic when a player clicks a square
  */
 function handleSquareClick(squareId) {
-    if (gameEngine.game_over() || gameEngine.turn() !== 'w') return; // Only allow clicks on player's turn
+    if (gameEngine.game_over() || !gameActive || (isVersusBot && gameEngine.turn() !== 'w')) return;
 
     const pieceOnSquare = gameEngine.get(squareId);
 
@@ -351,13 +383,32 @@ function makeCasualFishMove() {
     let bestMove = null;
     let possibleMoves = gameEngine.moves({ verbose: true });
 
-    if (possibleMoves.length === 0) return;
+    if (isImmortalEnabled()) {
+        possibleMoves = possibleMoves.filter(move => {
+            gameEngine.move(move);
+            const isMate = matesWhite();
+            gameEngine.undo();
+            return !isMate;
+        });
+    }
+
+    if (possibleMoves.length === 0) {
+        gameActive = false;
+        overlay.classList.remove('hidden');
+        gameOverText.textContent = 'BERABERE · Ölümsüzlük mat hamlesini engelledi';
+        return;
+    }
 
     if (botDifficulty === 1) {
         bestMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
     } else {
         const depth = botDifficulty === 2 ? 2 : 3;
         bestMove = minimaxRoot(depth, gameEngine, true);
+    }
+
+    if (bestMove && isImmortalEnabled()) {
+        const bestSan = typeof bestMove === 'string' ? bestMove : bestMove.san;
+        if (!possibleMoves.some(move => move.san === bestSan)) bestMove = possibleMoves[0];
     }
 
     if (bestMove) {
@@ -403,13 +454,13 @@ function minimaxRoot(depth, engine, isMaximizingPlayer) {
     // when multiple moves have the exact same evaluation score.
     newGameMoves.sort(() => Math.random() - 0.5);
 
-    let bestMove = -9999;
+    let bestMove = -Infinity;
     let bestMoveFound = newGameMoves[0];
 
     for (let i = 0; i < newGameMoves.length; i++) {
         const newGameMove = newGameMoves[i];
         engine.move(newGameMove);
-        const value = minimax(depth - 1, engine, -10000, 10000, !isMaximizingPlayer);
+        const value = minimax(depth - 1, engine, -Infinity, Infinity, !isMaximizingPlayer);
         engine.undo();
         if (value > bestMove) { // Use strictly greater than to preserve randomized first-best
             bestMove = value;
@@ -420,6 +471,12 @@ function minimaxRoot(depth, engine, isMaximizingPlayer) {
 }
 
 function minimax(depth, engine, alpha, beta, isMaximizingPlayer) {
+    if (engine.in_checkmate()) {
+        return engine.turn() === 'w' ? 100000 + depth : -100000 - depth;
+    }
+    if (engine.in_draw() || engine.in_stalemate()) {
+        return 0;
+    }
     if (depth === 0) {
         return evaluateBoard(engine);
     }
@@ -427,7 +484,7 @@ function minimax(depth, engine, alpha, beta, isMaximizingPlayer) {
     const newGameMoves = engine.moves();
 
     if (isMaximizingPlayer) {
-        let bestMove = -9999;
+        let bestMove = -Infinity;
         for (let i = 0; i < newGameMoves.length; i++) {
             engine.move(newGameMoves[i]);
             bestMove = Math.max(bestMove, minimax(depth - 1, engine, alpha, beta, !isMaximizingPlayer));
@@ -437,7 +494,7 @@ function minimax(depth, engine, alpha, beta, isMaximizingPlayer) {
         }
         return bestMove;
     } else {
-        let bestMove = 9999;
+        let bestMove = Infinity;
         for (let i = 0; i < newGameMoves.length; i++) {
             engine.move(newGameMoves[i]);
             bestMove = Math.min(bestMove, minimax(depth - 1, engine, alpha, beta, !isMaximizingPlayer));
@@ -468,15 +525,15 @@ function updateStatus() {
 
     statusDisplay.className = 'status-display';
     if (isWhiteTurn) {
-        statusDisplay.textContent = 'Sıra: Beyaz (White)';
+        statusDisplay.textContent = 'Sıra: Beyaz';
         statusDisplay.classList.add('turn-white');
     } else {
-        statusDisplay.textContent = 'Sıra: Siyah (Black)';
+        statusDisplay.textContent = 'Sıra: Siyah';
         statusDisplay.classList.add('turn-black');
     }
 
     if (gameEngine.in_check() && !gameEngine.game_over()) {
-        statusDisplay.textContent += ' - ŞAH (CHECK)';
+        statusDisplay.textContent += ' - ŞAH';
     }
 }
 
@@ -489,12 +546,12 @@ function checkGameOver() {
         if (typeof playPopSound === 'function') playPopSound();
 
         if (gameEngine.in_checkmate()) {
-            const winner = gameEngine.turn() === 'w' ? 'Siyah (Black)' : 'Beyaz (White)';
+            const winner = gameEngine.turn() === 'w' ? 'Siyah' : 'Beyaz';
             gameOverText.textContent = `ŞAH MAT! ${winner} Kazandı.`;
         } else if (gameEngine.in_draw()) {
-            gameOverText.textContent = 'BERABERE (Draw)';
+            gameOverText.textContent = 'BERABERE';
         } else if (gameEngine.in_stalemate()) {
-            gameOverText.textContent = 'PAT (Stalemate)';
+            gameOverText.textContent = 'PAT';
         } else {
             gameOverText.textContent = 'OYUN BİTTİ';
         }
@@ -525,10 +582,11 @@ function resetGame() {
  * Handle resign
  */
 function resignGame() {
+    if (window.CasualCheats && CasualCheats.immortal()) return;
     if (!gameActive || gameEngine.game_over()) return;
     overlay.classList.remove('hidden');
     gameActive = false;
-    const winner = gameEngine.turn() === 'w' ? 'Siyah (Black)' : 'Beyaz (White)';
+    const winner = gameEngine.turn() === 'w' ? 'Siyah' : 'Beyaz';
     gameOverText.textContent = `ÇEKİLDİ! ${winner} Kazandı.`;
 
     if (typeof recordGameResult === 'function') {

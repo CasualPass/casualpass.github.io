@@ -76,6 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (isImmortalEnabled() && (mode === 'local' || currentPlayer === 'O') && wouldWin(clickedCellIndex, currentPlayer)) {
+            if (getAvailableCells(board).every((index) => wouldWin(index, currentPlayer))) {
+                gameActive = false;
+                statusDisplay.textContent = 'Berabere! Kazandıran kutular engellendi.';
+            } else {
+                statusDisplay.textContent = 'Ölümsüzlük: kazandıran kutu engellendi. Başka kutu seç.';
+            }
+            return;
+        }
+
         handleCellPlayed(clickedCell, clickedCellIndex);
         handleResultValidation();
     }
@@ -110,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (roundWon) {
-            statusDisplay.innerHTML = winningMessage();
+            statusDisplay.textContent = winningMessage();
             gameActive = false;
 
             winningCells.forEach(index => {
@@ -139,21 +149,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Record stats
             if (typeof recordGameResult === 'function') {
                 const isPlayer1Win = currentPlayer === 'X';
-                recordGameResult('Tic Tac Toe', { won: isPlayer1Win, score: 0 });
+                recordGameResult('XOX', { won: isPlayer1Win, score: 0 });
             }
             return;
         }
 
         const roundDraw = !board.includes('');
         if (roundDraw) {
-            statusDisplay.innerHTML = drawMessage();
+            statusDisplay.textContent = drawMessage();
             gameActive = false;
             statusDisplay.style.color = 'var(--text-primary)';
             statusDisplay.style.textShadow = 'none';
 
             // Record draw as played
             if (typeof recordGameResult === 'function') {
-                recordGameResult('Tic Tac Toe', { won: false, score: 0 });
+                recordGameResult('XOX', { won: false, score: 0 });
             }
             return;
         }
@@ -163,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handlePlayerChange() {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        statusDisplay.innerHTML = currentPlayerTurn();
+        statusDisplay.textContent = currentPlayerTurn();
         updateActiveCard();
 
         statusDisplay.style.color = 'var(--text-primary)';
@@ -191,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayer = 'X';
         board = ['', '', '', '', '', '', '', '', ''];
 
-        statusDisplay.innerHTML = currentPlayerTurn();
+        statusDisplay.textContent = currentPlayerTurn();
         statusDisplay.style.color = 'var(--text-primary)';
         statusDisplay.style.textShadow = 'none';
 
@@ -302,10 +312,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* --- LEADERBOARD LOGIC --- */
     function getLeaderboard() {
-        return JSON.parse(getCookieValue('cp_xox_leaderboard') || '{}');
+        try {
+            const leaderboard = JSON.parse(getCookieValue('cp_xox_leaderboard') || '{}');
+            return leaderboard && typeof leaderboard === 'object' && !Array.isArray(leaderboard) ? leaderboard : {};
+        } catch {
+            return {};
+        }
     }
 
     function saveToLeaderboard(winnerName) {
+        if (window.CasualCheats?.active()) return;
         if (winnerName.includes("Bot")) return; // Don't save bot wins
 
         const lb = getLeaderboard();
@@ -329,8 +345,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sorted.forEach(([name, wins], index) => {
             const row = document.createElement('div');
             row.className = 'lb-row';
-            let medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
-            row.innerHTML = `<span>${medal} ${name}</span> <span style="color:var(--cp-accent);font-weight:bold;">${wins} Kazanma</span>`;
+            const player = document.createElement('span');
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
+            player.textContent = `${medal} ${name}`;
+            const total = document.createElement('span');
+            total.style.cssText = 'color:var(--cp-accent);font-weight:bold;';
+            total.textContent = `${wins} Kazanma`;
+            row.append(player, total);
             leaderboardContent.appendChild(row);
         });
     }
@@ -361,11 +382,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return gameWon;
     }
 
+    function isImmortalEnabled() {
+        return Boolean(window.CasualCheats && CasualCheats.immortal());
+    }
+
+    function wouldWin(index, player) {
+        const candidate = [...board];
+        candidate[index] = player;
+        return Boolean(checkWinCondition(candidate, player));
+    }
+
     function makeBotMove() {
         if (!gameActive || currentPlayer !== 'O') return;
 
         let available = getAvailableCells(board);
         if (available.length === 0) return;
+
+        if (isImmortalEnabled()) {
+            available = available.filter(index => !wouldWin(index, 'O'));
+            if (available.length === 0) {
+                gameActive = false;
+                statusDisplay.textContent = 'Berabere! Kazandıran kutular engellendi.';
+                return;
+            }
+        }
 
         let moveIndex;
 
@@ -380,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (botDifficulty === "impossible") {
             // Minimax algorithm
             moveIndex = minimax(board, "O").index;
+            if (!available.includes(moveIndex)) moveIndex = available[Math.floor(Math.random() * available.length)];
         }
 
         const cellToClick = cells[moveIndex];

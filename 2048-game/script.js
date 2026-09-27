@@ -24,6 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ── helpers ─────────────────────────────────── */
 
+    function cheatImmortal() {
+        const cheats = window.CasualCheats;
+        return Boolean(cheats && typeof cheats.immortal === 'function' && cheats.immortal());
+    }
+
+    function makeRoomForImmortal() {
+        let smallest = null;
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                const tile = cells[r][c];
+                if (tile && (!smallest || tile.value < smallest.tile.value)) smallest = { r, c, tile };
+            }
+        }
+        if (smallest) {
+            smallest.tile.el.remove();
+            cells[smallest.r][smallest.c] = null;
+        }
+    }
+
     function cellSize() {
         return (gridEl.offsetWidth - GAP * (SIZE - 1)) / SIZE;
     }
@@ -201,7 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        if (!moved) return;
+        if (!moved) {
+            if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
+            return;
+        }
         moving = true;
 
         setTimeout(() => {
@@ -210,7 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreEl.textContent = score;
             if (score > bestScore) {
                 bestScore = score;
-                setCookieValue('cp_2048_best', String(bestScore));
+                // A cheat score is display only; the stored best stays untouched.
+                if (!cheatsActive()) setCookieValue('cp_2048_best', String(bestScore));
                 bestScoreEl.textContent = bestScore;
             }
 
@@ -220,9 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (anyMerge && typeof playPopSound   === 'function') playPopSound();
             else if        (typeof playClickSound === 'function') playClickSound();
 
-            if (won && !gameOver) {
+            if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
+            if (won && !gameOver && !cheatImmortal()) {
                 endGame(true);
-            } else if (isGameOver()) {
+            } else if (isGameOver() && !cheatImmortal()) {
                 endGame(false);
             }
         }, ANIM_MS + 10);
@@ -280,6 +304,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.d-pad').forEach(btn =>
         btn.addEventListener('click', () => move(btn.dataset.dir))
     );
+
+    window.addEventListener('casual-cheat-set', (event) => {
+        score = event.detail.n;
+        scoreEl.textContent = score;
+    });
+    setInterval(() => {
+        if (!window.CasualCheats || gameOver) return;
+        // Fractional rates and one-point interval modes share the same tick API.
+        const gain = window.CasualCheats.tick();
+        if (!gain) return;
+        score = Number((score + gain).toFixed(3));
+        scoreEl.textContent = score;
+    }, 1000);
 
     restartBtn.addEventListener('click', () => {
         if (typeof playClickSound === 'function') playClickSound();

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Chess Game</title>
+    <title>Satranç — CasualPass</title>
 
     <!-- Load Global Settings First -->
     <link rel="stylesheet" href="../shared-settings.css">
@@ -20,11 +20,13 @@
 
     <!-- Global Setting Script -->
     <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js"></script>
+    <script src="../casual-cheats.js"></script>
 </head>
 
-<body>
+<body class="theme-liquid">
     <!-- Global Dynamic Background -->
-    <div id="global-bg-container" class="background-container"></div>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
     <!-- Global Menu Navigation -->
     <a href="../index.html" class="back-btn">
@@ -40,24 +42,24 @@
     <div class="game-container">
         <!-- Header -->
         <header>
-            <h1 class="glow-text">CHESS</h1>
+            <h1 class="glow-text">SATRANÇ</h1>
         </header>
 
         <!-- Pre-Game Lobby Overlay -->
         <div id="lobby-menu" class="config-menu">
-            <h2>GAME SETUP</h2>
+            <h2>Oyun ayarı</h2>
 
             <div class="custom-settings">
                 <div class="setting-row">
-                    <label>Opponent Type</label>
+                    <label>Rakip</label>
                     <div class="preset-buttons" id="opponent-selector">
-                        <button class="preset-btn active" data-opponent="ai">CasualFish (Bot)</button>
-                        <button class="preset-btn" data-opponent="local">Lokal (1v1)</button>
+                        <button type="button" class="preset-btn active" data-opponent="ai">CasualFish (Yapay zekâ)</button>
+                        <button type="button" class="preset-btn" data-opponent="local">Yerel (1'e 1)</button>
                     </div>
                 </div>
 
                 <div class="setting-row" id="difficulty-wrapper">
-                    <label>CasualFish Difficulty</label>
+                    <label>CasualFish zorluğu</label>
                     <input type="range" id="bot-difficulty" min="1" max="3" value="2" step="1">
                     <div
                         style="display: flex; justify-content: space-between; padding: 0 10px; font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
@@ -68,12 +70,12 @@
                 </div>
             </div>
 
-            <button id="start-game-btn" class="btn">OYUNA BAŞLA</button>
+            <button type="button" id="start-game-btn" class="btn">OYUNA BAŞLA</button>
         </div>
 
         <!-- Player Turn Status Information -->
         <div class="status-panel">
-            <div id="status-display" class="status-display turn-white">Sıra: Beyaz (White)</div>
+            <div id="status-display" class="status-display turn-white">Sıra: Beyaz</div>
         </div>
 
         <!-- The Chess Board Container -->
@@ -85,13 +87,13 @@
             <!-- Game Over Overlay Modal -->
             <div id="game-over-overlay" class="overlay hidden" style="z-index: 100;">
                 <h2 id="game-over-text" class="game-over-text">ŞAH MAT</h2>
-                <button id="reset-btn" class="btn">Lobiye Dön</button>
+                <button type="button" id="reset-btn" class="btn">Lobiye Dön</button>
             </div>
         </div>
 
         <!-- Captured Pieces / Logs / Extras -->
         <div class="hud-panel">
-            <button id="resign-btn" class="secondary-btn">Oyundan Çekil</button>
+            <button type="button" id="resign-btn" class="secondary-btn">Oyundan Çekil</button>
         </div>
     </div>
 
