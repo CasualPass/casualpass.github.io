@@ -2,7 +2,7 @@
 
 ## Proje özeti
 
-CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game` ve `chess-game` sayfalarına doğrudan bağlanır.
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat` ve `owl-game` sayfalarına doğrudan bağlanır.
 
 ## 2026-08-31 — Çerez odaklı dashboard yenilemesi
 
@@ -45,3 +45,23 @@ Ana sayfayı kaydırmalı bir vitrin yerine sade bir dashboard’a dönüştürm
 - `rg -n "localStorage" --glob '*.js' --glob '*.html'`: Aktif JavaScript/HTML içinde localStorage kullanımı kalmadığı doğrulandı.
 - `git diff --check`: Başarıyla tamamlandı.
 - `node --check`: Çalıştırılamadı; çalışma ortamında `node` komutu bulunmuyor. JavaScript dosyaları ilgili tarayıcı sayfalarında yüklenip yürütüldü.
+
+## 2026-09-30 — Minerva Owl
+
+### Amaç
+
+Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu eklemek; diğer baykuşları CasualMoney ile satın alınabilir yapmak.
+
+### Yapılanlar
+
+- `owl-game/`: Canvas tabanlı uçuş oyunu. Baykuş mermer sütunların arasından geçer, her sütun 1 puan verir. Boşluk/↑/W, tıklama veya dokunma ile kanat çırpılır; Esc ya da sekme değişimi oyunu duraklatır. Fizik 1/120 sn alt adımlarla çalışır, böylece düşük FPS'de de hız aynıdır.
+- `casual-profile.js`: `owls` kataloğu (Minerva ücretsiz; Kar 80, Peçeli 150, Puhu 260, Gece 420, Altın 750 CM), `ownedOwls`/`selectedOwl` profil alanları, `buyOwl`, `selectOwl`, `owlRewardForScore`, `awardOwlFlight` eklendi. Uçuş ödülü `floor(skor / 2)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` baykuşları da açar.
+- `casual-cheats.js`: Ölümsüzlük baykuşu düşürmez; `allopen` baykuşları kaydetmeden önizlemeye açar. İpuçları güncellendi.
+- `index.html`, `style.css`: Dashboard'a 7. kart (Minerva Owl) eklendi; grid masaüstünde 7, tablette 4, telefonda 2 sütun (tek kalan kart tam genişlik).
+- Rekor `cp_owl_best` çerezinde, istatistik `recordGameResult('Minerva Owl', …)` ile tutulur. Hile açıkken rekor, ödül ve satın alma kaydedilmez.
+
+### Testler
+
+- `node --check`: `casual-profile.js`, `casual-cheats.js`, `owl-game/script.js`, `script.js` başarılı.
+- Playwright (Chromium) uçtan uca: oturum başlatma (+15 CM), yetersiz bakiyede satın alma reddi, gerçek uçuş ve çarpışma sonrası sonuç ekranı, 20 puan → 10 CM, 500 puan → 40 CM tavanı, Kar Baykuşu'nu 80 CM'ye alıp seçme, yenileme sonrası seçimin korunması, ölümsüzlük hilesinde sütunlardan geçip puan alma.
+- Görsel kontrol: masaüstü, 390 px telefon, 1000 px tablet dashboard'u ve Paper teması. Konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hataları görüldü.

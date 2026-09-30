@@ -9,6 +9,7 @@
     const DAILY_REWARD = 20;
     const REBIRTH_BASE = 500;
     const MAX_REBIRTHS = 8;
+    const OWL_REWARD_CAP = 40;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -26,6 +27,15 @@
         paper: { id: 'paper', name: 'Paper', description: 'Açık ve temiz', price: 30, preview: ['#f1f3f5', '#2980b9'] },
         neon: { id: 'neon', name: 'Neon', description: 'Gece ışıkları', price: 180, preview: ['#111111', '#00f2fe'] },
         retro: { id: 'retro', name: 'Retro', description: 'Piksel nostaljisi', price: 300, preview: ['#1a1c2c', '#ffcd75'] }
+    };
+
+    const owls = {
+        minerva: { id: 'minerva', name: 'Minerva', description: 'Bilgeliğin baykuşu', price: 0 },
+        snowy: { id: 'snowy', name: 'Kar Baykuşu', description: 'Kuzeyden sessiz kanat', price: 80 },
+        barn: { id: 'barn', name: 'Peçeli Baykuş', description: 'Kalp yüzlü avcı', price: 150 },
+        eagle: { id: 'eagle', name: 'Puhu', description: 'Kulaklı gece devi', price: 260 },
+        cosmic: { id: 'cosmic', name: 'Gece Baykuşu', description: 'Yıldız tozu bırakır', price: 420 },
+        golden: { id: 'golden', name: 'Altın Baykuş', description: 'Altın iz bırakır', price: 750 }
     };
 
     const offices = [
@@ -93,6 +103,8 @@
             selectedPaint: 'honey',
             ownedThemes: ['liquid'],
             selectedTheme: 'liquid',
+            ownedOwls: ['minerva'],
+            selectedOwl: 'minerva',
             dailyBonusDate: '',
             sessionRewardDate: '',
             rebirths: 0,
@@ -126,6 +138,8 @@
         if (!ownedPaints.includes('honey')) ownedPaints.push('honey');
         const ownedThemes = Array.isArray(safe.ownedThemes) ? safe.ownedThemes.filter((id) => themes[id]) : ['liquid'];
         if (!ownedThemes.includes('liquid')) ownedThemes.unshift('liquid');
+        const ownedOwls = Array.isArray(safe.ownedOwls) ? safe.ownedOwls.filter((id) => owls[id]) : ['minerva'];
+        if (!ownedOwls.includes('minerva')) ownedOwls.unshift('minerva');
         const activities = Array.isArray(safe.activities) ? safe.activities.slice(0, MAX_ACTIVITIES).filter((item) => item && typeof item.label === 'string') : [];
         return {
             id: canonicalUsername(safe.id),
@@ -136,6 +150,8 @@
             selectedPaint: ownedPaints.includes(safe.selectedPaint) ? safe.selectedPaint : 'honey',
             ownedThemes,
             selectedTheme: ownedThemes.includes(safe.selectedTheme) ? safe.selectedTheme : 'liquid',
+            ownedOwls,
+            selectedOwl: ownedOwls.includes(safe.selectedOwl) ? safe.selectedOwl : 'minerva',
             dailyBonusDate: String(safe.dailyBonusDate || ''),
             sessionRewardDate: String(safe.sessionRewardDate || ''),
             rebirths: Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(safe.rebirths) || 0))),
@@ -260,6 +276,21 @@
         return { profile, reward };
     }
 
+    function owlRewardForScore(score) {
+        return Math.min(OWL_REWARD_CAP, Math.floor(Math.max(0, Number(score) || 0) / 2));
+    }
+
+    function awardOwlFlight(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = owlRewardForScore(result?.score);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, 'Minerva Owl uçuşu');
+        });
+        return { profile, reward };
+    }
+
     function buyPaint(paintId) {
         if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
         const paint = paints[paintId];
@@ -309,6 +340,30 @@
         });
         applyTheme(themeId);
         return profile;
+    }
+
+    function buyOwl(owlId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
+        const owl = owls[owlId];
+        if (!owl) throw new Error('Baykuş bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedOwls.includes(owlId)) {
+                if (draft.balance < owl.price) throw new Error('Bu baykuş için yeterli CasualMoney yok.');
+                draft.balance -= owl.price;
+                draft.ownedOwls.push(owlId);
+                addActivity(draft, `${owl.name} açıldı`, -owl.price);
+            }
+            draft.selectedOwl = owlId;
+        });
+    }
+
+    function selectOwl(owlId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
+        if (!owls[owlId]) throw new Error('Baykuş bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedOwls.includes(owlId)) throw new Error('Önce bu baykuşu satın almalısın.');
+            draft.selectedOwl = owlId;
+        });
     }
 
     function upgradeOffice() {
@@ -376,6 +431,7 @@
         return update((draft) => {
             draft.ownedPaints = Object.keys(paints);
             draft.ownedThemes = Object.keys(themes);
+            draft.ownedOwls = Object.keys(owls);
             draft.officeLevel = offices.length;
             draft.selectedPaint = draft.selectedPaint || 'honey';
         });
@@ -386,9 +442,10 @@
     }
 
     window.CasualProfile = Object.freeze({
-        paints, themes, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
+        paints, themes, owls, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
         validateUsername, rewardForScore, awardWoodTurning, buyPaint, selectPaint, buyTheme, selectTheme,
         upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
-        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS
+        buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
+        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP
     });
 })();

@@ -1,12 +1,14 @@
 # CasualPass 🎮
 
-CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak beş oyunu tek ekranda sunar:
+CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak oyunları tek ekranda sunar:
 
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
 - **Snake:** Yemi kapıp rekorunu uzat.
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
 - **Chess:** CasualFish motoruna karşı hamleni hesapla.
+- **Son Hat (Beta):** Zombileri temizle, bölge aç.
+- **Minerva Owl:** Minerva'nın baykuşuyla mermer sütunların arasından süzül; CasualMoney ile yeni baykuşlar aç.
 
 ## Çerez tabanlı profil ve CasualMoney
 
@@ -15,6 +17,8 @@ CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullan
 - Oturumu başlatmak günde bir kez **15 CM** verir.
 - Günlük ödül günde bir kez **20 CM** verir.
 - Wood Turning tamamlanan işin puanına göre CasualMoney kazandırır.
+- Minerva Owl'da her 2 sütun 1 CM kazandırır (uçuş başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır).
+- Minerva varsayılan baykuştur; `Kar Baykuşu` (80 CM), `Peçeli Baykuş` (150 CM), `Puhu` (260 CM), `Gece Baykuşu` (420 CM) ve `Altın Baykuş` (750 CM) CasualMoney ile açılır.
 - `Liquid` varsayılan temadır; `Paper` (30 CM), `Neon` (180 CM) ve `Retro` (300 CM) temaları CasualMoney ile açılır.
 - Çerezleri silmek profil, bakiye ve ilerlemeyi de siler. Bu bilerek seçilmiş, yalnızca-çerez tasarımının sonucudur.
 
