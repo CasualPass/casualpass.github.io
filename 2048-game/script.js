@@ -8,9 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart-btn');
     const backToMenuBtn = document.getElementById('back-to-menu-btn');
     const newGameBtn = document.getElementById('new-game-btn');
+    const continueBtn = document.getElementById('continue-btn');
 
     const SIZE = 4;
-    const GAP = 8;
     const ANIM_MS = 110;
 
     let cells = [];   // 4x4 grid of tile objects or null
@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let bestScore = parseInt(getCookieValue('cp_2048_best') || '0', 10);
     let gameOver = false;
     let won = false;
+    let keepPlaying = false;   // player chose "Devam Et" after reaching 2048
+    let recorded = false;      // this run's result is already in the stats
     let moving = false;
+    let queuedDir = null;      // one move typed during the slide animation
 
     bestScoreEl.textContent = bestScore;
 
@@ -43,22 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function cellSize() {
-        return (gridEl.offsetWidth - GAP * (SIZE - 1)) / SIZE;
-    }
-
-    function tileOffset(idx) {
-        return idx * (cellSize() + GAP);
+    // Tile size and gap come from CSS, so positions stay correct when the board resizes.
+    function tileTransform(r, c, scale) {
+        const pos = i => `calc(${i} * (100% + var(--gap)))`;
+        return `translate(${pos(c)}, ${pos(r)})` + (scale === undefined ? '' : ` scale(${scale})`);
     }
 
     function positionTile(el, r, c, animate) {
-        const x = tileOffset(c);
-        const y = tileOffset(r);
-        const sz = cellSize();
-        el.style.width  = sz + 'px';
-        el.style.height = sz + 'px';
+        el.appearing = false;
         el.style.transition = animate ? `transform ${ANIM_MS}ms ease-in-out` : 'none';
-        el.style.transform  = `translate(${x}px, ${y}px)`;
+        el.style.transform  = tileTransform(r, c);
     }
 
     function makeTileEl(value, r, c, appear) {
@@ -68,17 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent   = value;
         if (value > 2048) el.classList.add('super');
 
-        const sz = cellSize();
-        const x  = tileOffset(c);
-        const y  = tileOffset(r);
-        el.style.width  = sz + 'px';
-        el.style.height = sz + 'px';
-
         if (appear) {
             // Başlangıç: doğru konumda ama scale(0)
             el.style.transition = 'none';
-            el.style.transform  = `translate(${x}px, ${y}px) scale(0)`;
+            el.style.transform  = tileTransform(r, c, 0);
             el.style.opacity    = '0';
+            el.appearing        = true;
             gridEl.appendChild(el);
 
             // Reflow zorla — tarayıcı scale:0 halini görüp işlemeli
@@ -87,14 +79,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Animasyonu başlat
             el.style.transition = `transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                                    opacity 0.12s ease`;
-            el.style.transform  = `translate(${x}px, ${y}px) scale(1)`;
+            el.style.transform  = tileTransform(r, c, 1);
             el.style.opacity    = '1';
 
-            // Animasyon bitince transform'u normalize et (slide için)
+            // Animasyon bitince transform'u normalize et (slide için).
+            // Taş bu sürede kaydırıldıysa eski konuma geri çekilmez.
             setTimeout(() => {
-                if (el.isConnected) {
+                if (el.isConnected && el.appearing) {
+                    el.appearing = false;
                     el.style.transition = 'none';
-                    el.style.transform  = `translate(${x}px, ${y}px)`;
+                    el.style.transform  = tileTransform(r, c);
                 }
             }, 240);
         } else {
@@ -105,9 +99,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return el;
     }
 
+    function showScoreGain(gain) {
+        const card = scoreEl.parentElement;
+        const bubble = document.createElement('span');
+        bubble.className = 'score-add';
+        bubble.textContent = '+' + gain;
+        card.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 750);
+    }
+
     /* ── init ────────────────────────────────────── */
 
     function init() {
+        // A run that reached 2048 counts as a win even if the player stops early.
+        if (won && !recorded) recordResult(true);
+
         gridEl.querySelectorAll('.tile').forEach(t => t.remove());
 
         // background cells (once)
@@ -123,9 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
         score   = 0;
         gameOver = false;
         won      = false;
+        keepPlaying = false;
+        recorded = false;
         moving   = false;
+        queuedDir = null;
         scoreEl.textContent = '0';
-        overlay.classList.add('hidden');
+        hideOverlay();
 
         spawnTile();
         spawnTile();
@@ -147,7 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── move engine ─────────────────────────────── */
 
     function move(dir) {
-        if (gameOver || moving) return;
+        if (gameOver) return;
+        if (moving) { queuedDir = dir; return; }
 
         // traversal order: process tiles in the direction of movement first
         const rows = dir === 'down'  ? [3,2,1,0] : [0,1,2,3];
@@ -158,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let moved    = false;
         let anyMerge = false;
+        let gained   = 0;
         const toRemove  = [];          // tiles consumed by merge
         const mergedAt  = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
 
@@ -195,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // merge
                     const newVal = tile.value * 2;
                     score += newVal;
+                    gained += newVal;
                     if (newVal === 2048 && !won) won = true;
                     anyMerge     = true;
                     mergedAt[nr][nc] = true;
@@ -230,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toRemove.forEach(t => t.el.remove());
 
             scoreEl.textContent = score;
+            if (gained) showScoreGain(gained);
             if (score > bestScore) {
                 bestScore = score;
                 // A cheat score is display only; the stored best stays untouched.
@@ -244,24 +257,53 @@ document.addEventListener('DOMContentLoaded', () => {
             else if        (typeof playClickSound === 'function') playClickSound();
 
             if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
-            if (won && !gameOver && !cheatImmortal()) {
+            if (won && !keepPlaying && !cheatImmortal()) {
                 endGame(true);
             } else if (isGameOver() && !cheatImmortal()) {
                 endGame(false);
+            } else if (queuedDir) {
+                const next = queuedDir;
+                queuedDir = null;
+                move(next);
             }
         }, ANIM_MS + 10);
     }
 
+    function recordResult(didWin) {
+        recorded = true;
+        if (typeof recordGameResult === 'function')
+            recordGameResult('2048', { won: didWin, score });
+    }
+
+    function hideOverlay() {
+        // Keep keyboard focus on something visible once the overlay fades out.
+        if (overlay.contains(document.activeElement)) newGameBtn.focus({ preventScroll: true });
+        overlay.classList.add('hidden');
+        overlay.inert = true;
+    }
+
     function endGame(didWin) {
         gameOver = true;
+        queuedDir = null;
+        // Reaching 2048 pauses the run; the result is recorded when it really ends.
+        if (!didWin) recordResult(won);
         setTimeout(() => {
             gameOverText.textContent = didWin ? 'Tebrikler! 2048!' : 'Oyun Bitti!';
-            gameOverText.style.color = didWin ? '#ffcd75' : '#ff3366';
+            gameOverText.classList.toggle('win', didWin);
             finalScoreEl.textContent = score;
+            continueBtn.classList.toggle('hidden', !didWin);
+            restartBtn.textContent = didWin ? 'Yeni Oyun' : 'Tekrar Oyna';
+            overlay.inert = false;
             overlay.classList.remove('hidden');
-            if (typeof recordGameResult === 'function')
-                recordGameResult('2048', { won: didWin, score });
+            (didWin ? continueBtn : restartBtn).focus({ preventScroll: true });
         }, 300);
+    }
+
+    function continueGame() {
+        keepPlaying = true;
+        gameOver = false;
+        hideOverlay();
+        if (isGameOver()) endGame(false);
     }
 
     function isGameOver() {
@@ -278,6 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── input ───────────────────────────────────── */
 
     document.addEventListener('keydown', e => {
+        // Leave typing fields (e.g. the cheat code box) and browser shortcuts alone.
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
         const map = {
             ArrowLeft: 'left', a: 'left', A: 'left',
             ArrowRight:'right',d: 'right',D: 'right',
@@ -326,7 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof playClickSound === 'function') playClickSound();
         init();
     });
+    continueBtn.addEventListener('click', () => {
+        if (typeof playClickSound === 'function') playClickSound();
+        continueGame();
+    });
     backToMenuBtn.addEventListener('click', () => {
+        if (won && !recorded) recordResult(true);
         window.location.href = '../index.html';
     });
 

@@ -6,6 +6,15 @@ body {
     --text-primary: var(--cp-text);
     --text-muted: var(--cp-text-muted);
     --accent: var(--cp-accent);
+    --best-color: #ffcc70;
+    --board-bg: rgba(0, 0, 0, 0.2);
+    --cell-bg: rgba(255, 255, 255, 0.05);
+    --overlay-bg: rgba(0, 0, 0, 0.72);
+    --overlay-text: #fff;
+    --btn-hover: rgba(255, 255, 255, 0.15);
+    /* Board edge length; tiles, gaps and fonts all scale from it. */
+    --board-size: 340px;
+    --gap: 8px;
 }
 
 * {
@@ -17,11 +26,14 @@ body {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Top keeps the back button clear; bottom keeps the cheat button clear. */
+    padding: 5.5rem 1rem 5rem;
     color: var(--text-primary);
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
 }
 
@@ -76,7 +88,7 @@ select:focus-visible {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
-    width: 90%;
+    width: 100%;
     max-width: 480px;
     z-index: 10;
     position: relative;
@@ -93,6 +105,7 @@ select:focus-visible {
     background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05), transparent);
     transform: skewX(-25deg);
     animation: glassShine 8s infinite;
+    pointer-events: none;
 }
 
 @keyframes glassShine {
@@ -137,6 +150,7 @@ header {
     align-items: center;
     min-width: 100px;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .personal-best {
@@ -157,53 +171,79 @@ header {
     font-weight: 800;
     color: var(--accent);
     text-shadow: 0 0 10px var(--cp-accent-glow);
+    font-variant-numeric: tabular-nums;
 }
 
 .personal-best .score-value {
-    color: #ffcc70;
+    color: var(--best-color);
     text-shadow: 0 0 10px rgba(255, 204, 112, 0.5);
+}
+
+/* "+N" that floats up from the score after a merge */
+.score-add {
+    position: absolute;
+    left: 50%;
+    bottom: 0.4rem;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent);
+    pointer-events: none;
+    animation: scoreFloat 0.7s ease-out forwards;
+}
+
+@keyframes scoreFloat {
+    0%   { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -2.2rem); }
 }
 
 /* Board */
 .board-wrapper {
     position: relative;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--board-bg);
     border-radius: 16px;
     border: 1px solid var(--glass-border);
     box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* Swipes on the board move tiles instead of scrolling the page. */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 8px;
-    width: 340px;
-    height: 340px;
+    gap: var(--gap);
+    width: var(--board-size);
+    height: var(--board-size);
     position: relative;
+    font-size: calc(var(--board-size) * 0.094);
 }
 
 .cell {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--cell-bg);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Tiles are absolutely positioned and animated via transform */
+/* Tiles are absolutely positioned; JS sets --r/--c and the transform slides them.
+   Sizes are relative to the grid, so tiles stay aligned at every board size. */
 .tile {
     position: absolute;
     top: 0;
     left: 0;
+    width: calc((100% - 3 * var(--gap)) / 4);
+    height: calc((100% - 3 * var(--gap)) / 4);
     border-radius: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
+    font-size: 1em;
     font-weight: 800;
     user-select: none;
     z-index: 2;
-    /* transform is set by JS for smooth sliding */
+    font-variant-numeric: tabular-nums;
 }
 
 /* Tile Colors */
@@ -240,35 +280,35 @@ header {
 .tile[data-value="128"] {
     background: rgba(237, 207, 114, 0.95);
     color: #fff;
-    font-size: 1.8rem;
+    font-size: 0.9em;
     box-shadow: 0 0 20px rgba(237, 207, 114, 0.4);
 }
 
 .tile[data-value="256"] {
     background: rgba(237, 204, 97, 0.95);
     color: #fff;
-    font-size: 1.8rem;
+    font-size: 0.9em;
     box-shadow: 0 0 25px rgba(237, 204, 97, 0.5);
 }
 
 .tile[data-value="512"] {
     background: rgba(237, 200, 80, 0.95);
     color: #fff;
-    font-size: 1.8rem;
+    font-size: 0.9em;
     box-shadow: 0 0 30px rgba(237, 200, 80, 0.5);
 }
 
 .tile[data-value="1024"] {
     background: rgba(237, 197, 63, 0.95);
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 0.75em;
     box-shadow: 0 0 35px rgba(237, 197, 63, 0.6);
 }
 
 .tile[data-value="2048"] {
     background: rgba(237, 194, 46, 0.95);
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 0.75em;
     box-shadow: 0 0 40px rgba(237, 194, 46, 0.8);
 }
 
@@ -276,7 +316,7 @@ header {
 .tile.super {
     background: linear-gradient(135deg, #3c3a32, #1a1a2e);
     color: #fff;
-    font-size: 1.3rem;
+    font-size: 0.62em;
     box-shadow: 0 0 40px rgba(0, 255, 204, 0.5);
 }
 
@@ -293,26 +333,29 @@ header {
 /* Overlay */
 .overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    inset: 0;
+    background: var(--overlay-bg);
+    color: var(--overlay-text);
     backdrop-filter: blur(8px);
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 1rem;
+    text-align: center;
     transition: opacity 0.3s ease;
     opacity: 1;
     z-index: 20;
 }
 
+/* visibility keeps hidden overlay buttons out of the tab order */
 .overlay.hidden {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
 }
 
 .game-over-text {
@@ -322,9 +365,14 @@ header {
     margin: 0;
 }
 
+.game-over-text.win {
+    color: #ffcd75;
+    text-shadow: 0 0 20px rgba(255, 205, 117, 0.6);
+}
+
 .final-score-text {
     font-size: 1.2rem;
-    color: var(--text-muted);
+    opacity: 0.8;
 }
 
 .final-score-text span {
@@ -332,10 +380,39 @@ header {
     font-weight: 800;
 }
 
+.overlay-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.overlay .btn {
+    color: inherit;
+}
+
+.overlay .text-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.overlay.hidden {
+    display: flex;
+}
+
 /* Game Controls */
 .game-controls {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem 1rem;
 }
 
 /* Button */
@@ -345,6 +422,7 @@ header {
     border-top: 1px solid var(--glass-highlight);
     border-left: 1px solid var(--glass-highlight);
     padding: 0.8rem 2rem;
+    min-height: 44px;
     border-radius: 30px;
     color: var(--text-primary);
     font-size: 1rem;
@@ -358,7 +436,7 @@ header {
 }
 
 .btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--btn-hover);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
@@ -367,36 +445,89 @@ header {
     transform: translateY(1px);
 }
 
-/* Mobile Controls */
-.mobile-controls {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
+.btn-primary {
+    background: var(--accent);
+    border-color: transparent;
+    color: #10131c;
 }
 
-.d-pad-middle {
-    display: flex;
-    gap: 40px;
+.overlay .btn-primary {
+    color: #10131c;
+}
+
+.btn-primary:hover {
+    background: var(--accent);
+    filter: brightness(1.1);
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: -0.5rem;
+}
+
+/* Touch Controls: one compact row next to "Yeni Oyun" */
+.mobile-controls {
+    display: none;
+    gap: 6px;
 }
 
 .d-pad {
-    width: 55px;
-    height: 55px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     transition: background 0.1s;
+    touch-action: manipulation;
+}
+
+.d-pad:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+}
+
+/* Paper is a light theme: dark text, classic board and readable overlay */
+body.theme-paper {
+    --best-color: #b9770e;
+    --board-bg: #bbada0;
+    --cell-bg: rgba(238, 228, 218, 0.4);
+    --overlay-bg: rgba(255, 255, 255, 0.86);
+    --overlay-text: #2c3e50;
+    --btn-hover: rgba(44, 62, 80, 0.08);
+}
+
+body.theme-paper .glow-text {
+    color: var(--cp-text);
+    -webkit-text-stroke: 0;
+    background: none;
+    text-shadow: none;
+}
+
+body.theme-paper .board-wrapper {
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+body.theme-paper .personal-best .score-value {
+    text-shadow: none;
+}
+
+body.theme-paper .btn-primary,
+body.theme-paper .overlay .btn-primary {
+    color: #fff;
+}
+
+body.theme-paper .d-pad {
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -405,14 +536,32 @@ header {
         transform: none;
         transition: none;
     }
+
+    .score-add {
+        display: none;
+    }
 }
 
-.d-pad:active {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(0.95);
+@media (pointer: coarse) {
+    .mobile-controls {
+        display: flex;
+    }
+
+    .hint {
+        display: none;
+    }
 }
 
+/* Phones: title and scores share one row so the board gets the height */
 @media (max-width: 600px) {
+    body {
+        --gap: 6px;
+        /* Width: viewport - body padding - container padding - board padding.
+           Height: everything above and below the board on a phone. */
+        --board-size: max(220px, min(340px, calc(100vw - 4rem - 18px), calc(100dvh - 330px)));
+        padding: 4.5rem 1rem 4.25rem;
+    }
+
     .back-btn {
         top: 1rem;
         left: 1rem;
@@ -420,36 +569,148 @@ header {
         font-size: 0.9rem;
     }
 
-    .grid {
-        width: 300px;
-        height: 300px;
-        gap: 6px;
-    }
-
-    .tile {
-        font-size: 1.5rem;
-    }
-
-    .tile[data-value="128"],
-    .tile[data-value="256"],
-    .tile[data-value="512"] {
-        font-size: 1.3rem;
-    }
-
-    .tile[data-value="1024"],
-    .tile[data-value="2048"] {
-        font-size: 1.1rem;
-    }
-
-    .mobile-controls {
-        display: flex;
-    }
-
     .game-container {
-        padding: 1.5rem;
+        padding: 1rem;
+        gap: 0.9rem;
+        border-radius: 24px;
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
     }
 
     .glow-text {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
+        margin-bottom: 0;
+        letter-spacing: 1px;
+    }
+
+    .scores {
+        width: auto;
+        gap: 0.5rem;
+    }
+
+    .score-card {
+        min-width: 72px;
+        padding: 0.3rem 0.75rem;
+        border-radius: 12px;
+    }
+
+    .player-label {
+        font-size: 0.68rem;
+    }
+
+    .score-value {
+        font-size: 1.3rem;
+    }
+
+    .board-wrapper {
+        padding: 8px;
+        border-radius: 14px;
+    }
+
+    .cell,
+    .tile {
+        border-radius: 9px;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .game-over-text {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .glow-text {
+        font-size: 1.7rem;
+    }
+
+    .score-card {
+        min-width: 60px;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+/* Landscape phones: board on the right, scores and controls on the left */
+@media (max-height: 520px) and (orientation: landscape) {
+    body {
+        --gap: 6px;
+        --board-size: max(200px, min(340px, calc(100dvh - 80px)));
+        padding: 0.75rem 1rem;
+    }
+
+    .back-btn {
+        top: 0.75rem;
+        left: 0.75rem;
+        padding: 0.5rem;
+        width: 44px;
+        justify-content: center;
+    }
+
+    .back-btn span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .game-container {
+        display: grid;
+        grid-template-columns: auto auto;
+        grid-template-rows: 1fr auto auto auto 1fr;
+        grid-template-areas:
+            ".     board"
+            "head  board"
+            "ctrl  board"
+            "hint  board"
+            ".     board";
+        align-items: center;
+        justify-items: center;
+        width: auto;
+        max-width: none;
+        padding: 1rem 1.25rem;
+        gap: 0.75rem 1.5rem;
+        border-radius: 24px;
+    }
+
+    header { grid-area: head; }
+    .board-wrapper { grid-area: board; padding: 8px; }
+    .game-controls { grid-area: ctrl; flex-direction: column; }
+    .hint { grid-area: hint; margin: 0; max-width: 12rem; }
+
+    .glow-text {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .scores {
+        gap: 0.5rem;
+    }
+
+    .score-card {
+        min-width: 72px;
+        padding: 0.3rem 0.75rem;
+    }
+
+    .score-value {
+        font-size: 1.3rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+
+    .game-over-text {
+        font-size: 1.6rem;
     }
 }
