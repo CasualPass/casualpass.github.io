@@ -72,7 +72,7 @@ Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu e
 
 - `index.html`: Oyunlar paneli karşılama alanının hemen altına alındı; telefonda ilk ekranda dört oyun kartı tam görünür (önce yalnızca ilk satırın üstü görünüyordu). Metrikler ve yeniden doğuş oyunların altında.
 - `style.css`: Toast, sabit "Kod gir" düğmesinin arkasında kalıyordu; artık onun üstünde ve önünde. Footer'a düğme kadar alt boşluk eklendi. 9–10 px metinler 11–13 px'e büyütüldü. "Temizle" 40 px dokunma alanı aldı. Telefonda oturum düğmesi, ödül alınana kadar etiketini gösterir. 400 px altında kart numaraları gizlenir (Snake sanatıyla çakışıyordu).
-- `casual-cheats.js`: 720 px altında sabit "Kod gir" düğmesi 44 px'lik yalnızca simgeli düğmeye dönüşür (XOX tahtasının alt satırını kapatıyordu); erişilebilir adı "Kod gir" olarak kalır. Sürümlü sayfalarda `?v=5`.
+- `casual-cheats.js`: 720 px altında sabit "Kod gir" düğmesi 44 px'lik yalnızca simgeli düğmeye dönüşür (XOX tahtasının alt satırını kapatıyordu); erişilebilir adı "Kod gir" olarak kalır. Sürümlü sayfalarda `?v=5`. `font: inherit` sıfırlaması `:where(.cp-cheat)` ile düşük özgüllüğe indirildi; önceden düğmelerin kendi boyut/kalınlık kuralları (ör. 14 px/800) eziliyordu ve oyunlar düğmeyi yeniden biçimlendiremiyordu.
 - `script.js`: Günlük ödül oturum yokken oturumu da başlatır. Oturum ödülü günlük olduğundan, alınmamışsa düğme "Ödülü al", metrik "Bugün alındı" gösterir. Tema kartları açıklamayı, düğme fiyatı gösterir. "Temizle" yalnızca hareket varken görünür. Oyun sayısı metni kartlardan hesaplanır.
 
 ### Testler
