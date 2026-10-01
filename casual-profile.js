@@ -10,6 +10,8 @@
     const REBIRTH_BASE = 500;
     const MAX_REBIRTHS = 8;
     const OWL_REWARD_CAP = 40;
+    const BLOCKS_REWARD_CAP = 40;
+    const BLOCKS_POINTS_PER_CM = 50;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -36,6 +38,13 @@
         eagle: { id: 'eagle', name: 'Puhu', description: 'Kulaklı gece devi', price: 260 },
         cosmic: { id: 'cosmic', name: 'Gece Baykuşu', description: 'Yıldız tozu bırakır', price: 420 },
         golden: { id: 'golden', name: 'Altın Baykuş', description: 'Altın iz bırakır', price: 750 }
+    };
+
+    const woods = {
+        pine: { id: 'pine', name: 'Çam', description: 'Açık ve sıcak', price: 0 },
+        walnut: { id: 'walnut', name: 'Ceviz', description: 'Koyu damarlı', price: 90 },
+        cherry: { id: 'cherry', name: 'Kiraz', description: 'Kızıl tonlu', price: 180 },
+        ebony: { id: 'ebony', name: 'Abanoz', description: 'Gece siyahı', price: 360 }
     };
 
     const offices = [
@@ -105,6 +114,8 @@
             selectedTheme: 'liquid',
             ownedOwls: ['minerva'],
             selectedOwl: 'minerva',
+            ownedWoods: ['pine'],
+            selectedWood: 'pine',
             dailyBonusDate: '',
             sessionRewardDate: '',
             rebirths: 0,
@@ -140,6 +151,8 @@
         if (!ownedThemes.includes('liquid')) ownedThemes.unshift('liquid');
         const ownedOwls = Array.isArray(safe.ownedOwls) ? safe.ownedOwls.filter((id) => owls[id]) : ['minerva'];
         if (!ownedOwls.includes('minerva')) ownedOwls.unshift('minerva');
+        const ownedWoods = Array.isArray(safe.ownedWoods) ? safe.ownedWoods.filter((id) => woods[id]) : ['pine'];
+        if (!ownedWoods.includes('pine')) ownedWoods.unshift('pine');
         const activities = Array.isArray(safe.activities) ? safe.activities.slice(0, MAX_ACTIVITIES).filter((item) => item && typeof item.label === 'string') : [];
         return {
             id: canonicalUsername(safe.id),
@@ -152,6 +165,8 @@
             selectedTheme: ownedThemes.includes(safe.selectedTheme) ? safe.selectedTheme : 'liquid',
             ownedOwls,
             selectedOwl: ownedOwls.includes(safe.selectedOwl) ? safe.selectedOwl : 'minerva',
+            ownedWoods,
+            selectedWood: ownedWoods.includes(safe.selectedWood) ? safe.selectedWood : 'pine',
             dailyBonusDate: String(safe.dailyBonusDate || ''),
             sessionRewardDate: String(safe.sessionRewardDate || ''),
             rebirths: Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(safe.rebirths) || 0))),
@@ -366,6 +381,45 @@
         });
     }
 
+    function blocksRewardForScore(score) {
+        return Math.min(BLOCKS_REWARD_CAP, Math.floor(Math.max(0, Number(score) || 0) / BLOCKS_POINTS_PER_CM));
+    }
+
+    function awardBlocksGame(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = blocksRewardForScore(result?.score);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, 'Wood Blocks oyunu');
+        });
+        return { profile, reward };
+    }
+
+    function buyWood(woodId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
+        const wood = woods[woodId];
+        if (!wood) throw new Error('Ahşap bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedWoods.includes(woodId)) {
+                if (draft.balance < wood.price) throw new Error('Bu ahşap için yeterli CasualMoney yok.');
+                draft.balance -= wood.price;
+                draft.ownedWoods.push(woodId);
+                addActivity(draft, `${wood.name} blokları açıldı`, -wood.price);
+            }
+            draft.selectedWood = woodId;
+        });
+    }
+
+    function selectWood(woodId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
+        if (!woods[woodId]) throw new Error('Ahşap bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedWoods.includes(woodId)) throw new Error('Önce bu ahşabı satın almalısın.');
+            draft.selectedWood = woodId;
+        });
+    }
+
     function upgradeOffice() {
         if (cheatsActive()) throw new Error('Hileleri kapatana kadar ilerleme kaydedilmez.');
         return update((draft) => {
@@ -432,6 +486,7 @@
             draft.ownedPaints = Object.keys(paints);
             draft.ownedThemes = Object.keys(themes);
             draft.ownedOwls = Object.keys(owls);
+            draft.ownedWoods = Object.keys(woods);
             draft.officeLevel = offices.length;
             draft.selectedPaint = draft.selectedPaint || 'honey';
         });
@@ -442,10 +497,11 @@
     }
 
     window.CasualProfile = Object.freeze({
-        paints, themes, owls, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
+        paints, themes, owls, woods, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
         validateUsername, rewardForScore, awardWoodTurning, buyPaint, selectPaint, buyTheme, selectTheme,
         upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
-        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP
+        buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
+        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM
     });
 })();

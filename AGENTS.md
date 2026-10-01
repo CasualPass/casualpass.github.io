@@ -65,3 +65,24 @@ Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu e
 - `node --check`: `casual-profile.js`, `casual-cheats.js`, `owl-game/script.js`, `script.js` başarılı.
 - Playwright (Chromium) uçtan uca: oturum başlatma (+15 CM), yetersiz bakiyede satın alma reddi, gerçek uçuş ve çarpışma sonrası sonuç ekranı, 20 puan → 10 CM, 500 puan → 40 CM tavanı, Kar Baykuşu'nu 80 CM'ye alıp seçme, yenileme sonrası seçimin korunması, ölümsüzlük hilesinde sütunlardan geçip puan alma.
 - Görsel kontrol: masaüstü, 390 px telefon, 1000 px tablet dashboard'u ve Paper teması. Konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hataları görüldü.
+
+## 2026-10-01 — Wood Blocks
+
+### Amaç
+
+Woodoku benzeri bir ahşap blok bulmacası eklemek; blok görünümlerini CasualMoney ile satın alınabilir yapmak.
+
+### Yapılanlar
+
+- `wood-blocks/`: Canvas tabanlı 9×9 bulmaca. Her turda 3 parça gelir; fare veya dokunmayla sürüklenir (dokunmada parça parmağın üstünde görünür). Dolu satır, sütun ve 3×3 kareler silinir. Yerleştirilen her kare 1 puan; silinen her grup 18 puan, aynı hamlede birden fazla grup ek bonus; art arda 3 hamle içinde yeniden silmek seri çarpanı verir. Hiçbir parça sığmayınca oyun biter. Klavye: 1/2/3 parça seçer, oklar taşır, Enter bırakır, Esc vazgeçer. Yeni el, mümkünse en az bir parça sığacak şekilde yeniden çekilir; tahtaya sığmayan parçalar tepside soluk görünür.
+- `casual-profile.js`: `woods` kataloğu (Çam ücretsiz; Ceviz 90, Kiraz 180, Abanoz 360 CM), `ownedWoods`/`selectedWood`, `buyWood`, `selectWood`, `blocksRewardForScore`, `awardBlocksGame` eklendi. Ödül `floor(skor / 50)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` ahşapları da açar.
+- `casual-cheats.js`: Ölümsüzlükte tahta tıkanınca parçalar yenilenir; `allopen` ahşapları kaydetmeden önizlemeye açar.
+- Tüm sayfalarda `casual-profile.js?v=12` ve `casual-cheats.js?v=4`: eski önbellekteki profil betiği yeni alanları silmesin diye.
+- `index.html`, `style.css`: Dashboard'a 8. kart (Wood Blocks); masaüstü grid 8 sütun.
+- Rekor `cp_blocks_best` çerezinde, istatistik `recordGameResult('Wood Blocks', …)` ile tutulur.
+
+### Testler
+
+- `node --check`: `casual-profile.js`, `casual-cheats.js`, `wood-blocks/script.js` başarılı.
+- Playwright (Chromium): gerçek fare sürüklemeleriyle oyun sonuna kadar oynama (833 puan → 16 CM), iPhone SE'de dokunmatik sürükleme, klavyeyle tam oyun, Ceviz'i 90 CM'ye alma ve yenileme sonrası seçimin korunması, yetersiz bakiyede red, ölümsüzlükte 150 hamle boyunca oyunun bitmemesi, `score set` hilesi.
+- Görsel kontrol: masaüstü, telefon oyun ekranı ve dashboard (masaüstü, 1000 px, 390 px).

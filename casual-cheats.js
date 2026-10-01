@@ -4,8 +4,8 @@
     const catalog = [
         { id: 'plus', name: 'Skor artışı', price: 60, code: 'score plus 1', hint: 'score plus 0.2: saniyede +0.2. score plus second 2: iki saniyede +1.' },
         { id: 'set', name: 'Skor yaz', price: 35, code: 'score set 255', hint: 'Skoru 0–255 arası yazar.' },
-        { id: 'immortal', name: 'Ölümsüzlük', price: 160, code: 'immortal', hint: 'Hat, yılan, taşlar ve baykuş düşmez.' },
-        { id: 'all', name: 'Her şey açık', price: 800, code: 'allopen', hint: 'Tema, boya, ofis, bölge ve baykuşlar açılır.' }
+        { id: 'immortal', name: 'Ölümsüzlük', price: 160, code: 'immortal', hint: 'Hat, yılan, taşlar ve baykuş düşmez; bloklar tıkanınca yenilenir.' },
+        { id: 'all', name: 'Her şey açık', price: 800, code: 'allopen', hint: 'Tema, boya, ofis, bölge, baykuş ve ahşaplar açılır.' }
     ];
     let state = load();
 
