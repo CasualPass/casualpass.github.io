@@ -611,11 +611,14 @@
         $('over-note').textContent = note.trim();
         // Taps and key presses meant for the owl can land on the result sheet; keep its buttons inert for a moment.
         const over = $('over');
+        const buttons = over.querySelectorAll('button');
         over.classList.add('arming');
+        buttons.forEach((button) => { button.disabled = true; });
         over.classList.remove('hidden');
         window.clearTimeout(armTimer);
         armTimer = window.setTimeout(() => {
             over.classList.remove('arming');
+            buttons.forEach((button) => { button.disabled = false; });
             if (mode === 'over') $('retry-btn').focus({ preventScroll: true });
         }, RESULT_LOCK_MS);
         updateHud();
