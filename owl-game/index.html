@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#141a3a">
+    <title>Minerva Owl — CasualPass</title>
+    <link rel="stylesheet" href="../shared-settings.css">
+    <link rel="stylesheet" href="style.css?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js?v=11"></script>
+    <script src="../casual-cheats.js?v=3"></script>
+</head>
+<body class="theme-liquid">
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+
+    <main class="owl-app">
+        <header class="owl-hud">
+            <a class="owl-back" href="../index.html" aria-label="Oyunlara dön">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Oyunlar</span>
+            </a>
+            <div class="owl-stats" role="status" aria-live="polite">
+                <span class="owl-stat"><small>Skor</small><b id="score">0</b></span>
+                <span class="owl-stat"><small>Rekor</small><b id="best">0</b></span>
+                <span class="owl-stat coin"><small>CM</small><b id="balance">0</b></span>
+            </div>
+        </header>
+
+        <section class="stage" id="stage" tabindex="-1" aria-label="Minerva Owl">
+            <canvas id="sky" width="480" height="720" role="img" aria-label="Baykuşun mermer sütunlar arasından uçtuğu gece göğü"></canvas>
+            <p class="stage-hint hidden" id="stage-hint">Dokun, tıkla ya da <kbd>Boşluk</kbd></p>
+
+            <div class="sheet-overlay" id="menu">
+                <div class="sheet">
+                    <p class="eyebrow">BİLGELİK UÇUŞU</p>
+                    <h1>Minerva Owl</h1>
+                    <p class="lead">Mermer sütunların arasından süzül. Her sütun 1 puan, her 2 puan 1 CM.</p>
+                    <div class="session-line" id="session-line"></div>
+                    <div class="sheet-heading">
+                        <h2>Karakterler</h2>
+                        <span id="owl-count">1 / 6</span>
+                    </div>
+                    <div class="owl-grid" id="owl-grid"></div>
+                    <button class="primary" id="start-btn" type="button">Uçuşa başla</button>
+                </div>
+            </div>
+
+            <div class="sheet-overlay hidden" id="over">
+                <div class="sheet compact">
+                    <p class="eyebrow">UÇUŞ BİTTİ</p>
+                    <h2 id="over-title">Sütuna çarptın</h2>
+                    <div class="result-row">
+                        <span><small>Skor</small><b id="over-score">0</b></span>
+                        <span><small>Rekor</small><b id="over-best">0</b></span>
+                        <span><small>Kazanç</small><b id="over-reward">0 CM</b></span>
+                    </div>
+                    <p class="over-note" id="over-note"></p>
+                    <div class="actions">
+                        <button class="primary" id="retry-btn" type="button">Tekrar uç</button>
+                        <button class="ghost" id="menu-btn" type="button">Karakterler</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="owl-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="script.js?v=1"></script>
+</body>
+</html>
