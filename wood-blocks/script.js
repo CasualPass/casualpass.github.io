@@ -75,7 +75,7 @@
         }
         return { weight: family.weight, shapes: [...seen.values()] };
     });
-    const totalWeight = shapeFamilies.reduce((sum, family) => sum + family.weight, 0);
+    const allShapes = shapeFamilies.flatMap((family) => family.shapes.map((shape) => ({ shape, weight: family.weight / family.shapes.length })));
 
     let mode = 'menu';
     let grid = emptyGrid();
@@ -513,24 +513,28 @@
         return fullGroups(new Set(piece.cells.map(([dr, dc]) => `${r + dr},${c + dc}`)));
     }
 
-    function randomPiece() {
-        let roll = Math.random() * totalWeight;
-        let family = shapeFamilies[shapeFamilies.length - 1];
-        for (const item of shapeFamilies) {
+    function weightedPick(options) {
+        let roll = Math.random() * options.reduce((sum, item) => sum + item.weight, 0);
+        for (const item of options) {
             roll -= item.weight;
-            if (roll <= 0) { family = item; break; }
+            if (roll <= 0) return item.shape;
         }
-        return family.shapes[Math.floor(Math.random() * family.shapes.length)];
+        return options[options.length - 1].shape;
     }
 
-    /* A fresh hand is re-rolled a few times so at least one piece fits when that is possible. */
-    function dealTray(forceFit) {
+    function randomPiece() { return weightedPick(allShapes); }
+
+    /* A fresh hand always holds a playable piece: random hands are re-rolled a few times, then one piece is
+       swapped for a shape that fits. A single block always fits, since a board with no empty cell would have cleared. */
+    function dealTray() {
         let hand = [];
-        for (let attempt = 0; attempt < (forceFit ? 200 : 25); attempt += 1) {
+        for (let attempt = 0; attempt < 25; attempt += 1) {
             hand = [randomPiece(), randomPiece(), randomPiece()];
-            // A single block always fits: a board with no empty cell would already have cleared.
-            if (forceFit && attempt > 100) hand[0] = shapeFamilies[0].shapes[0];
             if (hand.some(pieceFitsAnywhere)) break;
+        }
+        if (!hand.some(pieceFitsAnywhere)) {
+            const fitting = allShapes.filter((item) => pieceFitsAnywhere(item.shape));
+            if (fitting.length) hand[Math.floor(Math.random() * hand.length)] = weightedPick(fitting);
         }
         tray = hand;
     }
@@ -577,7 +581,7 @@
             addScore(gained, centerX, centerY, `+${gained}`, '#fff3d6', 20);
             sound(300, .06, 'square', -60);
         }
-        if (tray.every((item) => !item)) dealTray(false);
+        if (tray.every((item) => !item)) dealTray();
         checkStuck();
         return true;
     }
@@ -586,7 +590,7 @@
         const left = tray.filter(Boolean);
         if (left.some(pieceFitsAnywhere)) return;
         if (cheatOn('immortal')) {
-            dealTray(true);
+            dealTray();
             toast('Ölümsüzlük · parçalar yenilendi.');
             return;
         }
@@ -618,7 +622,7 @@
         clearing = [];
         pops = [];
         floaters = [];
-        dealTray(false);
+        dealTray();
         updateHud();
     }
 
