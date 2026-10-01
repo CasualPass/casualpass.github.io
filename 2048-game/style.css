@@ -642,8 +642,10 @@ body.theme-paper .d-pad {
 @media (max-height: 520px) and (orientation: landscape) {
     body {
         --gap: 6px;
-        --board-size: max(200px, min(340px, calc(100dvh - 80px)));
-        padding: 0.75rem 1rem;
+        /* Height bound, and width left after the back button, container
+           padding, column gap, controls column and board padding. */
+        --board-size: max(150px, min(340px, calc(100dvh - 80px), calc(100vw - 320px)));
+        padding: 0.75rem 1rem 0.75rem 4rem;
     }
 
     .back-btn {
@@ -677,12 +679,15 @@ body.theme-paper .d-pad {
         justify-items: center;
         width: auto;
         max-width: none;
-        padding: 1rem 1.25rem;
-        gap: 0.75rem 1.5rem;
+        padding: 1rem;
+        gap: 0.75rem 1rem;
         border-radius: 24px;
     }
 
-    header { grid-area: head; }
+    .mobile-controls { gap: 4px; }
+    .d-pad { width: 40px; height: 40px; font-size: 1rem; }
+
+    header { grid-area: head; display: block; }
     .board-wrapper { grid-area: board; padding: 8px; }
     .game-controls { grid-area: ctrl; flex-direction: column; }
     .hint { grid-area: hint; margin: 0; max-width: 12rem; }

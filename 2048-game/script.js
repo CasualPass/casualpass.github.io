@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let won = false;
     let keepPlaying = false;   // player chose "Devam Et" after reaching 2048
     let recorded = false;      // this run's result is already in the stats
+    let recordedScore = 0;     // score stored when the run was recorded
     let moving = false;
     let queuedDir = null;      // one move typed during the slide animation
 
@@ -111,8 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── init ────────────────────────────────────── */
 
     function init() {
-        // A run that reached 2048 counts as a win even if the player stops early.
-        if (won && !recorded) recordResult(true);
+        // A run continued after 2048 keeps its stats up to date when abandoned.
+        if (won) recordResult(true);
 
         gridEl.querySelectorAll('.tile').forEach(t => t.remove());
 
@@ -131,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         won      = false;
         keepPlaying = false;
         recorded = false;
+        recordedScore = 0;
         moving   = false;
         queuedDir = null;
         scoreEl.textContent = '0';
@@ -270,9 +272,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function recordResult(didWin) {
-        recorded = true;
-        if (typeof recordGameResult === 'function')
+        if (recorded) {
+            // Played on after 2048: raise the stored score instead of counting a second game.
+            const extra = score - recordedScore;
+            if (extra > 0 && !cheatsActive() && typeof getGameStats === 'function') {
+                const stats = getGameStats();
+                const game = stats['2048'];
+                if (game) {
+                    game.totalScore += extra;
+                    game.highScore = Math.max(game.highScore, score);
+                    saveGameStats(stats);
+                }
+            }
+        } else if (typeof recordGameResult === 'function') {
             recordGameResult('2048', { won: didWin, score });
+        }
+        recorded = true;
+        recordedScore = score;
     }
 
     function hideOverlay() {
@@ -285,8 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function endGame(didWin) {
         gameOver = true;
         queuedDir = null;
-        // Reaching 2048 pauses the run; the result is recorded when it really ends.
-        if (!didWin) recordResult(won);
+        // The win is stored right away; playing on only raises its score later.
+        recordResult(won);
         setTimeout(() => {
             gameOverText.textContent = didWin ? 'Tebrikler! 2048!' : 'Oyun Bitti!';
             gameOverText.classList.toggle('win', didWin);
@@ -376,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         continueGame();
     });
     backToMenuBtn.addEventListener('click', () => {
-        if (won && !recorded) recordResult(true);
+        if (won) recordResult(true);
         window.location.href = '../index.html';
     });
 
