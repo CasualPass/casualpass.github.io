@@ -12,22 +12,38 @@ const boardElement = document.getElementById('chessboard');
 const statusDisplay = document.getElementById('status-display');
 const overlay = document.getElementById('game-over-overlay');
 const gameOverText = document.getElementById('game-over-text');
+const gameOverDetail = document.getElementById('game-over-detail');
 const resetBtn = document.getElementById('reset-btn');
+const rematchBtn = document.getElementById('rematch-btn');
 const resignBtn = document.getElementById('resign-btn');
 const lobbyMenu = document.getElementById('lobby-menu');
+const gameArea = document.getElementById('game-area');
 const startGameBtn = document.getElementById('start-game-btn');
 const diffWrapper = document.getElementById('difficulty-wrapper');
+const diffSlider = document.getElementById('bot-difficulty');
+const promotionOverlay = document.getElementById('promotion-overlay');
+const promotionCancel = document.getElementById('promotion-cancel');
 
 // State Variables
 let selectedSquare = null;      // "e2" etc.
 let isVersusBot = true;
 let botDifficulty = 2; // 1: Kolay, 2: Orta, 3: Zor
 let gameActive = false;
+let isAnimating = false;
+let botTimer = null;
+let lastMove = null;            // { from, to } of the most recent move
+let pendingPromotion = null;    // { from, to } while the promotion picker is open
+let focusedSquare = 'e2';       // roving tabindex target for keyboard play
+let resignConfirmTimer = null;
 
-// Object mapping to unicode chess pieces for beautiful rendering without images
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const DIFFICULTY_NAMES = { 1: 'Kolay', 2: 'Orta', 3: 'Zor' };
+const PIECE_NAMES = { p: 'piyon', n: 'at', b: 'fil', r: 'kale', q: 'vezir', k: 'şah' };
+
+// Filled glyphs for both colors (colored via CSS) so white pieces stay readable on light squares.
+// U+FE0E keeps iOS from drawing the black pawn as an emoji.
 const piecesMap = {
-    'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-    'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+    'p': '♟︎', 'r': '♜︎', 'n': '♞︎', 'b': '♝︎', 'q': '♛︎', 'k': '♚︎'
 };
 
 /**
@@ -36,30 +52,43 @@ const piecesMap = {
 function createBoard() {
     boardElement.innerHTML = '';
 
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-
     for (let row = 0; row < 8; row++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'board-row';
+        rowDiv.setAttribute('role', 'row');
+
         for (let col = 0; col < 8; col++) {
             const squareDiv = document.createElement('div');
 
             const rank = 8 - row;
-            const file = files[col];
+            const file = FILES[col];
             const squareId = file + rank;
 
             squareDiv.id = squareId;
             squareDiv.className = 'square';
+            squareDiv.setAttribute('role', 'gridcell');
+            squareDiv.tabIndex = squareId === focusedSquare ? 0 : -1;
+            squareDiv.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
 
-            if ((row + col) % 2 === 0) {
-                squareDiv.classList.add('light');
-            } else {
-                squareDiv.classList.add('dark');
-            }
+            // Board coordinates (rank numbers on the a-file, file letters on rank 1)
+            if (col === 0) squareDiv.appendChild(makeCoord('coord-rank', rank));
+            if (row === 7) squareDiv.appendChild(makeCoord('coord-file', file));
 
             squareDiv.addEventListener('click', () => handleSquareClick(squareId));
+            squareDiv.addEventListener('keydown', (e) => handleSquareKey(e, squareId));
 
-            boardElement.appendChild(squareDiv);
+            rowDiv.appendChild(squareDiv);
         }
+        boardElement.appendChild(rowDiv);
     }
+}
+
+function makeCoord(className, text) {
+    const span = document.createElement('span');
+    span.className = `coord ${className}`;
+    span.textContent = text;
+    span.setAttribute('aria-hidden', 'true');
+    return span;
 }
 
 /**
@@ -67,46 +96,64 @@ function createBoard() {
  */
 function renderPieces() {
     const boardState = gameEngine.board();
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
     document.querySelectorAll('.square').forEach(sq => {
-        sq.innerHTML = '';
-        sq.classList.remove('selected', 'highlight', 'in-check');
+        sq.querySelectorAll('.chess-piece').forEach(p => p.remove());
+        sq.classList.remove('selected', 'highlight', 'capture', 'in-check', 'last-move');
     });
 
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const piece = boardState[row][col];
+            const squareId = FILES[col] + (8 - row);
+            const squareEl = document.getElementById(squareId);
             if (piece) {
-                const squareId = files[col] + (8 - row);
-                const squareEl = document.getElementById(squareId);
-
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `chess-piece ${piece.color === 'w' ? 'white' : 'black'}`;
-                const charType = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
-                pieceEl.textContent = piecesMap[charType];
+                pieceEl.textContent = piecesMap[piece.type];
+                pieceEl.setAttribute('aria-hidden', 'true');
 
                 // Bind Drag & Drop event seamlessly!
                 setupDragEvents(pieceEl, squareId);
 
                 squareEl.appendChild(pieceEl);
             }
+            squareEl.setAttribute('aria-label', describeSquare(squareId, piece));
         }
+    }
+
+    if (lastMove) {
+        document.getElementById(lastMove.from).classList.add('last-move');
+        document.getElementById(lastMove.to).classList.add('last-move');
     }
 
     if (gameEngine.in_check()) {
         const turnColor = gameEngine.turn();
-        const checkBoard = gameEngine.board();
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
-                const p = checkBoard[r][c];
+                const p = boardState[r][c];
                 if (p && p.type === 'k' && p.color === turnColor) {
-                    const kingSquareId = files[c] + (8 - r);
-                    document.getElementById(kingSquareId).classList.add('in-check');
+                    document.getElementById(FILES[c] + (8 - r)).classList.add('in-check');
                 }
             }
         }
     }
+}
+
+function describeSquare(squareId, piece) {
+    if (!piece) return `${squareId}, boş`;
+    return `${squareId}, ${piece.color === 'w' ? 'beyaz' : 'siyah'} ${PIECE_NAMES[piece.type]}`;
+}
+
+/**
+ * True when the human may not touch the board right now
+ */
+function inputLocked() {
+    return !gameActive
+        || gameEngine.game_over()
+        || isAnimating
+        || pendingPromotion !== null
+        || (isVersusBot && gameEngine.turn() !== 'w');
 }
 
 /**
@@ -117,6 +164,7 @@ function renderPieces() {
 let activePiece = null;
 let startSquare = null;
 let wasSelected = false;
+let dragIsTouch = false;
 
 function setupDragEvents(pieceEl, squareId) {
     pieceEl.addEventListener('mousedown', (e) => startDrag(e, pieceEl, squareId));
@@ -124,7 +172,8 @@ function setupDragEvents(pieceEl, squareId) {
 }
 
 function startDrag(e, pieceEl, squareId) {
-    if (gameEngine.game_over() || !gameActive) return;
+    if (inputLocked()) return;
+    if (e.type === 'mousedown' && e.button !== 0) return;
 
     const pieceObj = gameEngine.get(squareId);
     if (!pieceObj || pieceObj.color !== gameEngine.turn()) {
@@ -136,14 +185,18 @@ function startDrag(e, pieceEl, squareId) {
     if (typeof playClickSound === 'function') playClickSound();
 
     wasSelected = (selectedSquare === squareId);
+    dragIsTouch = e.type === 'touchstart';
 
     activePiece = pieceEl;
     startSquare = squareId;
 
     selectedSquare = squareId;
-    renderPiecesWithoutRebuilding();
+    setFocusedSquare(squareId, false);
+    clearSelectionMarks();
     highlightValidMoves(squareId);
 
+    // Lock the dragged glyph to the rendered square size before leaving the board
+    activePiece.style.fontSize = getComputedStyle(activePiece).fontSize;
     document.body.appendChild(activePiece);
     activePiece.classList.add('dragging');
     activePiece.classList.remove('snap-back');
@@ -154,6 +207,7 @@ function startDrag(e, pieceEl, squareId) {
     document.addEventListener('touchmove', dragMove, { passive: false });
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
 }
 
 function dragMove(e) {
@@ -166,8 +220,10 @@ function movePieceWithCursor(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+    // On touch, lift the piece above the finger so the player can see it
+    const lift = dragIsTouch ? activePiece.offsetHeight * 0.6 : 0;
     activePiece.style.left = `${clientX - activePiece.offsetWidth / 2}px`;
-    activePiece.style.top = `${clientY - activePiece.offsetHeight / 2}px`;
+    activePiece.style.top = `${clientY - activePiece.offsetHeight / 2 - lift}px`;
 }
 
 function endDrag(e) {
@@ -175,16 +231,19 @@ function endDrag(e) {
 
     activePiece.classList.remove('dragging');
 
-    const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    const point = e.changedTouches ? e.changedTouches[0] : e;
+    const clientX = point.clientX;
+    const clientY = point.clientY;
 
     // Use elementsFromPoint to penetrate the dragging piece if it's over the square
-    const elements = document.elementsFromPoint(clientX, clientY);
     let targetSquare = null;
-    for (let el of elements) {
-        if (el.classList.contains('square')) {
-            targetSquare = el;
-            break;
+    if (e.type !== 'touchcancel') {
+        const elements = document.elementsFromPoint(clientX, clientY);
+        for (let el of elements) {
+            if (el.classList.contains('square')) {
+                targetSquare = el;
+                break;
+            }
         }
     }
 
@@ -192,24 +251,24 @@ function endDrag(e) {
     document.removeEventListener('touchmove', dragMove);
     document.removeEventListener('mouseup', endDrag);
     document.removeEventListener('touchend', endDrag);
+    document.removeEventListener('touchcancel', endDrag);
 
     const sq = document.getElementById(startSquare);
     if (sq) sq.appendChild(activePiece);
 
     activePiece.style.left = '';
     activePiece.style.top = '';
+    activePiece.style.fontSize = '';
 
     if (targetSquare && targetSquare.id) {
         if (targetSquare.id === startSquare) {
             // Dropped where it started (interpreted as a click)
             activePiece.classList.add('snap-back');
-            activePiece.style.left = '';
-            activePiece.style.top = '';
 
             if (wasSelected) {
                 // If it was already selected before the click, deselect it
                 selectedSquare = null;
-                renderPiecesWithoutRebuilding();
+                clearSelectionMarks();
             }
         } else {
             const success = tryMove(startSquare, targetSquare.id, false); // false = no animation
@@ -230,15 +289,24 @@ function snapPieceBack() {
     activePiece.style.top = '';
 
     selectedSquare = null;
-    renderPiecesWithoutRebuilding();
+    clearSelectionMarks();
 }
 
 /**
- * Handle move attempt logic & bot trigger. 
+ * Handle move attempt logic & bot trigger.
  * 'animate' boolean tells us whether to smoothly transition the move (for click/bot)
+ * Returns true when the move was played or is waiting on the promotion picker.
  */
-function tryMove(from, to, animate = true) {
-    const moveAttempt = gameEngine.move({ from, to, promotion: 'q' });
+function tryMove(from, to, animate = true, promotion = null) {
+    const candidates = gameEngine.moves({ square: from, verbose: true }).filter(m => m.to === to);
+    if (candidates.length === 0) return false;
+
+    if (!promotion && candidates.some(m => m.promotion)) {
+        openPromotionPicker(from, to, animate);
+        return true;
+    }
+
+    const moveAttempt = gameEngine.move({ from, to, promotion: promotion || 'q' });
     if (moveAttempt) {
         if (isImmortalEnabled() && gameEngine.in_checkmate() && (!isVersusBot || matesWhite())) {
             gameEngine.undo();
@@ -251,32 +319,60 @@ function tryMove(from, to, animate = true) {
                 return !mate;
             });
             if (hasNonMatingMove) updateImmortalStatus();
-            else {
-                gameActive = false;
-                overlay.classList.remove('hidden');
-                gameOverText.textContent = 'BERABERE · Ölümsüzlük mat hamlelerini engelledi';
-            }
+            else showGameOver('BERABERE', 'Ölümsüzlük mat hamlelerini engelledi.');
             return false;
         }
         if (typeof playClickSound === 'function') playClickSound();
         selectedSquare = null;
-        renderPiecesWithoutRebuilding(); // Clear selections
+        clearSelectionMarks();
+        lastMove = { from, to };
 
         if (animate) {
-            animateMoveAndRender(from, to, () => {
-                updateStatus();
-                checkGameOver();
-                triggerBotMove();
-            });
+            animateMoveAndRender(from, to, afterMove);
         } else {
-            updateStatus();
             renderPieces(); // Just render instantly for drag drops
-            checkGameOver();
-            triggerBotMove();
+            afterMove();
         }
         return true;
     }
     return false;
+}
+
+function afterMove() {
+    updateStatus();
+    checkGameOver();
+    triggerBotMove();
+}
+
+/**
+ * Pawn promotion picker
+ */
+function openPromotionPicker(from, to, animate) {
+    pendingPromotion = { from, to, animate };
+    promotionOverlay.classList.remove('hidden');
+    promotionOverlay.querySelector('.promotion-btn').focus();
+}
+
+function closePromotionPicker() {
+    pendingPromotion = null;
+    promotionOverlay.classList.add('hidden');
+}
+
+function choosePromotion(pieceType) {
+    if (!pendingPromotion) return;
+    const { from, to } = pendingPromotion;
+    closePromotionPicker();
+    tryMove(from, to, true, pieceType);
+    focusSquareElement(to);
+}
+
+function cancelPromotion() {
+    if (!pendingPromotion) return;
+    const { from } = pendingPromotion;
+    closePromotionPicker();
+    selectedSquare = null;
+    renderPieces();
+    focusSquareElement(from);
 }
 
 function isImmortalEnabled() {
@@ -313,13 +409,13 @@ function animateMoveAndRender(from, to, onComplete) {
     const deltaX = toRect.left - fromRect.left;
     const deltaY = toRect.top - fromRect.top;
 
-    boardElement.style.pointerEvents = 'none';
+    isAnimating = true;
     piece.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
     piece.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
     piece.style.zIndex = '100';
 
     setTimeout(() => {
-        boardElement.style.pointerEvents = 'auto';
+        isAnimating = false;
         renderPieces();
         if (onComplete) onComplete();
     }, 250);
@@ -327,13 +423,17 @@ function animateMoveAndRender(from, to, onComplete) {
 
 function triggerBotMove() {
     if (isVersusBot && gameEngine.turn() === 'b' && gameActive && !gameEngine.game_over()) {
-        setTimeout(makeCasualFishMove, 600);
+        statusDisplay.className = 'status-display turn-black thinking';
+        statusDisplay.textContent = 'CasualFish düşünüyor…';
+        clearTimeout(botTimer);
+        // Short delay lets the "thinking" status paint before the search blocks the thread
+        botTimer = setTimeout(makeCasualFishMove, 450);
     }
 }
 
-function renderPiecesWithoutRebuilding() {
+function clearSelectionMarks() {
     document.querySelectorAll('.square').forEach(sq => {
-        sq.classList.remove('selected', 'highlight');
+        sq.classList.remove('selected', 'highlight', 'capture');
     });
 }
 
@@ -341,7 +441,8 @@ function renderPiecesWithoutRebuilding() {
  * Handle interaction logic when a player clicks a square
  */
 function handleSquareClick(squareId) {
-    if (gameEngine.game_over() || !gameActive || (isVersusBot && gameEngine.turn() !== 'w')) return;
+    setFocusedSquare(squareId, false);
+    if (inputLocked()) return;
 
     const pieceOnSquare = gameEngine.get(squareId);
 
@@ -353,23 +454,63 @@ function handleSquareClick(squareId) {
         return;
     }
 
-    if (selectedSquare) {
-        if (selectedSquare === squareId) {
+    if (selectedSquare === squareId) {
+        selectedSquare = null;
+        clearSelectionMarks();
+        return;
+    }
+
+    const success = tryMove(selectedSquare, squareId, true); // true = animate
+
+    if (!success) {
+        clearSelectionMarks();
+        if (pieceOnSquare && pieceOnSquare.color === gameEngine.turn()) {
+            selectedSquare = squareId;
+            highlightValidMoves(squareId);
+        } else {
             selectedSquare = null;
-            renderPieces();
-            return;
-        }
-
-        const success = tryMove(selectedSquare, squareId, true); // true = animate
-
-        if (!success) {
-            if (pieceOnSquare && pieceOnSquare.color === gameEngine.turn()) {
-                selectedSquare = squareId;
-                renderPieces();
-                highlightValidMoves(squareId);
-            }
         }
     }
+}
+
+/**
+ * Keyboard play: arrows move focus, Enter/Space acts like a click
+ */
+function handleSquareKey(e, squareId) {
+    const fileIdx = FILES.indexOf(squareId[0]);
+    const rank = Number(squareId[1]);
+    const steps = {
+        ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [-1, 0], ArrowRight: [1, 0]
+    };
+
+    if (steps[e.key]) {
+        e.preventDefault();
+        const [df, dr] = steps[e.key];
+        const nf = Math.min(7, Math.max(0, fileIdx + df));
+        const nr = Math.min(8, Math.max(1, rank + dr));
+        focusSquareElement(FILES[nf] + nr);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSquareClick(squareId);
+    } else if (e.key === 'Escape' && selectedSquare) {
+        selectedSquare = null;
+        clearSelectionMarks();
+    }
+}
+
+function setFocusedSquare(squareId, moveFocus) {
+    const prev = document.getElementById(focusedSquare);
+    if (prev) prev.tabIndex = -1;
+    focusedSquare = squareId;
+    const next = document.getElementById(squareId);
+    if (next) {
+        next.tabIndex = 0;
+        if (moveFocus) next.focus();
+    }
+}
+
+function focusSquareElement(squareId) {
+    setFocusedSquare(squareId, true);
 }
 
 /**
@@ -378,7 +519,8 @@ function handleSquareClick(squareId) {
  * =========================================================
  */
 function makeCasualFishMove() {
-    if (gameEngine.game_over() || !gameActive) return;
+    botTimer = null;
+    if (gameEngine.game_over() || !gameActive || !isVersusBot || gameEngine.turn() !== 'b') return;
 
     let bestMove = null;
     let possibleMoves = gameEngine.moves({ verbose: true });
@@ -393,9 +535,7 @@ function makeCasualFishMove() {
     }
 
     if (possibleMoves.length === 0) {
-        gameActive = false;
-        overlay.classList.remove('hidden');
-        gameOverText.textContent = 'BERABERE · Ölümsüzlük mat hamlesini engelledi';
+        showGameOver('BERABERE', 'Ölümsüzlük mat hamlesini engelledi.');
         return;
     }
 
@@ -417,7 +557,8 @@ function makeCasualFishMove() {
 
         if (moveResult) {
             if (typeof playPopSound === 'function') playPopSound();
-            renderPiecesWithoutRebuilding();
+            clearSelectionMarks();
+            lastMove = { from: moveResult.from, to: moveResult.to };
 
             animateMoveAndRender(moveResult.from, moveResult.to, () => {
                 updateStatus();
@@ -447,12 +588,28 @@ function evaluateBoard(engine) {
     return totalEvaluation;
 }
 
+/**
+ * Captures (most valuable victim first) and promotions are searched first so
+ * alpha-beta can prune more; this keeps "Zor" from freezing the page for seconds.
+ */
+function moveOrderScore(move) {
+    let score = 0;
+    if (move.captured) score += pieceValues[move.captured] * 10 - pieceValues[move.piece];
+    if (move.promotion) score += pieceValues[move.promotion];
+    return score;
+}
+
+function orderMoves(moves) {
+    return moves.sort((a, b) => moveOrderScore(b) - moveOrderScore(a));
+}
+
 function minimaxRoot(depth, engine, isMaximizingPlayer) {
     const newGameMoves = engine.moves({ verbose: true });
 
     // Randomize the order of moves being evaluated to prevent identical games
     // when multiple moves have the exact same evaluation score.
     newGameMoves.sort(() => Math.random() - 0.5);
+    orderMoves(newGameMoves);
 
     let bestMove = -Infinity;
     let bestMoveFound = newGameMoves[0];
@@ -471,17 +628,21 @@ function minimaxRoot(depth, engine, isMaximizingPlayer) {
 }
 
 function minimax(depth, engine, alpha, beta, isMaximizingPlayer) {
-    if (engine.in_checkmate()) {
-        return engine.turn() === 'w' ? 100000 + depth : -100000 - depth;
-    }
-    if (engine.in_draw() || engine.in_stalemate()) {
-        return 0;
-    }
     if (depth === 0) {
         return evaluateBoard(engine);
     }
 
-    const newGameMoves = engine.moves();
+    // One move generation answers mate/stalemate too; the full in_draw() check
+    // replays the whole game history and was the main cost of the search.
+    const newGameMoves = engine.moves({ verbose: true });
+    if (newGameMoves.length === 0) {
+        if (!engine.in_check()) return 0;
+        return engine.turn() === 'w' ? 100000 + depth : -100000 - depth;
+    }
+    if (engine.insufficient_material()) {
+        return 0;
+    }
+    orderMoves(newGameMoves);
 
     if (isMaximizingPlayer) {
         let bestMove = -Infinity;
@@ -513,7 +674,9 @@ function highlightValidMoves(squareId) {
     document.getElementById(squareId).classList.add('selected');
     const moves = gameEngine.moves({ square: squareId, verbose: true });
     moves.forEach(move => {
-        document.getElementById(move.to).classList.add('highlight');
+        const target = document.getElementById(move.to);
+        target.classList.add('highlight');
+        if (move.captured) target.classList.add('capture');
     });
 }
 
@@ -523,17 +686,16 @@ function highlightValidMoves(squareId) {
 function updateStatus() {
     const isWhiteTurn = gameEngine.turn() === 'w';
 
-    statusDisplay.className = 'status-display';
-    if (isWhiteTurn) {
-        statusDisplay.textContent = 'Sıra: Beyaz';
-        statusDisplay.classList.add('turn-white');
+    statusDisplay.className = `status-display ${isWhiteTurn ? 'turn-white' : 'turn-black'}`;
+    if (isVersusBot) {
+        statusDisplay.textContent = isWhiteTurn ? 'Sıra sende (Beyaz)' : 'Sıra: CasualFish (Siyah)';
     } else {
-        statusDisplay.textContent = 'Sıra: Siyah';
-        statusDisplay.classList.add('turn-black');
+        statusDisplay.textContent = isWhiteTurn ? 'Sıra: Beyaz' : 'Sıra: Siyah';
     }
 
     if (gameEngine.in_check() && !gameEngine.game_over()) {
-        statusDisplay.textContent += ' - ŞAH';
+        statusDisplay.classList.add('in-check');
+        statusDisplay.textContent = `Şah! ${statusDisplay.textContent}`;
     }
 }
 
@@ -542,18 +704,22 @@ function updateStatus() {
  */
 function checkGameOver() {
     if (gameEngine.game_over()) {
-        overlay.classList.remove('hidden');
-        if (typeof playPopSound === 'function') playPopSound();
-
         if (gameEngine.in_checkmate()) {
             const winner = gameEngine.turn() === 'w' ? 'Siyah' : 'Beyaz';
-            gameOverText.textContent = `ŞAH MAT! ${winner} Kazandı.`;
-        } else if (gameEngine.in_draw()) {
-            gameOverText.textContent = 'BERABERE';
+            const detail = isVersusBot
+                ? (winner === 'Beyaz' ? 'Tebrikler, CasualFish\'i yendin!' : 'CasualFish bu sefer kazandı.')
+                : `${winner} kazandı.`;
+            showGameOver('ŞAH MAT', detail);
         } else if (gameEngine.in_stalemate()) {
-            gameOverText.textContent = 'PAT';
+            showGameOver('PAT', 'Hamle yapacak taş kalmadı; oyun berabere.');
+        } else if (gameEngine.in_threefold_repetition()) {
+            showGameOver('BERABERE', 'Aynı pozisyon üç kez tekrarlandı.');
+        } else if (gameEngine.insufficient_material()) {
+            showGameOver('BERABERE', 'Mat için yeterli taş kalmadı.');
+        } else if (gameEngine.in_draw()) {
+            showGameOver('BERABERE', '50 hamle kuralı.');
         } else {
-            gameOverText.textContent = 'OYUN BİTTİ';
+            showGameOver('OYUN BİTTİ', '');
         }
 
         // Record stats
@@ -564,34 +730,95 @@ function checkGameOver() {
     }
 }
 
+function showGameOver(title, detail) {
+    gameActive = false;
+    clearTimeout(botTimer);
+    botTimer = null;
+    resetResignConfirm();
+    resignBtn.disabled = true;
+    gameOverText.textContent = title;
+    gameOverDetail.textContent = detail;
+    statusDisplay.className = 'status-display game-over';
+    statusDisplay.textContent = detail ? `${title} · ${detail}` : title;
+    overlay.classList.remove('hidden');
+    if (typeof playPopSound === 'function') playPopSound();
+    rematchBtn.focus();
+}
+
+/**
+ * Start a fresh game with the current lobby settings
+ */
+function startGame() {
+    clearTimeout(botTimer);
+    botTimer = null;
+    closePromotionPicker();
+    resetResignConfirm();
+    botDifficulty = parseInt(diffSlider.value, 10);
+
+    lobbyMenu.classList.add('hidden');
+    gameArea.classList.remove('hidden');
+    overlay.classList.add('hidden');
+    gameActive = true;
+    resignBtn.disabled = isImmortalEnabled();
+    resignBtn.title = resignBtn.disabled ? 'Ölümsüzlük açıkken çekilemezsin' : '';
+
+    // Fresh game
+    gameEngine.reset();
+    selectedSquare = null;
+    lastMove = null;
+    renderPieces();
+    updateStatus();
+}
+
 /**
  * Handle Reset Game
  */
 function resetGame() {
+    clearTimeout(botTimer);
+    botTimer = null;
+    closePromotionPicker();
+    resetResignConfirm();
     gameEngine.reset();
     selectedSquare = null;
+    lastMove = null;
     overlay.classList.add('hidden');
     lobbyMenu.classList.remove('hidden');
-    boardElement.parentElement.classList.add('hidden');
+    gameArea.classList.add('hidden');
     gameActive = false;
     updateStatus();
     renderPieces();
+    startGameBtn.focus();
 }
 
 /**
- * Handle resign
+ * Handle resign (asks for a second press to avoid accidental taps)
  */
 function resignGame() {
-    if (window.CasualCheats && CasualCheats.immortal()) return;
+    if (isImmortalEnabled()) return;
     if (!gameActive || gameEngine.game_over()) return;
-    overlay.classList.remove('hidden');
-    gameActive = false;
-    const winner = gameEngine.turn() === 'w' ? 'Siyah' : 'Beyaz';
-    gameOverText.textContent = `ÇEKİLDİ! ${winner} Kazandı.`;
+
+    if (!resignBtn.classList.contains('confirm')) {
+        resignBtn.classList.add('confirm');
+        resignBtn.textContent = 'Emin misin? Çekilmek için tekrar bas';
+        resignConfirmTimer = setTimeout(resetResignConfirm, 4000);
+        return;
+    }
+
+    // Against the bot the human (White) always resigns; locally the side to move resigns
+    const loser = isVersusBot ? 'Beyaz' : (gameEngine.turn() === 'w' ? 'Beyaz' : 'Siyah');
+    const winner = loser === 'Beyaz' ? 'Siyah' : 'Beyaz';
+    showGameOver('ÇEKİLDİ', isVersusBot ? 'CasualFish kazandı.' : `${loser} çekildi, ${winner} kazandı.`);
 
     if (typeof recordGameResult === 'function') {
         recordGameResult('Chess', { won: false, score: 0 });
     }
+}
+
+function resetResignConfirm() {
+    clearTimeout(resignConfirmTimer);
+    resignConfirmTimer = null;
+    resignBtn.classList.remove('confirm');
+    resignBtn.textContent = 'Oyundan Çekil';
 }
 
 // Event Listeners
@@ -600,36 +827,47 @@ resetBtn.addEventListener('click', () => {
     resetGame();
 });
 
+rematchBtn.addEventListener('click', () => {
+    if (typeof playClickSound === 'function') playClickSound();
+    startGame();
+});
+
 resignBtn.addEventListener('click', () => {
     if (typeof playClickSound === 'function') playClickSound();
     resignGame();
 });
 
+promotionOverlay.querySelectorAll('.promotion-btn').forEach(btn => {
+    btn.addEventListener('click', () => choosePromotion(btn.dataset.piece));
+});
+promotionCancel.addEventListener('click', cancelPromotion);
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && pendingPromotion) cancelPromotion();
+});
+
 // Lobby Selection Listeners
 document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        isVersusBot = e.target.getAttribute('data-opponent') === 'ai';
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        isVersusBot = btn.getAttribute('data-opponent') === 'ai';
         diffWrapper.style.display = isVersusBot ? 'flex' : 'none';
     });
 });
 
+diffSlider.addEventListener('input', () => {
+    diffSlider.setAttribute('aria-valuetext', DIFFICULTY_NAMES[diffSlider.value]);
+});
+
 startGameBtn.addEventListener('click', () => {
     if (typeof playClickSound === 'function') playClickSound();
-    botDifficulty = parseInt(document.getElementById('bot-difficulty').value);
-
-    lobbyMenu.classList.add('hidden');
-    boardElement.parentElement.classList.remove('hidden');
-    gameActive = true;
-
-    // Fresh game
-    gameEngine.reset();
-    selectedSquare = null;
-    renderPieces();
-    updateStatus();
+    startGame();
 });
 
 // Initialization state
-boardElement.parentElement.classList.add('hidden');
 createBoard();
+renderPieces();
