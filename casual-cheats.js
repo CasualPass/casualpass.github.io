@@ -177,6 +177,7 @@
         .cp-cheat-feedback { min-height: 20px; margin: 12px 0 0; color: #d6eacc; font-size: 12px; line-height: 1.5; }
         .cp-cheat-feedback.error { color: #ffb6a8; }
         .cp-cheat :is(button, input):focus-visible { outline: 3px solid #f3c657; outline-offset: 3px; }
+        @media (max-width: 720px) { .cp-cheat .cp-cheat-open { width: 44px; min-height: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; font-size: 0; opacity: .88; } .cp-cheat .cp-cheat-open::before { font-size: 19px; } .cp-cheat.open .cp-cheat-open { opacity: 1; } }
         @media (max-height: 480px) { .cp-cheat-box { max-height: calc(100dvh - 80px); padding: 14px; } .cp-cheat-help { margin: 5px 0 10px; } }
         @media (prefers-reduced-motion: reduce) { .cp-cheat * { scroll-behavior: auto; } }
     `;
@@ -192,7 +193,7 @@
         <p class="cp-cheat-examples">Örnekler: <code>score plus 0.2</code> · <code>score plus second 2</code> · <code>score set 255</code> · <code>immortal</code></p>
         <button type="button" class="cp-cheat-disable">Tüm hileleri kapat</button>
         <p class="cp-cheat-feedback" id="cp-cheat-note" role="status" aria-live="polite"></p>
-    </form><button type="button" class="cp-cheat-open" aria-expanded="false" aria-controls="cp-cheat-box">Kod gir</button>`;
+    </form><button type="button" class="cp-cheat-open" aria-expanded="false" aria-controls="cp-cheat-box" aria-label="Kod gir" title="Kod gir">Kod gir</button>`;
     document.addEventListener('DOMContentLoaded', () => {
         document.body.append(root);
         const trigger = root.querySelector('.cp-cheat-open');
