@@ -78,6 +78,7 @@
     canvas.addEventListener('pointercancel', endDrag);
     canvas.addEventListener('lostpointercapture', endDrag);
     window.addEventListener('keydown', e => {
+        if (e.defaultPrevented || (e.target instanceof Element && e.target.closest('.cp-cheat'))) return;
         if (e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))) return;
         const k = e.key.toLowerCase();
         if ((k === 'escape' || k === 'p') && !e.repeat) {
