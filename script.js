@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.querySelector('.theme-name').textContent = theme.name;
             const owned = allOpen || Boolean(profile?.ownedThemes?.includes(theme.id));
             const active = (previewTheme || profile?.selectedTheme || 'liquid') === theme.id;
-            card.querySelector('.theme-description').textContent = owned || theme.price === 0 ? theme.description : `${CasualProfile.formatMoney(theme.price)} CM ile aç`;
+            card.querySelector('.theme-description').textContent = theme.description;
             const action = card.querySelector('.theme-action');
             if (active) {
                 card.classList.add('active');
@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else {
-                action.textContent = `${theme.price} CM`;
+                action.textContent = `${CasualProfile.formatMoney(theme.price)} CM ile aç`;
+                action.setAttribute('aria-label', `${theme.name} temasını ${CasualProfile.formatMoney(theme.price)} CasualMoney karşılığında aç`);
                 action.addEventListener('click', () => {
                     if (!CasualProfile.current()) {
                         showToast('Tema almak için önce oturumu başlat.');
@@ -130,18 +131,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const theme = CasualProfile.themes[previewTheme || profile?.selectedTheme || 'liquid'];
         const balance = profile?.balance || 0;
         sessionAvatar.textContent = profile ? initials(profile.displayName) : '?';
-        sessionLabel.textContent = profile ? 'Oturum açık' : 'Oturumu başlat';
+        const sessionRewardReady = !profile || profile.sessionRewardDate !== CasualProfile.todayKey();
+        sessionLabel.textContent = !profile ? 'Oturumu başlat' : sessionRewardReady ? 'Ödülü al' : 'Oturum açık';
+        sessionButton.classList.toggle('is-open', !sessionRewardReady);
+        sessionButton.setAttribute('aria-label', !sessionRewardReady ? `Oturum açık: ${profile.displayName}` : sessionLabel.textContent);
         balanceValue.textContent = CasualProfile.formatMoney(balance);
         themeBalanceValue.textContent = CasualProfile.formatMoney(balance);
         const rebirth = CasualProfile.rebirthStatus(profile);
-        sessionRewardValue.textContent = `+${CasualProfile.formatMoney(CasualProfile.SESSION_REWARD * rebirth.multiplier)} CM`;
+        sessionRewardValue.textContent = !sessionRewardReady ? 'Bugün alındı' : `+${CasualProfile.formatMoney(CasualProfile.SESSION_REWARD * rebirth.multiplier)} CM`;
         document.getElementById('earned-value').textContent = `${CasualProfile.formatMoney(totalEarned(profile))} CM`;
         document.getElementById('plays-value').textContent = CasualProfile.formatMoney(totalPlays());
         document.getElementById('active-theme-value').textContent = theme.name;
         dailyBonusButton.disabled = CasualCheats.active() || profile?.dailyBonusDate === CasualProfile.todayKey();
-        dailyBonusButton.textContent = CasualCheats.active() ? 'Hile açık' : profile?.dailyBonusDate === CasualProfile.todayKey() ? 'Alındı' : 'Günlük ödül';
+        dailyBonusButton.textContent = CasualCheats.active() ? 'Hile açık' : profile?.dailyBonusDate === CasualProfile.todayKey() ? 'Yarın yine gel' : 'Günlük ödül';
         renderThemes(profile);
         renderActivity(profile);
+        document.getElementById('clear-activity-button').hidden = !profile?.activities?.length;
         renderCheats();
         renderRebirth(profile, rebirth);
     }
@@ -258,8 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dailyBonusButton.addEventListener('click', () => {
         try {
+            const session = CasualProfile.current() ? null : CasualProfile.startSession();
             const result = CasualProfile.claimDailyBonus();
-            showToast(result.granted ? `Günlük ödül: +${result.reward} CM.` : 'Günlük ödülünü bugün zaten aldın.');
+            const sessionNote = session?.granted ? `Oturum açıldı (+${session.reward} CM), ` : '';
+            showToast(result.granted ? `${sessionNote}${sessionNote ? 'günlük' : 'Günlük'} ödül: +${result.reward} CM.` : 'Günlük ödülünü bugün zaten aldın.');
         } catch (error) {
             showToast(error.message);
         }
@@ -271,6 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
         CasualProfile.clearActivities();
         showToast('Hareketler temizlendi.');
     });
+
+    const gameCount = document.querySelectorAll('.game-grid .game-card').length;
+    const countWords = ['Sıfır', 'Bir', 'İki', 'Üç', 'Dört', 'Beş', 'Altı', 'Yedi', 'Sekiz', 'Dokuz', 'On'];
+    document.getElementById('games-count').textContent = `${countWords[gameCount] || gameCount} oyun aynı ekranda.`;
 
     window.addEventListener('casualprofilechange', render);
     window.addEventListener('casual-cheat', render);
