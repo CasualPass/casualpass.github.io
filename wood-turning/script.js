@@ -122,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
         accuracyRing: document.getElementById('accuracy-ring'),
         accuracyValue: document.getElementById('accuracy-value'),
         accuracyLabel: document.getElementById('accuracy-label'),
+        liveScoreValue: document.getElementById('live-score-value'),
+        liveScoreTarget: document.getElementById('live-score-target'),
         stageKicker: document.getElementById('stage-kicker'),
         stageTitle: document.getElementById('stage-title'),
         stageDescription: document.getElementById('stage-description'),
@@ -267,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.clientAvatar.textContent = state.job.initials;
         elements.clientName.textContent = state.job.client;
         elements.targetName.textContent = state.job.name;
+        elements.liveScoreTarget.textContent = state.job.name;
         elements.targetNote.textContent = state.job.note;
         setStage('carve');
         drawTargetPreview();
@@ -349,12 +352,14 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.accuracyValue.textContent = shape;
         elements.accuracyRing.style.setProperty('--score', shape);
         elements.accuracyLabel.textContent = accuracyCopy(shape);
+        elements.liveScoreValue.textContent = `${shape}%`;
         elements.sandCoverage.textContent = `${sandScore()}%`;
         elements.paintCoverage.textContent = `${paintScore()}%`;
     }
 
     function setStage(stage) {
         state.stage = stage;
+        clearResetConfirm();
         document.body.dataset.stage = stage;
         const copy = stageCopy[stage];
         elements.stageKicker.textContent = copy.kicker;
@@ -966,7 +971,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    let resetConfirmTimer;
+    function clearResetConfirm() {
+        clearTimeout(resetConfirmTimer);
+        elements.resetStage.classList.remove('confirming');
+        elements.resetStage.textContent = 'Sıfırla';
+    }
+
     elements.resetStage.addEventListener('click', () => {
+        // A stray tap should not wipe a stage's work, so the first tap only arms the reset.
+        if (!elements.resetStage.classList.contains('confirming')) {
+            elements.resetStage.classList.add('confirming');
+            elements.resetStage.textContent = 'Emin misin?';
+            resetConfirmTimer = setTimeout(clearResetConfirm, 2600);
+            return;
+        }
+        clearResetConfirm();
         if (state.stage === 'carve') {
             state.current = Array.from({ length: SAMPLE_COUNT }, (_, index) => {
                 const edge = Math.min(index, SAMPLE_COUNT - 1 - index);

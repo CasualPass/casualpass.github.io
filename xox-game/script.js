@@ -16,14 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameArea = document.getElementById('game-area');
     const startGameBtn = document.getElementById('start-game-btn');
 
-    // Auth Elements
-    const authSection = document.getElementById('auth-section');
-    const playerInfo = document.getElementById('player-info');
+    // Player name (prefilled from the cookie profile when a session is open)
     const playerNameInput = document.getElementById('player-name-input');
-    const displayPlayerName = document.getElementById('display-player-name');
-    const btnGuest = document.getElementById('btn-guest');
-    const btnLogin = document.getElementById('btn-login');
-    const btnLogout = document.getElementById('btn-logout');
+    const profileHint = document.getElementById('profile-hint');
+    const boardElem = document.getElementById('board');
+    const resetBtnText = resetBtn.querySelector('.btn-text');
 
     // Settings Elements
     const modeBotBtn = document.getElementById('mode-bot');
@@ -40,12 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardContent = document.getElementById('leaderboard-content');
 
     // State Variables
-    let currentUser = "Misafir";
-    let isGuest = true;
     let mode = "bot"; // "bot" or "local"
     let botDifficulty = "easy"; // "easy", "medium", "impossible"
     let player1Name = "Oyuncu 1";
     let player2Name = "Bot";
+    const difficultyLabels = { easy: 'Kolay', medium: 'Orta', impossible: 'İmkansız' };
 
     let board = ['', '', '', '', '', '', '', '', ''];
     let currentPlayer = 'X';
@@ -64,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPlayerTurn = () => `Sıra: ${currentPlayer === 'X' ? player1Name : player2Name}`;
 
     function handleCellClick(clickedCellEvent) {
-        const clickedCell = clickedCellEvent.target;
+        const clickedCell = clickedCellEvent.currentTarget;
         const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
 
         if (board[clickedCellIndex] !== '' || !gameActive) {
@@ -78,8 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isImmortalEnabled() && (mode === 'local' || currentPlayer === 'O') && wouldWin(clickedCellIndex, currentPlayer)) {
             if (getAvailableCells(board).every((index) => wouldWin(index, currentPlayer))) {
-                gameActive = false;
-                statusDisplay.textContent = 'Berabere! Kazandıran kutular engellendi.';
+                finishRound('draw', 'Berabere! Kazandıran kutular engellendi.');
             } else {
                 statusDisplay.textContent = 'Ölümsüzlük: kazandıran kutu engellendi. Başka kutu seç.';
             }
@@ -94,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         board[clickedCellIndex] = currentPlayer;
         clickedCell.classList.add('occupied');
         clickedCell.classList.add(currentPlayer.toLowerCase());
+        updateCellLabel(clickedCellIndex);
 
         if (typeof playClickSound === 'function') playClickSound();
     }
@@ -120,8 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (roundWon) {
-            statusDisplay.textContent = winningMessage();
-            gameActive = false;
+            finishRound(currentPlayer === 'X' ? 'win-x' : 'win-o', winningMessage());
 
             winningCells.forEach(index => {
                 cells[index].classList.add('winning-cell');
@@ -133,18 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentPlayer === 'X') {
                 scoreX++;
                 scoreXElem.textContent = scoreX;
-                statusDisplay.style.color = 'var(--color-x)';
-                statusDisplay.style.textShadow = '0 0 10px rgba(0, 255, 204, 0.5)';
                 winnerName = player1Name;
             } else {
                 scoreO++;
                 scoreOElem.textContent = scoreO;
-                statusDisplay.style.color = 'var(--color-o)';
-                statusDisplay.style.textShadow = '0 0 10px rgba(255, 0, 204, 0.5)';
                 winnerName = player2Name;
             }
 
-            saveToLeaderboard(winnerName);
+            // Bot wins are never ranked; only human names reach the leaderboard.
+            if (mode === 'local' || currentPlayer === 'X') saveToLeaderboard(winnerName);
 
             // Record stats
             if (typeof recordGameResult === 'function') {
@@ -156,10 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const roundDraw = !board.includes('');
         if (roundDraw) {
-            statusDisplay.textContent = drawMessage();
-            gameActive = false;
-            statusDisplay.style.color = 'var(--text-primary)';
-            statusDisplay.style.textShadow = 'none';
+            finishRound('draw', drawMessage());
 
             // Record draw as played
             if (typeof recordGameResult === 'function') {
@@ -175,14 +164,42 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         statusDisplay.textContent = currentPlayerTurn();
         updateActiveCard();
-
-        statusDisplay.style.color = 'var(--text-primary)';
-        statusDisplay.style.textShadow = 'none';
+        setStatusTone('');
+        updateBoardLock();
 
         // Trigger Bot Move
         if (gameActive && mode === "bot" && currentPlayer === 'O') {
             setTimeout(makeBotMove, 500);
         }
+    }
+
+    /** Ends the round: shows the result, locks the board and offers a new round. */
+    function finishRound(tone, message) {
+        gameActive = false;
+        statusDisplay.textContent = message;
+        setStatusTone(tone);
+        updateBoardLock();
+        resetBtnText.textContent = 'Tekrar Oyna';
+        resetBtn.classList.add('primary');
+    }
+
+    function setStatusTone(tone) {
+        statusDisplay.classList.remove('win-x', 'win-o', 'draw');
+        if (tone) statusDisplay.classList.add(tone);
+    }
+
+    // The board is locked after the round ends and while the bot is thinking.
+    function updateBoardLock() {
+        const botTurn = mode === 'bot' && currentPlayer === 'O';
+        boardElem.classList.toggle('locked', !gameActive || botTurn);
+        boardElem.setAttribute('aria-busy', String(gameActive && botTurn));
+    }
+
+    function updateCellLabel(index) {
+        const row = Math.floor(index / 3) + 1;
+        const col = (index % 3) + 1;
+        const value = board[index] || 'boş';
+        cells[index].setAttribute('aria-label', `Satır ${row}, sütun ${col}: ${value}`);
     }
 
     function updateActiveCard() {
@@ -202,77 +219,55 @@ document.addEventListener('DOMContentLoaded', () => {
         board = ['', '', '', '', '', '', '', '', ''];
 
         statusDisplay.textContent = currentPlayerTurn();
-        statusDisplay.style.color = 'var(--text-primary)';
-        statusDisplay.style.textShadow = 'none';
+        setStatusTone('');
+        resetBtnText.textContent = 'Yeniden Başlat';
+        resetBtn.classList.remove('primary');
 
         updateActiveCard();
 
-        cells.forEach(cell => {
+        cells.forEach((cell, index) => {
             cell.className = 'cell'; // reset classes
+            updateCellLabel(index);
         });
+        updateBoardLock();
 
         if (typeof playClickSound === 'function') playClickSound();
     }
 
-    /* --- LOBBY & AUTH LOGIC --- */
-    function updateAuthUI() {
-        if (!isGuest && currentUser) {
-            authSection.classList.add('hidden');
-            playerInfo.classList.remove('hidden');
-            displayPlayerName.textContent = currentUser;
-        } else {
-            authSection.classList.remove('hidden');
-            playerInfo.classList.add('hidden');
-            playerNameInput.value = '';
+    /* --- LOBBY LOGIC --- */
+    function prefillPlayerName() {
+        const profile = window.CasualProfile?.current?.();
+        if (profile?.displayName && !playerNameInput.value.trim()) {
+            playerNameInput.value = profile.displayName;
+            profileHint.classList.remove('hidden');
         }
     }
 
-    btnGuest.addEventListener('click', () => {
-        isGuest = true;
-        currentUser = playerNameInput.value.trim() || "Misafir";
-        btnGuest.classList.add('active');
-        btnLogin.classList.remove('active');
-    });
-
-    btnLogin.addEventListener('click', () => {
-        const name = playerNameInput.value.trim();
-        if (name.length < 3) {
-            alert("Lütfen en az 3 karakterli bir kullanıcı adı girin.");
-            return;
-        }
-        isGuest = false;
-        currentUser = name;
-        updateAuthUI();
-    });
-
-    btnLogout.addEventListener('click', () => {
-        isGuest = true;
-        currentUser = "Misafir";
-        updateAuthUI();
-        btnGuest.classList.add('active');
-        btnLogin.classList.remove('active');
-    });
+    function setPressed(activeBtn, group) {
+        group.forEach(b => {
+            const on = b === activeBtn;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', String(on));
+        });
+    }
 
     modeBotBtn.addEventListener('click', () => {
         mode = "bot";
-        modeBotBtn.classList.add('active');
-        modeLocalBtn.classList.remove('active');
+        setPressed(modeBotBtn, [modeBotBtn, modeLocalBtn]);
         botDifficultyRow.classList.remove('hidden');
         localPlayer2Row.classList.add('hidden');
     });
 
     modeLocalBtn.addEventListener('click', () => {
         mode = "local";
-        modeLocalBtn.classList.add('active');
-        modeBotBtn.classList.remove('active');
+        setPressed(modeLocalBtn, [modeBotBtn, modeLocalBtn]);
         botDifficultyRow.classList.add('hidden');
         localPlayer2Row.classList.remove('hidden');
     });
 
     diffBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            diffBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            setPressed(btn, [...diffBtns]);
             botDifficulty = btn.getAttribute('data-difficulty');
         });
     });
@@ -281,16 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof playClickSound === 'function') playClickSound();
 
         // Setup Players
-        player1Name = (isGuest && !playerNameInput.value.trim()) ? "Misafir" : currentUser;
+        player1Name = playerNameInput.value.trim() || "Misafir";
 
         if (mode === "bot") {
-            player2Name = `Bot (${botDifficulty})`;
+            player2Name = `Bot · ${difficultyLabels[botDifficulty]}`;
         } else {
             player2Name = player2NameInput.value.trim() || "Oyuncu 2";
         }
 
         labelX.textContent = player1Name;
         labelO.textContent = player2Name;
+        labelX.title = player1Name;
+        labelO.title = player2Name;
 
         // Reset scores
         scoreX = 0; scoreO = 0;
@@ -308,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActive = false;
         gameArea.classList.add('hidden');
         configMenu.classList.remove('hidden');
+        startGameBtn.focus();
     });
 
     /* --- LEADERBOARD LOGIC --- */
@@ -322,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveToLeaderboard(winnerName) {
         if (window.CasualCheats?.active()) return;
-        if (winnerName.includes("Bot")) return; // Don't save bot wins
 
         const lb = getLeaderboard();
         if (!lb[winnerName]) lb[winnerName] = 0;
@@ -338,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sorted = Object.entries(lb).sort((a, b) => b[1] - a[1]);
 
         if (sorted.length === 0) {
-            leaderboardContent.innerHTML = '<p style="text-align:center;">Henüz hiç galibiyet yok.</p>';
+            leaderboardContent.innerHTML = '<p class="lb-empty">Henüz hiç galibiyet yok. İlk galibiyeti sen al!</p>';
             return;
         }
 
@@ -349,20 +346,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
             player.textContent = `${medal} ${name}`;
             const total = document.createElement('span');
-            total.style.cssText = 'color:var(--cp-accent);font-weight:bold;';
-            total.textContent = `${wins} Kazanma`;
+            total.className = 'lb-wins';
+            total.textContent = `${wins} galibiyet`;
             row.append(player, total);
             leaderboardContent.appendChild(row);
         });
     }
 
+    function closeLeaderboard() {
+        if (leaderboardModal.classList.contains('hidden')) return;
+        leaderboardModal.classList.add('hidden');
+        showLeaderboardBtn.focus();
+    }
+
     showLeaderboardBtn.addEventListener('click', () => {
         renderLeaderboard();
         leaderboardModal.classList.remove('hidden');
+        closeLeaderboardBtn.focus();
     });
 
-    closeLeaderboardBtn.addEventListener('click', () => {
-        leaderboardModal.classList.add('hidden');
+    closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
+    leaderboardModal.addEventListener('click', (event) => {
+        if (event.target === leaderboardModal) closeLeaderboard();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeLeaderboard();
     });
 
     /* --- AI BOT LOGIC --- */
@@ -401,8 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isImmortalEnabled()) {
             available = available.filter(index => !wouldWin(index, 'O'));
             if (available.length === 0) {
-                gameActive = false;
-                statusDisplay.textContent = 'Berabere! Kazandıran kutular engellendi.';
+                finishRound('draw', 'Berabere! Kazandıran kutular engellendi.');
                 return;
             }
         }
@@ -500,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bind Event Listeners
     cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    prefillPlayerName();
     resetBtn.addEventListener('click', () => {
         if (typeof playClickSound === 'function') playClickSound();
         handleRestartGame();

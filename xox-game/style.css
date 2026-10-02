@@ -22,11 +22,16 @@ body {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 1.5rem 0;
     color: var(--text-primary);
-    overflow: hidden;
+    /* Tall lobbies must stay scrollable on short screens. */
+    overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
     /* Background is handled by shared-settings */
 }
@@ -76,12 +81,12 @@ select:focus-visible {
     border-top: 1px solid var(--glass-highlight);
     border-left: 1px solid var(--glass-highlight);
     border-radius: 30px;
-    padding: 2.5rem;
+    padding: 2rem 2.5rem;
     box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
     max-width: 500px;
     width: 90%;
     z-index: 10;
@@ -123,19 +128,12 @@ select:focus-visible {
     padding: 1.5rem;
     border-radius: 20px;
     border: 1px solid var(--glass-border);
-    margin-bottom: 1rem;
 }
 
 .config-menu h2 {
     text-align: center;
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
-}
-
-.auth-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .custom-input {
@@ -155,34 +153,14 @@ select:focus-visible {
     background: var(--glass-highlight);
 }
 
-.player-info {
-    text-align: center;
-    padding: 1rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--cp-accent);
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.icon-btn {
-    background: var(--glass-bg);
-    border: none;
-    color: var(--text-primary);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.icon-btn:hover {
-    background: rgba(255, 51, 102, 0.8);
-}
-
 .preset-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+}
+
+.preset-buttons--three {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .preset-btn {
@@ -190,6 +168,8 @@ select:focus-visible {
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
     padding: 0.8rem;
+    min-height: 44px;
+    font-size: 0.95rem;
     border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
@@ -218,9 +198,50 @@ select:focus-visible {
     gap: 8px;
 }
 
-.setting-row label {
+.setting-row label,
+.setting-label {
     font-size: 0.95rem;
     font-weight: 600;
+}
+
+.setting-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.start-btn {
+    width: 100%;
+}
+
+.btn.text-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.5rem;
+    min-height: 44px;
+}
+
+.game-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.game-actions .btn {
+    padding: 0.8rem 1.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+.game-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
 /* Modals & Visibility */
@@ -236,7 +257,8 @@ select:focus-visible {
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(8px);
-    border-radius: 20px;
+    border-radius: inherit;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -246,11 +268,40 @@ select:focus-visible {
 }
 
 /* Leaderboard Content */
+.leaderboard-dialog {
+    max-width: 400px;
+    background: var(--cp-bg, var(--glass-bg));
+}
+
+.leaderboard-content {
+    max-height: 250px;
+    overflow-y: auto;
+    text-align: left;
+}
+
 .lb-row {
     display: flex;
     justify-content: space-between;
+    gap: 1rem;
     padding: 0.5rem;
     border-bottom: 1px solid var(--glass-border);
+}
+
+.lb-row span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lb-wins {
+    color: var(--cp-accent);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.lb-empty {
+    text-align: center;
+    color: var(--text-muted);
 }
 
 header {
@@ -261,22 +312,20 @@ header {
 .glow-text {
     font-size: 3rem;
     font-weight: 800;
-    margin-bottom: 1.5rem;
-    color: transparent;
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
-    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.5));
-    -webkit-background-clip: text;
-    background-clip: text;
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    letter-spacing: 2px;
+    line-height: 1.1;
+    /* Theme colors keep the title readable on light themes such as Paper. */
+    color: var(--text-primary);
+    letter-spacing: 6px;
     text-transform: uppercase;
 }
 
+
 .scores {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
     width: 100%;
+    max-width: 360px;
 }
 
 .score-card {
@@ -288,32 +337,49 @@ header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 110px;
+    min-width: 0;
+    position: relative;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .score-card.active {
-    transform: translateY(-5px) scale(1.05);
     background: var(--glass-highlight);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .x-score.active {
-    border-color: rgba(0, 255, 204, 0.5);
-    box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    border-color: var(--color-x);
+    box-shadow: 0 0 0 1px var(--color-x), 0 0 18px color-mix(in srgb, var(--color-x) 30%, transparent);
 }
 
 .o-score.active {
-    border-color: rgba(255, 0, 204, 0.5);
-    box-shadow: 0 0 20px rgba(255, 0, 204, 0.2);
+    border-color: var(--color-o);
+    box-shadow: 0 0 0 1px var(--color-o), 0 0 18px color-mix(in srgb, var(--color-o) 30%, transparent);
+}
+
+.player-mark {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.x-score .player-mark {
+    color: var(--color-x);
+}
+
+.o-score .player-mark {
+    color: var(--color-o);
 }
 
 .player-label {
+    max-width: 100%;
     font-size: 0.85rem;
     color: var(--text-muted);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .score-value {
@@ -333,7 +399,9 @@ header {
 .status-display {
     font-size: 1.25rem;
     font-weight: 600;
-    padding: 0.75rem 2rem;
+    max-width: 100%;
+    text-align: center;
+    padding: 0.75rem 1.5rem;
     border-radius: 30px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
@@ -342,20 +410,38 @@ header {
     transition: all 0.3s ease;
 }
 
+.status-display.win-x {
+    color: var(--color-x);
+    border-color: var(--color-x);
+}
+
+.status-display.win-o {
+    color: var(--color-o);
+    border-color: var(--color-o);
+}
+
+.status-display.draw {
+    border-color: var(--text-muted);
+}
+
 /* Board */
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: 15px;
-    margin: 1.5rem 0;
+    gap: clamp(8px, 3vw, 15px);
+    margin: 0.5rem 0;
     perspective: 1000px;
+    --cell-size: clamp(64px, min(25vw, 12.5dvh), 100px);
     /* For 3D glass effect */
 }
 
 .cell {
-    width: 95px;
-    height: 95px;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    padding: 0;
+    color: inherit;
+    line-height: 1;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-top: 1px solid var(--glass-highlight);
@@ -364,7 +450,7 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 4rem;
+    font-size: calc(var(--cell-size) * 0.6);
     font-weight: 800;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -382,23 +468,34 @@ header {
     pointer-events: none;
 }
 
-.cell:hover:not(.occupied) {
-    background: var(--glass-highlight);
-    transform: translateZ(10px) scale(1.05);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .board:not(.locked) .cell:hover:not(.occupied) {
+        background: var(--glass-highlight);
+        transform: translateZ(10px) scale(1.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+}
+
+.board.locked .cell,
+.cell.occupied {
+    cursor: default;
+}
+
+.board.locked .cell:not(.occupied):not(.winning-cell) {
+    opacity: 0.75;
 }
 
 .cell.x::after {
     content: 'X';
     color: var(--color-x);
-    text-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+    text-shadow: 0 0 15px color-mix(in srgb, var(--color-x) 50%, transparent);
     animation: liquidPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .cell.o::after {
     content: 'O';
     color: var(--color-o);
-    text-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+    text-shadow: 0 0 15px color-mix(in srgb, var(--color-o) 50%, transparent);
     animation: liquidPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
@@ -431,12 +528,17 @@ header {
 
 .cell.winning-cell.x {
     border-color: var(--color-x);
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--color-x) 35%, transparent);
 }
 
 .cell.winning-cell.o {
     border-color: var(--color-o);
-    box-shadow: 0 0 30px rgba(255, 0, 204, 0.3);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--color-o) 35%, transparent);
+}
+
+/* Non-winning marks fade so the winning line reads at a glance. */
+.board.locked .cell.occupied:not(.winning-cell)::after {
+    opacity: 0.45;
 }
 
 /* Reset Button */
@@ -471,6 +573,11 @@ header {
     transition: 0.5s;
 }
 
+.btn.primary {
+    border-color: var(--cp-accent);
+    box-shadow: 0 0 14px var(--cp-accent-glow);
+}
+
 .btn:hover {
     background: var(--glass-highlight);
     transform: translateY(-3px);
@@ -487,20 +594,45 @@ header {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 480px) {
-    .cell {
-        width: 80px;
-        height: 80px;
-        font-size: 3rem;
+/* Narrow screens: the back link joins the page flow instead of covering the
+   title, and bottom space keeps the shared "Kod gir" button off the board. */
+@media (max-width: 720px) {
+    body {
+        justify-content: flex-start;
+        padding: 1rem 0 5.5rem;
+        gap: 1rem;
     }
 
+    .back-btn {
+        position: static;
+        align-self: flex-start;
+        margin-left: 2.5%;
+    }
+}
+
+@media (max-width: 480px) {
     .glow-text {
         font-size: 2.2rem;
     }
 
     .game-container {
-        padding: 1.5rem;
+        padding: 1.25rem 1rem;
         width: 95%;
+        border-radius: 24px;
+    }
+
+    .config-menu {
+        padding: 1.25rem 1rem;
+        gap: 1.1rem;
+    }
+
+    .btn {
+        padding: 0.9rem 1.75rem;
+        font-size: 1rem;
+    }
+
+    .score-card {
+        padding: 0.6rem 0.75rem;
     }
 }
 
@@ -508,7 +640,7 @@ header {
     .back-btn:hover,
     .icon-btn:hover,
     .preset-btn:hover,
-    .cell:hover:not(.occupied),
+    .board:not(.locked) .cell:hover:not(.occupied),
     .btn:hover {
         transform: none;
         transition: none;
