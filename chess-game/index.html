@@ -31,7 +31,7 @@
     <!-- Global Menu Navigation -->
     <a href="../index.html" class="back-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
@@ -39,30 +39,29 @@
     </a>
 
     <!-- Main Game Container -->
-    <div class="game-container">
+    <main class="game-container">
         <!-- Header -->
         <header>
             <h1 class="glow-text">SATRANÇ</h1>
         </header>
 
-        <!-- Pre-Game Lobby Overlay -->
-        <div id="lobby-menu" class="config-menu">
-            <h2>Oyun ayarı</h2>
+        <!-- Pre-Game Lobby -->
+        <section id="lobby-menu" class="config-menu" aria-labelledby="lobby-title">
+            <h2 id="lobby-title">Oyun ayarı</h2>
 
             <div class="custom-settings">
                 <div class="setting-row">
-                    <label>Rakip</label>
-                    <div class="preset-buttons" id="opponent-selector">
-                        <button type="button" class="preset-btn active" data-opponent="ai">CasualFish (Yapay zekâ)</button>
-                        <button type="button" class="preset-btn" data-opponent="local">Yerel (1'e 1)</button>
+                    <span class="setting-label" id="opponent-label">Rakip</span>
+                    <div class="preset-buttons" id="opponent-selector" role="group" aria-labelledby="opponent-label">
+                        <button type="button" class="preset-btn active" data-opponent="ai" aria-pressed="true">CasualFish (Yapay zekâ)</button>
+                        <button type="button" class="preset-btn" data-opponent="local" aria-pressed="false">Yerel (1'e 1)</button>
                     </div>
                 </div>
 
                 <div class="setting-row" id="difficulty-wrapper">
-                    <label>CasualFish zorluğu</label>
-                    <input type="range" id="bot-difficulty" min="1" max="3" value="2" step="1">
-                    <div
-                        style="display: flex; justify-content: space-between; padding: 0 10px; font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">
+                    <label class="setting-label" for="bot-difficulty">CasualFish zorluğu</label>
+                    <input type="range" id="bot-difficulty" min="1" max="3" value="2" step="1" aria-valuetext="Orta">
+                    <div class="range-labels" aria-hidden="true">
                         <span>Kolay</span>
                         <span>Orta</span>
                         <span>Zor</span>
@@ -71,31 +70,54 @@
             </div>
 
             <button type="button" id="start-game-btn" class="btn">OYUNA BAŞLA</button>
-        </div>
+        </section>
 
-        <!-- Player Turn Status Information -->
-        <div class="status-panel">
-            <div id="status-display" class="status-display turn-white">Sıra: Beyaz</div>
-        </div>
-
-        <!-- The Chess Board Container -->
-        <div class="board-wrapper">
-            <div id="chessboard" class="chessboard">
-                <!-- Javascript will inject 64 grid cells here -->
+        <!-- Game Area (hidden while the lobby is open) -->
+        <section id="game-area" class="game-area hidden" aria-label="Satranç oyunu">
+            <!-- Player Turn Status Information -->
+            <div class="status-panel">
+                <div id="status-display" class="status-display turn-white" role="status" aria-live="polite">Sıra: Beyaz</div>
             </div>
 
-            <!-- Game Over Overlay Modal -->
-            <div id="game-over-overlay" class="overlay hidden" style="z-index: 100;">
-                <h2 id="game-over-text" class="game-over-text">ŞAH MAT</h2>
-                <button type="button" id="reset-btn" class="btn">Lobiye Dön</button>
-            </div>
-        </div>
+            <!-- The Chess Board Container -->
+            <div class="board-wrapper">
+                <div id="chessboard" class="chessboard" role="grid" aria-label="Satranç tahtası. Ok tuşlarıyla gezin, Enter ile seçin.">
+                    <!-- Javascript will inject 64 grid cells here -->
+                </div>
 
-        <!-- Captured Pieces / Logs / Extras -->
-        <div class="hud-panel">
-            <button type="button" id="resign-btn" class="secondary-btn">Oyundan Çekil</button>
-        </div>
-    </div>
+                <!-- Pawn Promotion Picker -->
+                <div id="promotion-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="promotion-title">
+                    <div class="overlay-card">
+                        <h2 id="promotion-title" class="overlay-title">Piyon neye dönüşsün?</h2>
+                        <div class="promotion-choices">
+                            <button type="button" class="promotion-btn" data-piece="q" aria-label="Vezir">♛&#xFE0E;</button>
+                            <button type="button" class="promotion-btn" data-piece="r" aria-label="Kale">♜&#xFE0E;</button>
+                            <button type="button" class="promotion-btn" data-piece="b" aria-label="Fil">♝&#xFE0E;</button>
+                            <button type="button" class="promotion-btn" data-piece="n" aria-label="At">♞&#xFE0E;</button>
+                        </div>
+                        <button type="button" id="promotion-cancel" class="secondary-btn">Vazgeç</button>
+                    </div>
+                </div>
+
+                <!-- Game Over Overlay Modal -->
+                <div id="game-over-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="game-over-text">
+                    <div class="overlay-card">
+                        <h2 id="game-over-text" class="game-over-text">ŞAH MAT</h2>
+                        <p id="game-over-detail" class="game-over-detail"></p>
+                        <div class="overlay-actions">
+                            <button type="button" id="rematch-btn" class="btn">Tekrar Oyna</button>
+                            <button type="button" id="reset-btn" class="secondary-btn">Lobiye Dön</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Actions -->
+            <div class="hud-panel">
+                <button type="button" id="resign-btn" class="secondary-btn">Oyundan Çekil</button>
+            </div>
+        </section>
+    </main>
 
     <!-- Game Logic -->
     <script src="script.js"></script>
