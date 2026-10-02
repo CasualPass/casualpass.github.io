@@ -23,14 +23,30 @@
     const weaponNeed = () => Math.max(5, 7 - state.weapon);
     const recruitNeed = 5;
     const gateCost = () => ({ wood: state.zone >= 2 ? 2 : 1, iron: 1, coin: 2 });
-    let x = CENTER, y = 594, zombies = [], bullets = [], running = false, waveDone = false, kills = 0;
+    let x = CENTER, y = 594, zombies = [], bullets = [], running = false, paused = false, waveDone = false, kills = 0, gateWarned = false, hintTimer = 0;
+    const touchFirst = window.matchMedia('(hover: none)').matches;
+    const HINT = touchFirst
+        ? 'Sürükleyerek kay · kartlara dokun · zombiler kırmızı çizgiyi geçmesin.'
+        : 'A / D ya da ← → ile kay · istasyonda durunca silah ve asker gelir · zombiler kırmızı çizgiyi geçmesin.';
+    // World is 1280×720; the view scales it to fill the screen without stretching and keeps the play area (x 340–940) visible.
+    const view = { s: 1, ox: 0, oy: 0, w: 1280, h: 720, dpr: 1 };
+    function resize() {
+        const w = window.innerWidth, h = window.innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+        let s = Math.min(Math.max(w / 1280, h / 720), w / 600, h / 620);
+        const spare = Math.max(0, h - 720 * s);
+        view.s = s; view.w = w; view.h = h; view.dpr = dpr;
+        view.ox = w / 2 - CENTER * s;
+        view.oy = h - Math.min(spare * .5, 170) - 720 * s;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+        if (!running) paint(false, false, false);
+    }
     let natural = 0, spawned = 0, total = 0, gateHits = 0, gateTimer = 0;
     let spawnTimer = 0, fireTimer = 0, weaponProgress = 0, recruitProgress = 0, lastFrame = 0, lastHud = 0, toastTimer = 0, lastShotSound = 0;
     const keys = new Set();
     let dragging = false, dragClientX = 0, dragStartX = 0, moveTarget = null;
     function toast(text) { $('toast').textContent = text; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 1600); }
     function sound(freq = 180, duration = .05) {
-        if (window.cpSettings && window.cpSettings.sound === false) return;
+        if (typeof cpSettings !== 'undefined' && cpSettings.sound === false) return;
         try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; sound.context ||= new C(); const ctx2 = sound.context; if (ctx2.state === 'suspended') ctx2.resume(); const o = ctx2.createOscillator(), g = ctx2.createGain(); o.frequency.value = freq; g.gain.setValueAtTime(.025, ctx2.currentTime); g.gain.exponentialRampToValueAtTime(.001, ctx2.currentTime + duration); o.connect(g); g.connect(ctx2.destination); o.start(); o.stop(ctx2.currentTime + duration); } catch (_) {}
     }
     function update() {
@@ -38,60 +54,83 @@
         set('res-wood', state.wood); set('res-iron', state.iron); set('res-coin', state.coin);
         $('zone-label').textContent = names[state.zone]; $('gun').className = `gun g${state.weapon}`; $('weapon-name').textContent = weapons[state.weapon];
         const gunNeed = weaponNeed();
-        $('weapon-fraction').textContent = state.weapon >= 4 ? 'Tamam' : `${Math.floor(weaponProgress)}/${gunNeed}`;
+        $('weapon-fraction').textContent = state.weapon >= 4 ? 'Tamam' : `${Math.floor(weaponProgress)}/${gunNeed} sn`;
         $('weapon-fill').style.setProperty('--p', state.weapon >= 4 ? 100 : weaponProgress / gunNeed * 100);
-        $('weapon-cost').textContent = state.weapon >= 4 ? 'En iyi silah' : 'İstasyonda bekle';
-        $('squad-label').textContent = `${state.soldiers} kişilik birlik`; $('recruit-fraction').textContent = `${Math.floor(recruitProgress)}/${recruitNeed}`;
-        $('recruit-fill').style.width = `${Math.min(100, recruitProgress / recruitNeed * 100)}%`; $('recruit-cost').textContent = state.soldiers >= 12 ? 'Birlik dolu' : 'İstasyonda bekle';
+        $('weapon-cost').textContent = state.weapon >= 4 ? 'En iyi silah' : 'İstasyona git';
+        $('squad-label').textContent = `${state.soldiers} kişilik birlik`; $('recruit-fraction').textContent = state.soldiers >= 12 ? 'Dolu' : `${Math.floor(recruitProgress)}/${recruitNeed} sn`;
+        $('recruit-fill').style.width = `${Math.min(100, recruitProgress / recruitNeed * 100)}%`; $('recruit-cost').textContent = state.soldiers >= 12 ? 'Birlik dolu' : 'İstasyona git';
         $('pips').innerHTML = Array.from({ length: Math.min(state.soldiers, 8) }, () => '<i></i>').join(''); $('power').textContent = String(state.soldiers * (10 + state.weapon * 8)); $('lv').textContent = String(state.unlocked + 1);
         $('lane-status').textContent = waveDone
-            ? (state.zone >= 4 ? 'Beş bölge temizlendi!' : `Dalga bitti · merkezde ${GATE_HITS} vuruş · ${gateHits}/${GATE_HITS}`)
+            ? (state.zone >= 4 ? 'Beş bölge temizlendi!' : `Yol temiz · geçidi açmak için ortada dur · ${gateHits}/${GATE_HITS}`)
             : `Birlik ${state.soldiers} · ${Number(kills.toFixed(2))} zombi etkisiz · kalan ${Math.max(0, total - natural)}`;
     }
-    function pos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 1280, y: (e.clientY - r.top) / r.height * 720 }; }
-    function endDrag() { dragging = false; }
+        function endDrag() { dragging = false; }
     canvas.addEventListener('pointerdown', e => {
-        const p = pos(e);
-        if (Math.abs(p.x - x) > 110 || p.y < 470) { toast('Birlikten tutup sürükle ya da A / D kullan.'); return; }
+        if (!running) return;
         dragging = true; moveTarget = null; dragClientX = e.clientX; dragStartX = x;
         try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     });
     canvas.addEventListener('pointermove', e => {
         if (!dragging) return;
-        const r = canvas.getBoundingClientRect();
-        x = Math.max(MIN_X, Math.min(MAX_X, dragStartX + (e.clientX - dragClientX) / r.width * 1280));
+        x = Math.max(MIN_X, Math.min(MAX_X, dragStartX + (e.clientX - dragClientX) / view.s));
     });
     canvas.addEventListener('pointerup', endDrag);
     canvas.addEventListener('pointercancel', endDrag);
     canvas.addEventListener('lostpointercapture', endDrag);
     window.addEventListener('keydown', e => {
+        if (e.defaultPrevented || (e.target instanceof Element && e.target.closest('.cp-cheat'))) return;
         if (e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))) return;
         const k = e.key.toLowerCase();
+        if ((k === 'escape' || k === 'p') && !e.repeat) {
+            if (running) { e.preventDefault(); pause(); } else if (paused) { e.preventDefault(); resume(); }
+            return;
+        }
         if (['arrowleft', 'arrowright', 'a', 'd'].includes(k)) { e.preventDefault(); moveTarget = null; keys.add(k); }
     });
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => keys.clear());
-    $('base-toggle').textContent = 'Merkeze dön';
     $('base-toggle').addEventListener('click', () => { moveTarget = CENTER; toast('Birlik merkeze dönüyor.'); });
     $('weapon-btn').addEventListener('click', () => { moveTarget = WEAPON_X; toast('Birlik silah istasyonuna ilerliyor.'); });
     $('recruit-btn').addEventListener('click', () => { moveTarget = RECRUIT_X; toast('Birlik +1 istasyonuna ilerliyor.'); });
-    function startZone(index = state.zone) {
+    function overlay(html, onPrimary) {
+        $('result').innerHTML = `<div>${html}</div>`;
+        $('result').classList.remove('hidden');
+        const btn = $('again'); btn.onclick = onPrimary;
+        try { btn.focus({ preventScroll: true }); } catch (_) {}
+    }
+    const homeLink = '<a class="home" href="../index.html">Ana sayfa</a>';
+    function begin() {
+        $('result').classList.add('hidden');
+        running = true; paused = false; lastFrame = performance.now();
+        clearTimeout(hintTimer); $('hint').classList.remove('faded');
+        hintTimer = setTimeout(() => $('hint').classList.add('faded'), 9000);
+        requestAnimationFrame(frame);
+    }
+    function pause() {
+        if (!running) return;
+        running = false; paused = true; keys.clear(); dragging = false;
+        overlay(`<h2>Duraklatıldı</h2><p>${names[state.zone]} · ${Math.floor(kills)} zombi etkisiz. Devam etmek için Esc ya da P.</p><button type="button" id="again">Devam et</button>${homeLink}`, resume);
+    }
+    function resume() { if (paused) begin(); }
+    function intro() {
+        paused = true;
+        overlay(`<h2>Son Hat <small>Beta</small></h2><p>Zombiler yolun sonundaki kırmızı çizgiye ulaşmadan onları durdur. Birliğin kendiliğinden ateş eder; sen yalnızca sağa sola kaydır.</p><ul><li><b>Silah istasyonu</b> · üstünde bekle, silahın güçlenir.</li><li><b>+1 kişi istasyonu</b> · üstünde bekle, birliğe asker katılır.</li><li><b>Geçit</b> · dalga bitince ortada dur; ganimetle geçidi açıp yeni sokağa geç.</li></ul><p class="keys">${touchFirst ? 'Parmağınla sürükle ya da kartlara dokun.' : 'A / D ya da ← → ile kay · Esc ile duraklat.'}</p><button type="button" id="again">${state.zone ? `${names[state.zone]} · devam et` : 'Başla'}</button>`, begin);
+    }
+    function startZone(index = state.zone, autoStart = true) {
         if (window.CasualCheats && CasualCheats.features()) { state.unlocked = 4; state.weapon = 4; }
         state.zone = index; waveDone = false; zombies = []; bullets = []; kills = 0; natural = 0; spawned = 0; total = 9 + index * 4;
-        spawnTimer = .8; fireTimer = .1; weaponProgress = 0; recruitProgress = 0; gateHits = state.gateHits; gateTimer = 0; x = CENTER; y = 594; moveTarget = null; running = true;
-        $('result').classList.add('hidden'); $('base').classList.add('hidden');
-        $('hint').textContent = 'A/D · ← → · sürükle — düz ateş; sandıkta beklemek riskli.';
-        save(); update(); lastFrame = performance.now(); requestAnimationFrame(frame);
+        spawnTimer = .8; fireTimer = .1; weaponProgress = 0; recruitProgress = 0; gateHits = state.gateHits; gateTimer = 0; gateWarned = false; x = CENTER; y = 594; moveTarget = null; running = false;
+        $('hint').textContent = HINT;
+        save(); update();
+        if (autoStart) begin(); else paint(false, false, false);
     }
     function finish(won) {
         if (!won && window.CasualCheats && CasualCheats.immortal()) return;
         if (!running) return; running = false; keys.clear(); dragging = false;
         if (!won) {
-            $('result').innerHTML = '<div><h2>Hat düştü</h2><p>Bir zombi kırmızı çizgiyi geçti. Birlik dağıldı, kaynakların duruyor.</p><button type="button" id="again">Ücretsiz yeniden dene</button></div>';
-            $('result').classList.remove('hidden'); $('again').onclick = () => startZone(state.zone); sound(90, .2);
+            overlay(`<h2>Hat düştü</h2><p>Bir zombi kırmızı çizgiyi geçti. Bu dalgada ${Math.floor(kills)} zombi etkisiz; silahın, birliğin ve ganimetin duruyor.</p><button type="button" id="again">Yeniden dene</button>${homeLink}`, () => startZone(state.zone)); sound(90, .2);
         } else {
-            $('result').innerHTML = '<div><h2>Beş bölge temiz</h2><p>Hat tutuldu! Bölge ve kaynak ilerlemen korunuyor.</p><button type="button" id="again">Baştan oyna</button></div>';
-            $('result').classList.remove('hidden'); $('again').onclick = () => startZone(0); sound(660, .25);
+            overlay(`<h2>Beş bölge temiz</h2><p>Hat tutuldu! Silahın, birliğin ve ganimetin korunuyor.</p><button type="button" id="again">Baştan oyna</button>${homeLink}`, () => startZone(0)); sound(660, .25);
         }
         save(); update(); if (typeof window.recordGameResult === 'function') { try { window.recordGameResult('Son Hat', { won, score: kills }); } catch (_) {} }
     }
@@ -173,11 +212,11 @@
             const cost = gateCost();
             gateTimer += dt;
             while (gateTimer >= GATE_STEP && gateHits < GATE_HITS) {
-                if (state.wood < cost.wood || state.iron < cost.iron || state.coin < cost.coin) { gateTimer = 0; toast('Geçit vuruşu için kaynak yetersiz.'); break; }
+                if (state.wood < cost.wood || state.iron < cost.iron || state.coin < cost.coin) { gateTimer = 0; if (!gateWarned) toast('Geçit vuruşu için ganimet yetmiyor.'); gateWarned = true; break; }
                 state.wood -= cost.wood; state.iron -= cost.iron; state.coin -= cost.coin; gateHits++; state.gateHits = gateHits; gateTimer -= GATE_STEP; save(); sound(300 + gateHits * 26, .05);
             }
             if (gateHits >= GATE_HITS) { state.unlocked = Math.max(state.unlocked, state.zone + 1); state.wins++; state.gateHits = 0; save(); startZone(state.zone + 1); return; }
-        } else gateTimer = Math.max(0, gateTimer - dt * 2);
+        } else { gateTimer = Math.max(0, gateTimer - dt * 2); gateWarned = false; }
         if (time - lastHud > 100) { update(); lastHud = time; }
         paint(weaponStation, recruitStation, gateStation); requestAnimationFrame(frame);
     }
@@ -191,12 +230,14 @@
         ctx.fillStyle = active ? '#ffe98a' : '#8d9a6a'; ctx.fillRect(xx - 56, 604, 112 * Math.max(0, Math.min(1, ratio)), 8);
     }
     function paint(weaponActive, recruitActive, gateActive) {
-        ctx.clearRect(0, 0, 1280, 720); ctx.fillStyle = '#c9e9f4'; ctx.fillRect(0, 0, 1280, 720);
+        ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+        ctx.fillStyle = '#c9e9f4'; ctx.fillRect(0, 0, view.w, view.h);
+        ctx.setTransform(view.dpr * view.s, 0, 0, view.dpr * view.s, view.dpr * view.ox, view.dpr * view.oy);
         ctx.fillStyle = '#ffe6a6'; ctx.beginPath(); ctx.arc(1080, 82, 38, 0, Math.PI * 2); ctx.fill();
-        for (let s = 0; s < 2; s++) for (let i = 0; i < 6; i++) { const x0 = s ? 875 + i * 69 : 14 + i * 70, top = i * 7; ctx.fillStyle = ['#d8c5a8', '#becfd0', '#e2b7a8', '#c7d1b4'][i % 4]; ctx.fillRect(x0, 48 + top, 62, 160 - top); ctx.fillStyle = '#64828a'; for (let yy = 64 + top; yy < 178; yy += 31) for (let xx = x0 + 9; xx < x0 + 55; xx += 23) ctx.fillRect(xx, yy, 12, 15); }
-        polygon([[0, 210], [486, 150], [315, 720], [0, 720]], '#aaa18a'); polygon([[1280, 210], [794, 150], [965, 720], [1280, 720]], '#aaa18a');
-        polygon([[315, 720], [486, 150], [794, 150], [965, 720]], '#545b5b');
-        polygon([[0, 222], [486, 150], [500, 167], [0, 267]], '#cbc5b3'); polygon([[1280, 222], [794, 150], [780, 167], [1280, 267]], '#cbc5b3');
+        for (let s = 0; s < 2; s++) for (let i = -8; i < 6; i++) { const x0 = s ? 875 + (5 - i) * 69 : 14 + i * 70, top = Math.max(0, i) * 7; ctx.fillStyle = ['#d8c5a8', '#becfd0', '#e2b7a8', '#c7d1b4'][i % 4]; ctx.fillRect(x0, 48 + top, 62, 160 - top); ctx.fillStyle = '#64828a'; for (let yy = 64 + top; yy < 178; yy += 31) for (let xx = x0 + 9; xx < x0 + 55; xx += 23) ctx.fillRect(xx, yy, 12, 15); }
+        polygon([[-1400, 290], [0, 210], [486, 150], [201, 1100], [-1400, 1100]], '#aaa18a'); polygon([[2680, 290], [1280, 210], [794, 150], [1079, 1100], [2680, 1100]], '#aaa18a');
+        polygon([[201, 1100], [486, 150], [794, 150], [1079, 1100]], '#545b5b');
+        polygon([[-1400, 302], [0, 222], [486, 150], [500, 167], [0, 267], [-1400, 347]], '#cbc5b3'); polygon([[2680, 302], [1280, 222], [794, 150], [780, 167], [1280, 267], [2680, 347]], '#cbc5b3');
         ctx.strokeStyle = '#f3dfa0'; ctx.lineWidth = 3; for (let i = 0; i < 8; i++) { const t = i / 8, yy = 190 + t * t * 500; ctx.beginPath(); ctx.moveTo(CENTER - 3 - t * 14, yy); ctx.lineTo(CENTER + 3 + t * 14, yy); ctx.stroke(); }
         for (let i = 0; i < 3; i++) { const t = .2 + i * .29, yy = 160 + t * 450, side = i % 2 ? -1 : 1, lx = CENTER + side * (190 + t * 140); ctx.strokeStyle = '#46524a'; ctx.lineWidth = 4 + t * 3; ctx.beginPath(); ctx.moveTo(lx, yy); ctx.lineTo(lx, yy - 56 * t); ctx.stroke(); ctx.fillStyle = '#f5df9b'; ctx.beginPath(); ctx.arc(lx, yy - 58 * t, 5 * t + 2, 0, Math.PI * 2); ctx.fill(); }
         for (let i = 0; i < 2; i++) { const yy = 285 + i * 100, xx = 545 + i * 142; ctx.fillStyle = i ? '#b75c43' : '#d7d5c7'; ctx.fillRect(xx, yy, 48, 20); ctx.fillStyle = '#313f40'; ctx.fillRect(xx + 7, yy - 9, 33, 12); ctx.fillStyle = '#d8ebdd'; ctx.fillRect(xx + 10, yy - 7, 10, 7); ctx.fillRect(xx + 27, yy - 7, 9, 7); }
@@ -207,9 +248,9 @@
             ctx.fillStyle = gateActive ? 'rgba(255,218,94,.55)' : '#8b633d'; ctx.fillRect(520, 486, 240, 60);
             ctx.strokeStyle = '#efd59a'; ctx.lineWidth = 4; ctx.strokeRect(520, 486, 240, 60);
             ctx.fillStyle = '#fff'; ctx.font = '700 15px Outfit, sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(`GEÇİT ${gateHits}/${GATE_HITS} · HER VURUŞ ${cost.wood}TA ${cost.iron}D ${cost.coin}P`, 640, 506);
+            ctx.fillText(`GEÇİT ${gateHits}/${GATE_HITS} · vuruş: ${cost.wood} tahta ${cost.iron} demir ${cost.coin} para`, 640, 506);
             for (let i = 0; i < GATE_HITS; i++) { ctx.fillStyle = i < gateHits ? '#ffe98a' : 'rgba(0,0,0,.3)'; ctx.fillRect(528 + i * 29, 516, 23, 14); }
-            ctx.font = '600 12px Outfit, sans-serif'; ctx.fillText('ortada kal', 640, 543);
+            ctx.font = '600 12px Outfit, sans-serif'; ctx.fillText('açmak için ortada dur', 640, 543);
         }
         station(WEAPON_X, 'SİLAH', weaponActive, state.weapon >= 4 ? 1 : weaponProgress / weaponNeed(), state.weapon >= 4 ? 'Tamam' : `${Math.floor(weaponProgress)}/${weaponNeed()} sn`);
         station(RECRUIT_X, '+1 KİŞİ', recruitActive, state.soldiers >= 12 ? 1 : recruitProgress / recruitNeed, state.soldiers >= 12 ? 'Dolu' : `${Math.floor(recruitProgress)}/${recruitNeed} sn`);
@@ -251,5 +292,7 @@
         kills = Number((kills + plus).toFixed(3));
         update();
     }, 1000);
-    update(); startZone(Math.min(state.zone, state.unlocked));
+    window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+    resize(); startZone(Math.min(state.zone, state.unlocked), false); intro();
 })();

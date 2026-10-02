@@ -66,6 +66,19 @@ Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu e
 - Playwright (Chromium) uçtan uca: oturum başlatma (+15 CM), yetersiz bakiyede satın alma reddi, gerçek uçuş ve çarpışma sonrası sonuç ekranı, 20 puan → 10 CM, 500 puan → 40 CM tavanı, Kar Baykuşu'nu 80 CM'ye alıp seçme, yenileme sonrası seçimin korunması, ölümsüzlük hilesinde sütunlardan geçip puan alma.
 - Görsel kontrol: masaüstü, 390 px telefon, 1000 px tablet dashboard'u ve Paper teması. Konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hataları görüldü.
 
+## 2026-10-01 — Dashboard UI/UX düzeltmeleri
+
+### Yapılanlar
+
+- `index.html`: Oyunlar paneli karşılama alanının hemen altına alındı; telefonda ilk ekranda dört oyun kartı tam görünür (önce yalnızca ilk satırın üstü görünüyordu). Metrikler ve yeniden doğuş oyunların altında.
+- `style.css`: Toast, sabit "Kod gir" düğmesinin arkasında kalıyordu; artık onun üstünde ve önünde. Footer'a düğme kadar alt boşluk eklendi. 9–10 px metinler 11–13 px'e büyütüldü. "Temizle" 40 px dokunma alanı aldı. Telefonda oturum düğmesi, ödül alınana kadar etiketini gösterir. 400 px altında kart numaraları gizlenir (Snake sanatıyla çakışıyordu).
+- `casual-cheats.js`: Sabit "Kod gir" düğmesi oyun sayfalarında her genişlikte, dashboard'da 720 px altında 44 px'lik yalnızca simgeli düğmedir (XOX tahtasını ve 1280 px'te Wood Turning'in "Zımparaya geç" düğmesini kapatıyordu); erişilebilir adı "Kod gir" olarak kalır. Sürümlü sayfalarda `?v=6`. `font: inherit` sıfırlaması `:where(.cp-cheat)` ile düşük özgüllüğe indirildi; önceden düğmelerin kendi boyut/kalınlık kuralları (ör. 14 px/800) eziliyordu ve oyunlar düğmeyi yeniden biçimlendiremiyordu.
+- `script.js`: Günlük ödül oturum yokken oturumu da başlatır. Oturum ödülü günlük olduğundan, alınmamışsa düğme "Ödülü al", metrik "Bugün alındı" gösterir. Tema kartları açıklamayı, düğme fiyatı gösterir. "Temizle" yalnızca hareket varken görünür. Oyun sayısı metni kartlardan hesaplanır.
+
+### Testler
+
+- Playwright (Chromium) 1440, 1000, 390 ve 320 px: yatay taşma yok, sayfa hatası yok, 40 px altı düğme yok (atlama bağlantısı ve logo hariç), toast ile "Kod gir" çakışmıyor, oturumsuz günlük ödül +15 ve +20 CM verir.
+
 ## 2026-10-01 — Wood Blocks
 
 ### Amaç
@@ -77,7 +90,7 @@ Woodoku benzeri bir ahşap blok bulmacası eklemek; blok görünümlerini Casual
 - `wood-blocks/`: Canvas tabanlı 9×9 bulmaca. Her turda 3 parça gelir; fare veya dokunmayla sürüklenir (dokunmada parça parmağın üstünde görünür). Dolu satır, sütun ve 3×3 kareler silinir. Yerleştirilen her kare 1 puan; silinen her grup 18 puan, aynı hamlede birden fazla grup ek bonus; art arda 3 hamle içinde yeniden silmek seri çarpanı verir. Hiçbir parça sığmayınca oyun biter. Klavye: 1/2/3 parça seçer, oklar taşır, Enter bırakır, Esc vazgeçer. Yeni elde her zaman en az bir parça sığar: rastgele el birkaç kez yeniden çekilir, yine sığmazsa bir parçası sığan bir şekille değiştirilir. Tahtaya sığmayan parçalar tepside soluk görünür.
 - `casual-profile.js`: `woods` kataloğu (Çam ücretsiz; Ceviz 90, Kiraz 180, Abanoz 360 CM), `ownedWoods`/`selectedWood`, `buyWood`, `selectWood`, `blocksRewardForScore`, `awardBlocksGame` eklendi. Ödül `floor(skor / 50)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` ahşapları da açar.
 - `casual-cheats.js`: Ölümsüzlükte tahta tıkanınca parçalar yenilenir; `allopen` ahşapları kaydetmeden önizlemeye açar.
-- Dashboard ve Wood Blocks `casual-profile.js?v=12` ve `casual-cheats.js?v=4` yükler. Diğer oyun sayfalarının sürüm etiketlerine, açık UI/UX PR'larıyla çakışmasın diye dokunulmadı. Eski `cleanProfile` bilinmeyen alanları attığı için, yayından önce açılmış bir sekme profili yazarsa yeni `ownedWoods` alanı sıfırlanabilir; aynı risk baykuşlarda da vardı.
+- Dashboard ve Wood Blocks `casual-profile.js?v=12` ve `casual-cheats.js?v=7` yükler (main'deki `?v=6` düğme değişiklikleri ve yeni ahşap ipuçları birlikte); dashboard stili `style.css?v=15`. Diğer oyun sayfalarının sürüm etiketlerine, açık UI/UX PR'larıyla çakışmasın diye dokunulmadı. Eski `cleanProfile` bilinmeyen alanları attığı için, yayından önce açılmış bir sekme profili yazarsa yeni `ownedWoods` alanı sıfırlanabilir; aynı risk baykuşlarda da vardı.
 - `index.html`, `style.css`: Dashboard'a 8. kart (Wood Blocks); masaüstü grid 8 sütun.
 - Rekor `cp_blocks_best` çerezinde, istatistik `recordGameResult('Wood Blocks', …)` ile tutulur.
 
