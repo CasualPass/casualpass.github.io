@@ -19,6 +19,7 @@
     const SPACING = 255;
     const BEST_COOKIE = 'cp_owl_best';
     const FLAP_KEYS = new Set(['Space', 'ArrowUp', 'KeyW']);
+    const RESULT_LOCK_MS = 600;
 
     /* Visual palettes live with the renderer; names and prices come from CasualProfile.owls. */
     const palettes = {
@@ -53,6 +54,8 @@
     let trailTimer = 0;
     let toastTimer = 0;
     let audio = null;
+    let shownMode = '';
+    let armTimer = 0;
 
     function cheats() { return window.CasualCheats; }
     function cheatOn(name) { const c = cheats(); return Boolean(c && typeof c[name] === 'function' && c[name]()); }
@@ -121,7 +124,7 @@
             line.append(text);
             return;
         }
-        text.textContent = 'Oturum kapalı · CM kazanmak ve karakter almak için aç.';
+        text.textContent = 'Oturum kapalı · CM ve karakterler için başlat.';
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = 'Oturumu başlat';
@@ -602,12 +605,24 @@
         $('over-title').textContent = crashReason === 'ground' ? 'Yere indin' : 'Sütuna çarptın';
         $('over-score').textContent = formatScore(score);
         $('over-best').textContent = String(best);
-        $('over-reward').textContent = `+${CasualProfile.formatMoney(reward)} CM`;
+        const canEarn = !cheating && Boolean(CasualProfile.current());
+        $('over-reward').textContent = canEarn ? `+${CasualProfile.formatMoney(reward)} CM` : '—';
+        $('over-reward').classList.toggle('none', !reward);
         $('over-note').textContent = note.trim();
-        $('over').classList.remove('hidden');
+        // Taps and key presses meant for the owl can land on the result sheet; keep its buttons inert for a moment.
+        const over = $('over');
+        const buttons = over.querySelectorAll('button');
+        over.classList.add('arming');
+        buttons.forEach((button) => { button.disabled = true; });
+        over.classList.remove('hidden');
+        window.clearTimeout(armTimer);
+        armTimer = window.setTimeout(() => {
+            over.classList.remove('arming');
+            buttons.forEach((button) => { button.disabled = false; });
+            if (mode === 'over') $('retry-btn').focus({ preventScroll: true });
+        }, RESULT_LOCK_MS);
         updateHud();
         renderOwls();
-        $('retry-btn').focus({ preventScroll: true });
     }
 
     function circleHitsRect(cx, cy, r, x, y, w, h) {
@@ -708,7 +723,25 @@
             remaining -= dt;
         }
         draw();
+        syncPauseButton();
         requestAnimationFrame(frame);
+    }
+
+    function syncPauseButton() {
+        if (mode === shownMode) return;
+        shownMode = mode;
+        const button = $('pause-btn');
+        button.classList.toggle('hidden', mode !== 'playing' && mode !== 'paused');
+        const paused = mode === 'paused';
+        button.setAttribute('aria-label', paused ? 'Devam et' : 'Duraklat');
+        button.innerHTML = paused
+            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>'
+            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"></rect><rect x="14" y="5" width="4" height="14" rx="1.2"></rect></svg>';
+    }
+
+    function togglePause() {
+        if (mode === 'playing') mode = 'paused';
+        else if (mode === 'paused') flap();
     }
 
     function fitCanvas() {
@@ -733,13 +766,13 @@
     window.addEventListener('keydown', (event) => {
         const target = event.target;
         if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
-        if (event.key === 'Escape' && mode === 'playing') { mode = 'paused'; return; }
+        if (event.key === 'Escape' && (mode === 'playing' || mode === 'paused')) { togglePause(); return; }
         if (!FLAP_KEYS.has(event.code)) return;
         if (mode === 'menu') return;
         if (mode === 'over') {
             if (target instanceof HTMLButtonElement) return;
             event.preventDefault();
-            if (performance.now() - overAt > 500) startRun();
+            if (performance.now() - overAt > RESULT_LOCK_MS) startRun();
             return;
         }
         event.preventDefault();
@@ -755,6 +788,10 @@
     });
     window.addEventListener('blur', () => { if (mode === 'playing') mode = 'paused'; });
 
+    $('pause-btn').addEventListener('click', () => {
+        togglePause();
+        stage.focus({ preventScroll: true });
+    });
     $('start-btn').addEventListener('click', startRun);
     $('retry-btn').addEventListener('click', startRun);
     $('menu-btn').addEventListener('click', showMenu);
