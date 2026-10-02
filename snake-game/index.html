@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Snake — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
     <link rel="stylesheet" href="style.css">
@@ -29,14 +29,19 @@
     <main class="game-container">
         <header>
             <h1 class="glow-text">Snake</h1>
-            <div class="scores" id="scores" role="status" aria-live="polite">
-                <div class="score-card">
-                    <span class="player-label">Skor</span>
-                    <span class="score-value" id="score">0</span>
+            <div class="score-row">
+                <div class="scores" id="scores" role="status" aria-live="polite">
+                    <div class="score-card">
+                        <span class="player-label">Skor</span>
+                        <span class="score-value" id="score">0</span>
+                    </div>
+                    <div class="score-card personal-best">
+                        <span class="player-label">Rekor</span>
+                        <span class="score-value" id="high-score">0</span>
+                    </div>
                 </div>
-                <div class="score-card personal-best">
-                    <span class="player-label">Rekor</span>
-                    <span class="score-value" id="high-score">0</span>
+                <div class="game-actions hidden" id="game-actions">
+                    <button class="icon-btn" id="pause-btn" type="button" aria-pressed="false" aria-label="Duraklat" title="Duraklat (Boşluk)">❚❚</button>
                 </div>
             </div>
         </header>
@@ -54,17 +59,17 @@
 
             <div class="custom-settings">
                 <div class="setting-row">
-                    <label for="grid-size">Grid Boyutu: <span id="grid-val">20x20</span></label>
+                    <label for="grid-size">Alan boyutu <span id="grid-val">20x20</span></label>
                     <input type="range" id="grid-size" min="10" max="40" step="5" value="20">
                 </div>
 
                 <div class="setting-row">
-                    <label for="speed-val">Hız (FPS): <span id="speed-display">12</span></label>
+                    <label for="speed-val">Hız <span id="speed-display">12 adım/sn</span></label>
                     <input type="range" id="speed-val" min="5" max="30" step="1" value="12">
                 </div>
 
                 <div class="setting-row toggle-row">
-                    <label for="wall-death">Duvara Çarpınca Öl</label>
+                    <label for="wall-death">Duvara çarpınca öl <small id="wall-hint">Kapalıyken karşı kenardan çıkarsın</small></label>
                     <label class="toggle">
                         <input type="checkbox" id="wall-death" checked>
                         <span class="slider"></span>
@@ -78,30 +83,41 @@
         </div>
 
         <div class="board-wrapper hidden" id="board-wrapper">
-            <canvas id="game-canv" width="400" height="400" role="img" aria-label="Yılan oyun alanı"></canvas>
+            <canvas id="game-canv" width="400" height="400" tabindex="-1" role="img" aria-label="Yılan oyun alanı"></canvas>
+
+            <!-- Start hint, shown until the first move -->
+            <div id="start-hint" class="overlay hint-overlay hidden" aria-hidden="true">
+                <p class="hint-title">Hazır mısın?</p>
+                <p class="hint-text hint-keys">Başlamak için bir yön tuşuna bas<br><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> ya da <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></p>
+                <p class="hint-text hint-touch">Başlamak için alanda kaydır ya da yön tuşlarına dokun</p>
+                <p class="hint-text hint-sub hint-keys">Duraklatmak için <kbd>Boşluk</kbd> ya da <kbd>Esc</kbd></p>
+            </div>
+
+            <!-- Pause Overlay -->
+            <div id="pause-overlay" class="overlay hidden" role="dialog" aria-modal="false" aria-labelledby="pause-title">
+                <h2 class="overlay-title" id="pause-title">Duraklatıldı</h2>
+                <button class="btn" id="resume-btn" type="button">Devam Et</button>
+                <button class="btn text-btn" id="pause-menu-btn" type="button">Ayarlara Dön</button>
+            </div>
 
             <!-- Game Over Overlay -->
-            <div id="game-over-overlay" class="overlay hidden">
+            <div id="game-over-overlay" class="overlay hidden" role="dialog" aria-modal="false" aria-labelledby="game-over-title">
                 <h2 class="game-over-text" id="game-over-title">Oyun Bitti</h2>
+                <p class="final-score">Skor <strong id="final-score">0</strong></p>
+                <p class="new-record hidden" id="new-record">Yeni rekor!</p>
                 <button class="btn reset-btn" id="restart-btn" type="button">
                     <span class="btn-text">Tekrar Oyna</span>
                 </button>
-                <button class="btn text-btn" id="back-to-menu-btn" type="button"
-                    style="margin-top: 10px; background: transparent; border: none; font-size: 0.9rem;">
-                    Ayarlara Dön
-                </button>
+                <button class="btn text-btn" id="back-to-menu-btn" type="button">Ayarlara Dön</button>
             </div>
         </div>
 
-        <!-- Mobile Controls (hidden on desktop via css) -->
-        <div class="mobile-controls" role="group" aria-label="Yön tuşları">
+        <!-- Touch controls: shown on touch screens while a game is on -->
+        <div class="mobile-controls hidden" id="mobile-controls" role="group" aria-label="Yön tuşları">
             <button class="d-pad up" type="button" data-dir="UP" aria-label="Yukarı">▲</button>
-            <div class="d-pad-middle">
-                <button class="d-pad left" type="button" data-dir="LEFT" aria-label="Sola">◀</button>
-                <div class="d-pad-center"></div>
-                <button class="d-pad right" type="button" data-dir="RIGHT" aria-label="Sağa">▶</button>
-            </div>
+            <button class="d-pad left" type="button" data-dir="LEFT" aria-label="Sola">◀</button>
             <button class="d-pad down" type="button" data-dir="DOWN" aria-label="Aşağı">▼</button>
+            <button class="d-pad right" type="button" data-dir="RIGHT" aria-label="Sağa">▶</button>
         </div>
     </main>
 
