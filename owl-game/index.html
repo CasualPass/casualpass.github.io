@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#141a3a">
     <title>Minerva Owl — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=1">
+    <link rel="stylesheet" href="style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js"></script>
     <script src="../casual-profile.js?v=11"></script>
@@ -21,7 +21,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 <span>Oyunlar</span>
             </a>
-            <div class="owl-stats" role="status" aria-live="polite">
+            <div class="owl-stats">
                 <span class="owl-stat"><small>Skor</small><b id="score">0</b></span>
                 <span class="owl-stat"><small>Rekor</small><b id="best">0</b></span>
                 <span class="owl-stat coin"><small>CM</small><b id="balance">0</b></span>
@@ -30,6 +30,9 @@
 
         <section class="stage" id="stage" tabindex="-1" aria-label="Minerva Owl">
             <canvas id="sky" width="480" height="720" role="img" aria-label="Baykuşun mermer sütunlar arasından uçtuğu gece göğü"></canvas>
+            <button class="pause-btn hidden" id="pause-btn" type="button" aria-label="Duraklat">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"></rect><rect x="14" y="5" width="4" height="14" rx="1.2"></rect></svg>
+            </button>
             <p class="stage-hint hidden" id="stage-hint">Dokun, tıkla ya da <kbd>Boşluk</kbd></p>
 
             <div class="sheet-overlay" id="menu">
@@ -43,11 +46,13 @@
                         <span id="owl-count">1 / 6</span>
                     </div>
                     <div class="owl-grid" id="owl-grid"></div>
-                    <button class="primary" id="start-btn" type="button">Uçuşa başla</button>
+                    <div class="sheet-footer">
+                        <button class="primary" id="start-btn" type="button">Uçuşa başla</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="sheet-overlay hidden" id="over">
+            <div class="sheet-overlay hidden" id="over" role="dialog" aria-labelledby="over-title">
                 <div class="sheet compact">
                     <p class="eyebrow">UÇUŞ BİTTİ</p>
                     <h2 id="over-title">Sütuna çarptın</h2>
@@ -67,6 +72,6 @@
     </main>
 
     <div class="owl-toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="script.js?v=1"></script>
+    <script src="script.js?v=2"></script>
 </body>
 </html>
