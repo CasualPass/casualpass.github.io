@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#3b2618">
+    <title>Wood Blocks — CasualPass</title>
+    <link rel="stylesheet" href="../shared-settings.css">
+    <link rel="stylesheet" href="style.css?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="../shared-settings.js"></script>
+    <script src="../casual-profile.js?v=12"></script>
+    <script src="../casual-cheats.js?v=7"></script>
+</head>
+<body class="theme-liquid">
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+
+    <main class="wb-app">
+        <header class="wb-hud">
+            <a class="wb-back" href="../index.html" aria-label="Oyunlara dön">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Oyunlar</span>
+            </a>
+            <div class="wb-stats" role="status" aria-live="polite">
+                <span class="wb-stat"><small>Skor</small><b id="score">0</b></span>
+                <span class="wb-stat"><small>Rekor</small><b id="best">0</b></span>
+                <span class="wb-stat coin"><small>CM</small><b id="balance">0</b></span>
+            </div>
+        </header>
+
+        <section class="stage" id="stage" tabindex="-1" aria-label="Wood Blocks">
+            <canvas id="board" width="540" height="780" role="img" aria-label="9x9 ahşap tahta ve altında yerleştirilecek üç parça"></canvas>
+            <p class="stage-hint hidden" id="stage-hint">Parçayı tahtaya sürükle<span class="kbd-only"> · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> seç, oklarla taşı, <kbd>Enter</kbd> bırak</span></p>
+
+            <div class="sheet-overlay" id="menu">
+                <div class="sheet">
+                    <p class="eyebrow">AHŞAP BULMACA</p>
+                    <h1>Wood Blocks</h1>
+                    <p class="lead">Parçaları 9×9 tahtaya yerleştir. Dolu satır, sütun ve 3×3 kareler silinir. Her 50 puan 1 CM.</p>
+                    <div class="session-line" id="session-line"></div>
+                    <div class="sheet-heading">
+                        <h2>Ahşaplar</h2>
+                        <span id="wood-count">1 / 4</span>
+                    </div>
+                    <div class="wood-grid" id="wood-grid"></div>
+                    <button class="primary" id="start-btn" type="button">Oyuna başla</button>
+                </div>
+            </div>
+
+            <div class="sheet-overlay hidden" id="over">
+                <div class="sheet compact">
+                    <p class="eyebrow">OYUN BİTTİ</p>
+                    <h2 id="over-title">Yer kalmadı</h2>
+                    <div class="result-row">
+                        <span><small>Skor</small><b id="over-score">0</b></span>
+                        <span><small>Rekor</small><b id="over-best">0</b></span>
+                        <span><small>Kazanç</small><b id="over-reward">0 CM</b></span>
+                    </div>
+                    <p class="over-note" id="over-note"></p>
+                    <div class="actions">
+                        <button class="primary" id="retry-btn" type="button">Tekrar oyna</button>
+                        <button class="ghost" id="menu-btn" type="button">Ahşaplar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="wb-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="script.js?v=1"></script>
+</body>
+</html>

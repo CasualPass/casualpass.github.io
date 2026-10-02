@@ -78,3 +78,25 @@ Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu e
 ### Testler
 
 - Playwright (Chromium) 1440, 1000, 390 ve 320 px: yatay taşma yok, sayfa hatası yok, 40 px altı düğme yok (atlama bağlantısı ve logo hariç), toast ile "Kod gir" çakışmıyor, oturumsuz günlük ödül +15 ve +20 CM verir.
+
+## 2026-10-01 — Wood Blocks
+
+### Amaç
+
+Woodoku benzeri bir ahşap blok bulmacası eklemek; blok görünümlerini CasualMoney ile satın alınabilir yapmak.
+
+### Yapılanlar
+
+- `wood-blocks/`: Canvas tabanlı 9×9 bulmaca. Her turda 3 parça gelir; fare veya dokunmayla sürüklenir (dokunmada parça parmağın üstünde görünür). Dolu satır, sütun ve 3×3 kareler silinir. Yerleştirilen her kare 1 puan; silinen her grup 18 puan, aynı hamlede birden fazla grup ek bonus; art arda 3 hamle içinde yeniden silmek seri çarpanı verir. Hiçbir parça sığmayınca oyun biter. Klavye: 1/2/3 parça seçer, oklar taşır, Enter bırakır, Esc vazgeçer. Yeni elde her zaman en az bir parça sığar: rastgele el birkaç kez yeniden çekilir, yine sığmazsa bir parçası sığan bir şekille değiştirilir. Tahtaya sığmayan parçalar tepside soluk görünür.
+- `casual-profile.js`: `woods` kataloğu (Çam ücretsiz; Ceviz 90, Kiraz 180, Abanoz 360 CM), `ownedWoods`/`selectedWood`, `buyWood`, `selectWood`, `blocksRewardForScore`, `awardBlocksGame` eklendi. Ödül `floor(skor / 50)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` ahşapları da açar.
+- `casual-cheats.js`: Ölümsüzlükte tahta tıkanınca parçalar yenilenir; `allopen` ahşapları kaydetmeden önizlemeye açar.
+- Dashboard, Wood Blocks, Minerva Owl ve Wood Turning `casual-profile.js?v=12` ve `casual-cheats.js?v=7` yükler (main'deki `?v=6` düğme değişiklikleri ve yeni ahşap ipuçları birlikte); dashboard stili `style.css?v=15`. Sürümsüz sayfalar (Snake, 2048, Chess, Son Hat, XOX) yeni betiği GitHub Pages'in 10 dakikalık önbelleği dolunca alır. Eski `cleanProfile` bilinmeyen alanları attığı için, yayından önce açılmış bir sekme profili yazarsa yeni `ownedWoods` alanı sıfırlanabilir; aynı risk baykuşlarda da vardı.
+- `index.html`, `style.css`: Dashboard'a 8. kart (Wood Blocks); masaüstü grid 8 sütun.
+- Rekor `cp_blocks_best` çerezinde, istatistik `recordGameResult('Wood Blocks', …)` ile tutulur.
+
+### Testler
+
+- `node --check`: `casual-profile.js`, `casual-cheats.js`, `wood-blocks/script.js` başarılı.
+- Playwright (Chromium): gerçek fare sürüklemeleriyle oyun sonuna kadar oynama (833 puan → 16 CM), iPhone SE'de dokunmatik sürükleme, klavyeyle tam oyun, Ceviz'i 90 CM'ye alma ve yenileme sonrası seçimin korunması, yetersiz bakiyede red, ölümsüzlükte 150 hamle boyunca oyunun bitmemesi, `score set` hilesi.
+- Yalnızca tek blokların sığdığı tahtada (her satır, sütun ve 3×3 karede bir boşluk) dağıtılan 3000 elin hepsinde sığan bir parça vardı ve 1500 el bitişinde oyun erken bitmedi. Düzeltmeden önceki kod aynı testte 17 oynanamaz el ve 8 erken oyun sonu üretiyordu.
+- Görsel kontrol: masaüstü, telefon oyun ekranı ve dashboard (masaüstü, 1000 px, 390 px).
