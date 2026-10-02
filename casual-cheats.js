@@ -156,7 +156,7 @@
     style.textContent = `
         .cp-cheat { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 1000; color: #f3f7f4; font-family: Outfit, system-ui, sans-serif; }
         .cp-cheat * { box-sizing: border-box; }
-        .cp-cheat button, .cp-cheat input { font: inherit; }
+        :where(.cp-cheat) button, :where(.cp-cheat) input { font: inherit; }
         .cp-cheat-open { min-height: 48px; padding: 0 18px; display: flex; align-items: center; gap: 9px; margin-left: auto; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; background: #f3c657; color: #1c291f; box-shadow: 0 8px 28px rgba(0,0,0,.3); font-size: 14px; font-weight: 800; cursor: pointer; }
         .cp-cheat-open::before { content: '⌘'; font-size: 19px; line-height: 1; }
         .cp-cheat-box { display: none; width: min(380px, calc(100vw - 32px)); max-height: min(70dvh, 480px); overflow: auto; margin-bottom: 12px; padding: 20px; border: 1px solid #4b6756; border-radius: 20px; background: #18251e; box-shadow: 0 22px 65px rgba(0,0,0,.48); }
@@ -177,6 +177,10 @@
         .cp-cheat-feedback { min-height: 20px; margin: 12px 0 0; color: #d6eacc; font-size: 12px; line-height: 1.5; }
         .cp-cheat-feedback.error { color: #ffb6a8; }
         .cp-cheat :is(button, input):focus-visible { outline: 3px solid #f3c657; outline-offset: 3px; }
+        .cp-cheat.is-compact .cp-cheat-open { width: 44px; min-height: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; font-size: 0; opacity: .88; }
+        .cp-cheat.is-compact .cp-cheat-open::before { font-size: 19px; }
+        .cp-cheat.is-compact.open .cp-cheat-open { opacity: 1; }
+        @media (max-width: 720px) { .cp-cheat .cp-cheat-open { width: 44px; min-height: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; font-size: 0; opacity: .88; } .cp-cheat .cp-cheat-open::before { font-size: 19px; } .cp-cheat.open .cp-cheat-open { opacity: 1; } }
         @media (max-height: 480px) { .cp-cheat-box { max-height: calc(100dvh - 80px); padding: 14px; } .cp-cheat-help { margin: 5px 0 10px; } }
         @media (prefers-reduced-motion: reduce) { .cp-cheat * { scroll-behavior: auto; } }
     `;
@@ -192,8 +196,10 @@
         <p class="cp-cheat-examples">Örnekler: <code>score plus 0.2</code> · <code>score plus second 2</code> · <code>score set 255</code> · <code>immortal</code></p>
         <button type="button" class="cp-cheat-disable">Tüm hileleri kapat</button>
         <p class="cp-cheat-feedback" id="cp-cheat-note" role="status" aria-live="polite"></p>
-    </form><button type="button" class="cp-cheat-open" aria-expanded="false" aria-controls="cp-cheat-box">Kod gir</button>`;
+    </form><button type="button" class="cp-cheat-open" aria-expanded="false" aria-controls="cp-cheat-box" aria-label="Kod gir" title="Kod gir">Kod gir</button>`;
     document.addEventListener('DOMContentLoaded', () => {
+        // Oyun sayfalarında her genişlikte simge düğme; tam etiket yalnızca dashboard'da.
+        root.classList.toggle('is-compact', !document.querySelector('main.dashboard'));
         document.body.append(root);
         const trigger = root.querySelector('.cp-cheat-open');
         const input = root.querySelector('#cp-cheat-input');
