@@ -12,6 +12,8 @@
     const OWL_REWARD_CAP = 40;
     const BLOCKS_REWARD_CAP = 40;
     const BLOCKS_POINTS_PER_CM = 50;
+    const SONHAT_REWARD_CAP = 40;
+    const SONHAT_COINS_PER_CM = 8;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -396,6 +398,21 @@
         return { profile, reward };
     }
 
+    function sonHatRewardForCoins(coins) {
+        return Math.min(SONHAT_REWARD_CAP, Math.floor(Math.max(0, Number(coins) || 0) / SONHAT_COINS_PER_CM));
+    }
+
+    function awardSonHatRun(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = sonHatRewardForCoins(result?.coins);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, result?.won ? 'Son Hat zaferi' : 'Son Hat savaşı');
+        });
+        return { profile, reward };
+    }
+
     function buyWood(woodId) {
         if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
         const wood = woods[woodId];
@@ -502,6 +519,8 @@
         upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
         buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
-        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM
+        sonHatRewardForCoins, awardSonHatRun,
+        SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM,
+        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM
     });
 })();
