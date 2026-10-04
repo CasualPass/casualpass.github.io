@@ -3,51 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#8ec6ea">
-    <title>Son Hat Beta — CasualPass</title>
+    <meta name="theme-color" content="#1f8fa3">
+    <title>Son Hat — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=6">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=7">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="../shared-settings.js"></script>
-    <script src="../casual-profile.js"></script>
-    <script src="../casual-cheats.js"></script>
+    <script src="../casual-profile.js?v=13"></script>
+    <script src="../casual-cheats.js?v=7"></script>
 </head>
-<body>
+<body class="sh-body">
     <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
-    <div class="war">
-        <canvas id="lane" width="1280" height="720" aria-label="Sokak savunması"></canvas>
-        <header class="hud">
-            <a class="back" href="../index.html">Geri</a>
-            <div class="res-row" aria-label="Ganimet">
-                <span class="res wood" id="res-wood"><i aria-hidden="true"></i><small>Tahta</small><b>0</b></span>
-                <span class="res iron" id="res-iron"><i aria-hidden="true"></i><small>Demir</small><b>0</b></span>
-                <span class="res coin" id="res-coin"><i aria-hidden="true"></i><small>Para</small><b>0</b></span>
+    <main class="sh-app" id="app" data-mode="menu">
+        <canvas id="field" width="480" height="800" role="img" aria-label="Zombilerle dolu köprü"></canvas>
+
+        <header class="sh-top">
+            <a class="sh-back" href="../index.html" aria-label="Oyunlara dön">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span>Oyunlar</span>
+            </a>
+            <div class="sh-res">
+                <span class="pill gold" title="Altın"><i aria-hidden="true"></i><span class="sr">Altın</span><b id="res-gold">0</b></span>
+                <span class="pill iron" title="Demir"><i aria-hidden="true"></i><span class="sr">Demir</span><b id="res-iron">0</b></span>
+                <span class="pill food" title="Yiyecek"><i aria-hidden="true"></i><span class="sr">Yiyecek</span><b id="res-food">0</b></span>
+                <span class="pill cm" title="CasualMoney"><small>CM</small><b id="cm">0</b></span>
             </div>
-            <b class="beta-badge"><span class="beta-name">Son Hat ·</span>Beta</b>
-            <strong id="zone-label">İlk Sokak</strong>
-            <button type="button" id="base-toggle">Merkeze dön</button>
         </header>
-        <button type="button" class="mod left" id="weapon-btn" aria-label="Silah istasyonuna git">
-            <span class="ring" id="weapon-fill" style="--p:0"></span>
-            <span class="gun g0" id="gun"></span>
-            <span id="weapon-name">Tabanca</span>
-            <span id="weapon-fraction">0/7 sn</span>
-            <span id="weapon-cost"></span>
-        </button>
-        <button type="button" class="mod right" id="recruit-btn" aria-label="+1 kişi istasyonuna git">
-            <span class="pips" id="pips"></span>
-            <b class="plus">+1</b>
-            <span class="bar"><i id="recruit-fill"></i></span>
-            <span id="squad-label">3 kişilik birlik</span>
-            <span id="recruit-fraction">0/5 sn</span>
-            <span id="recruit-cost"></span>
-        </button>
-        <div class="hero" aria-hidden="true"><span class="face"></span><span class="lv" id="lv">1</span><strong id="power">30</strong><small class="power-label">güç</small></div>
-        <p class="lane-status" id="lane-status" role="status" aria-live="polite"></p>
-        <div class="result hidden" id="result"></div>
-        <p class="hint" id="hint"></p>
-        <div class="toast" id="toast" role="status"></div>
-    </div>
-    <script src="script.js?v=6"></script>
+
+        <div class="run-hud" id="run-hud">
+            <div class="run-stage">
+                <strong id="run-title">Bölüm 1</strong>
+                <span class="run-track"><i id="run-fill"></i></span>
+            </div>
+            <span class="run-weapon" id="run-weapon">Tabanca</span>
+            <button class="round-btn" id="pause-btn" type="button" aria-label="Duraklat">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"></rect><rect x="14" y="5" width="4" height="14" rx="1.2"></rect></svg>
+            </button>
+        </div>
+        <p class="run-hint" id="run-hint" aria-live="polite"></p>
+
+        <section class="screen" id="screen-map" aria-labelledby="map-title">
+            <div class="panel map-panel">
+                <div class="panel-head">
+                    <p class="eyebrow" id="region-name">BÖLGE 1 · KÖPRÜ</p>
+                    <h1 id="map-title">Son Hat</h1>
+                    <p class="lead">Şeridini seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah kap ve boss'u durdur.</p>
+                </div>
+                <p class="map-power" id="map-power"></p>
+                <ol class="map-path" id="map-path"></ol>
+            </div>
+            <div class="cta-row">
+                <button class="cta" id="play-btn" type="button"><small id="play-sub">Bölüm 1</small><span>SAVAŞ</span></button>
+            </div>
+        </section>
+
+        <section class="screen hidden" id="screen-base" aria-labelledby="base-title">
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="eyebrow">SIĞINAK</p>
+                    <h1 id="base-title">Üssün</h1>
+                    <p class="lead">Boş arsalara bina kur, madenlerin ürettiğini topla. Karargâh seviyesi diğer binaların sınırıdır.</p>
+                </div>
+                <div class="base-bar">
+                    <span id="base-slots">1/5 bina</span>
+                    <button class="buy" id="collect-btn" type="button">Topla</button>
+                </div>
+                <div class="plot" id="plot"></div>
+                <div class="tile-panel" id="tile-panel" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <section class="screen hidden" id="screen-heroes" aria-labelledby="heroes-title">
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="eyebrow">ÜÇ SINIF · TANK · UÇAK · FÜZE</p>
+                    <h1 id="heroes-title">Kahramanlar</h1>
+                    <p class="lead">Takımına en fazla üç kahraman al. Tank kalkan verir, uçak hava saldırısı yapar, füze hedef arar.</p>
+                </div>
+                <h2 class="sub">Takım</h2>
+                <div class="team" id="team"></div>
+                <p class="team-bonus" id="team-bonus"></p>
+                <div class="recruit">
+                    <button class="cta small" id="recruit-btn" type="button">Kahraman çağır</button>
+                    <small>Nadir %70 · Destansı %25 · Efsanevi %5. Tekrar gelen kahraman seviye atlar.</small>
+                </div>
+                <div class="sub-row"><h2 class="sub">Koleksiyon</h2><span id="hero-count">1/9</span></div>
+                <div class="hero-grid" id="hero-grid"></div>
+            </div>
+        </section>
+
+        <nav class="tabbar" id="tabbar" aria-label="Son Hat menüsü">
+            <button type="button" data-tab="map" class="active"><span class="tab-ico map" aria-hidden="true"></span>Harita</button>
+            <button type="button" data-tab="base"><span class="tab-ico base" aria-hidden="true"></span>Üs<i class="dot hidden" id="base-dot" aria-label="Toplanacak üretim var"></i></button>
+            <button type="button" data-tab="heroes"><span class="tab-ico heroes" aria-hidden="true"></span>Kahramanlar</button>
+        </nav>
+
+        <div class="overlay hidden" id="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+            <div class="sheet">
+                <p class="eyebrow">DURAKLATILDI</p>
+                <h2 id="pause-title">Nefes al</h2>
+                <p class="lead">Topladığın altın, haritaya dönsen de seninle kalır.</p>
+                <div class="actions">
+                    <button class="cta small" id="resume-btn" type="button"><span>DEVAM</span></button>
+                    <button class="ghost" id="quit-btn" type="button">Haritaya dön</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay hidden" id="result" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="sheet">
+                <p class="eyebrow" id="result-eyebrow">BÖLÜM 1</p>
+                <h2 id="result-title">Zafer!</h2>
+                <div class="result-row">
+                    <span><small>Altın</small><b id="result-gold">0</b></span>
+                    <span><small>Demir</small><b id="result-iron">0</b></span>
+                    <span><small>Yiyecek</small><b id="result-food">0</b></span>
+                    <span><small>CM</small><b id="result-cm">0</b></span>
+                </div>
+                <p class="lead" id="result-note"></p>
+                <div class="actions">
+                    <button class="cta small" id="next-btn" type="button"><span>SONRAKİ</span></button>
+                    <button class="ghost" id="base-btn" type="button">Üsse git</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay hidden" id="reveal" role="dialog" aria-modal="true" aria-labelledby="reveal-name">
+            <div class="sheet reveal">
+                <p class="eyebrow" id="reveal-rarity">NADİR</p>
+                <div class="reveal-icon" id="reveal-icon" aria-hidden="true"></div>
+                <h2 id="reveal-name">Kahraman</h2>
+                <p class="lead" id="reveal-note"></p>
+                <div class="actions"><button class="cta small" id="reveal-ok" type="button"><span>HARİKA</span></button></div>
+            </div>
+        </div>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+    <script src="script.js?v=7"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
 - **Chess:** CasualFish motoruna karşı hamleni hesapla.
-- **Son Hat (Beta):** Zombileri temizle, bölge aç.
+- **Son Hat (Beta):** Last War tarzı zombi koşusu. Şerit seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah ve helikopter kap, boss’u durdur. Ganimetle üssünde bina kur, madenlerden altın/demir/yiyecek topla, kahraman çağırıp üç kişilik takım kur. Koşu başına en fazla 40 CM (8 altın = 1 CM).
 - **Minerva Owl:** Minerva'nın baykuşuyla mermer sütunların arasından süzül; CasualMoney ile yeni baykuşlar aç.
 - **Wood Blocks:** Ahşap blokları 9×9 tahtaya yerleştir; dolu satır, sütun ve 3×3 kareleri sil, CasualMoney ile yeni ahşaplar aç.
 

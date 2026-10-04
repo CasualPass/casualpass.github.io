@@ -100,3 +100,26 @@ Woodoku benzeri bir ahşap blok bulmacası eklemek; blok görünümlerini Casual
 - Playwright (Chromium): gerçek fare sürüklemeleriyle oyun sonuna kadar oynama (833 puan → 16 CM), iPhone SE'de dokunmatik sürükleme, klavyeyle tam oyun, Ceviz'i 90 CM'ye alma ve yenileme sonrası seçimin korunması, yetersiz bakiyede red, ölümsüzlükte 150 hamle boyunca oyunun bitmemesi, `score set` hilesi.
 - Yalnızca tek blokların sığdığı tahtada (her satır, sütun ve 3×3 karede bir boşluk) dağıtılan 3000 elin hepsinde sığan bir parça vardı ve 1500 el bitişinde oyun erken bitmedi. Düzeltmeden önceki kod aynı testte 17 oynanamaz el ve 8 erken oyun sonu üretiyordu.
 - Görsel kontrol: masaüstü, telefon oyun ekranı ve dashboard (masaüstü, 1000 px, 390 px).
+
+## 2026-10-04 — Son Hat, Last War tarzında yeniden yazıldı
+
+### Amaç
+
+Eymen'in Last War: Survival Game açıklaması ve altı mağaza görseline göre Son Hat'ı hiper-casual bir şerit savaşına çevirmek; "Tam üs" seçimiyle bina kurma, kaynak üretimi, dünya haritası ve kahraman toplama eklemek. İttifak ve çok oyunculu kısım sunucu olmadığı için yok.
+
+### Yapılanlar
+
+- `son-hat/script.js`: Canvas üzerinde perspektifli köprü. Birlik ileri koşar, sürükleme veya ←/→/A/D ile şerit seçilir; her asker otomatik ateş eder. Mavi kapılar (+N, ×2) birliği büyütür, kırmızı kapılar (−N) küçültür; kapıları vurmak mavileri büyütür, kırmızıları boşaltıp maviye çevirir. Numaralı sandıklar vurulup kırılınca silah (Tabanca → Makineli → Pompalı → Lazer), helikopter, asker veya ateş hızı verir; vurmadan çarpınca asker kaybedilir ve ödül gelmez. Zombi sürüleri, iri zombiler ve bölüm sonunda can barlı boss (her 5. bölüm dev boss). Bölümler sabit tohumla üretilir (aynı bölüm hep aynı). Esc/P veya sekme değişimi duraklatır.
+- Üs: 5×5 arsa, ortada Karargâh. Bina türleri: Kışla (başlangıç askeri), Silah Atölyesi (hasar), Atış Poligonu (ateş hızı), Altın Madeni, Çiftlik, Demir Madeni, Depo (biriktirme süresi), Hangar (savaşa helikopterle başla). Karargâh seviyesi diğer binaların sınırı ve bina yeri sayısıdır (4 + Sv). Madenler dakika başı üretir, Depo'ya göre 60+30·Sv dakika biriktirir; kapalıyken de üretir (zaman damgası).
+- Kahramanlar: 3 sınıf (Tank kalkan, Uçak hava saldırısı, Füze hedef arayan füze) × 3 nadirlik = 9 kahraman. Çağırma 150 altın (%70/%25/%5); tekrar gelen seviye atlar. Takım en fazla 3; aynı sınıftan 2 kahraman +%5, 3 kahraman +%15 hasar. Eğitim altın + yiyecek ister.
+- Harita: bölgeler (Köprü, Liman, Sanayi, Şehir Merkezi, Son Kale), 99 bölüm, gücün ve önerilen güç.
+- Kayıt: `cp_sonhat_v2` çerezi, kısa anahtarlı JSON (~300 bayt; 3000 baytı aşarsa yazılmaz). Eski `cp_sonhat_v1` altını yeni kayda aktarılır ve eski çerez silinir.
+- `casual-profile.js`: `sonHatRewardForCoins`, `awardSonHatRun` (8 altın = 1 CM, koşu başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). Sürüm `?v=13` (dashboard, Owl, Wood Blocks, Wood Turning, Son Hat).
+- Hile açıkken ilerleme, ganimet, satın alma ve CM kaydedilmez; ölümsüzlükte birlik 1 askerin altına düşmez.
+
+### Testler
+
+- `node --check`: `son-hat/script.js`, `casual-profile.js` başarılı.
+- Playwright (Chromium), yönlendiren basit bir botla: Bölüm 1 ve 5 yükseltmesiz kazanıldı, Bölüm 10 yükseltmesiz kaybedildi, orta seviye üsle (Karargâh 4, savaş binaları 4, üç Sv 3 kahraman) Bölüm 10 kazanıldı.
+- Üs akışı: üretimi toplama, boş arsaya Çiftlik/Silah Atölyesi kurma, Karargâh yükseltme, kahraman çağırma ve takıma ekleme; kayıt çerezi 289 bayt.
+- 320, 390, 1000, 1440 px'te yatay taşma yok; konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hatası.
