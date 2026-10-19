@@ -2,7 +2,7 @@
 
 ## Proje özeti
 
-CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks` ve `fps-game` sayfalarına doğrudan bağlanır.
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game` ve `vektor` sayfalarına doğrudan bağlanır.
 
 ## 2026-08-31 — Çerez odaklı dashboard yenilemesi
 
@@ -219,3 +219,34 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 - Botlar basit kurallarla oynar; insan takım arkadaşı gibi iletişim kurmaz.
 - Çevrimiçi isabet ve kredi istemci tarafındadır; arkadaş oyunu içindir.
 - Duman ve görünürlük her istemcide yerel hesaplanır; küçük zaman farkları olabilir.
+
+## 2026-10-19 — Vektör: yeni haritalar ve ajanlar
+
+### Yapılanlar
+
+- `vektor/script.js`: Harita artık sabit değil; her harita 40×56 hücrelik bir karakter planı (`#` duvar, `.` zemin, `k`/`K` sandık, `M` konteyner, `h` alçak duvar, `o` sütun, `p` süs), bölge ve doğuş dikdörtgenleri, taktik noktaları ve görünümle (gökyüzü, sis, güneş, zemin/duvar dokusu, dış manzara) tanımlanır. `buildMap(id)` eski haritayı atıp yenisini kurar; çarpışma, gezinme ızgarası, mini harita, doğuş bariyerleri (doğuş dikdörtgeninin açık kenarlarından otomatik) ve bölge harfleri (en yakın duvar yüzüne otomatik) yeniden üretilir.
+- Haritalar: **Liman** (mevcut), **Kumsaray** (çöl kalesi; uzun A koridoru, kapılı B, ortada avlu), **Üçyol** (teknopark; A/B/C üç kurma bölgesi), **Buzul** (kutup üssü; A savunmaya, B saldırıya yakın, sütunlu kubbe salonu, kar yağışı). Yeni dokular: kumtaşı, taş döşeme, kar, panel zemin, cam cephe.
+- Menüde harita seçimi (önizlemeli plan çizimi) ve "Rastgele"; tercih `cp_vektor_prefs` çerezinde. Host haritayı anlık görüntüyle (`m.map`) gönderir, katılan aynı haritayı kurar. Botlar bölge listesini haritadan alır (üç bölgede savunma her bölgeye bir kişi koyar).
+- Tasarım denetimi: saldırgan/savunan doğuşundan bölgelere yürüme mesafesi Liman'a yakın tutuldu (saldırgan 43–52, savunan 14–28 hücre). Doğuştan doğuşa görüş hattı denetimi Liman'da da düz bir orta hat buldu; Liman, Kumsaray ve Buzul'un ortasına görüşü kesen birer blok kondu. Liman'da duvar içine gömülü 4 saksı kaldırıldı.
+- Yeni ajanlar: **Rüzgâr** (Düellocu: Yükseliş, Bulut, Süzülüş, nihai Fırtına Bıçakları — 5 isabetli bıçak, öldürünce dolar), **Ayaz** (Kontrolcü: Buz Duvarı, Kırağı, Kar Küresi, nihai Tipi — yavaşlatan ve yakan alan), **Fay** (Öncü: Sarsıntı Bombası, Fay Hattı — duvar ardına geçen şerit, Yer Dinleme, nihai Büyük Kırılma), **Nöbet** (Gözcü: Alarm, Kalkan Takviyesi, Taret — vurulunca bozulur, nihai Fener). Sarsılan oyuncu yavaşlar, dağılımı artar ve görüşü titrer; botlarda isabet düşer.
+- Ağ: yeni yetenekler mevcut `ab`/`abx` olaylarını kullanır; bozulan taret için `zd` olayı eklendi. Bıçaklar 9. silah sırası (4 bitlik silah alanına sığar).
+- Botlar yeni yetenekleri kullanır (savunmada taret/alarm, saldırıda duman/fay hattı/kalkan, hedefe göre atış açısı).
+- `?debug` ek kısayolları: `map`, `mapCheck`, `freeze`, `sim`, `setSim`, `revealed`, `zoneList`.
+
+### Testler
+
+- `node --check` ve ESLint temiz.
+- Dört haritada `mapCheck`: tüm doğuş/taktik noktaları serbest hücrede ve iki doğuştan da ulaşılabilir, kurma noktaları bölge içinde; kurulum 0–50 ms.
+- Playwright: her haritada oyun içi ekran görüntüsü; dört yeni ajanın tüm C/Q/E/X yetenekleri; donmuş bota karşı etkiler (Fay Hattı ve Sarsıntı Bombası botu sersemletti, Yer Dinleme ve Büyük Kırılma gösterdi, taret 100 → 52 can, Kalkan Takviyesi 0 → 25 kalkan, Tipi yavaşlattı ve yaktı, Fırtına Bıçakları iki atışta öldürüp şarjörü doldurdu); Üçyol, Buzul ve Kumsaray'da 5v5 bot maçı.
+
+## 2026-10-19 — Wood Turning, mobil torna oyunu tarzında
+
+### Yapılanlar
+
+- `wood-turning/`: Yeniden yazıldı (Play Store sayfası bu ortamdan açılamadığı için türün bilinen akışına göre). Işıklı, dönen 3B görünümlü kütük ve koddan üretilen ahşap damarı; parmağın biraz üstünde duran keski; Kaba/Oluk/İnce uçlar; kıvrılan talaşlar ve tezgâhta biriken yonga; derin kesimler kırmızı. Aşamalar Oy → Zımpara → Boya (her seviye 1–4 renk bandı ister) → yan yana karşılaştırma, puan ve 1–3 yıldız. "Seviye N" ilerlemesi, 20 şekil (sonrası sabit tohumla), her 5. seviye serbest tasarım (×1,5). Mağaza sekmeleri: Keski, Ahşap, Boya, Atölye; son 12 yıldızlı iş koleksiyon rafında. Dikey telefonda torna dik durur.
+- `casual-profile.js`: `logs` (Kayın ücretsiz; Meşe 120, Ceviz 260, Kiraz 420, Zebrano 700, Abanoz 1100 CM) ve `chisels` (Çelik ücretsiz; Karbür 150, Şam Çeliği 400, Elmas 900 CM; kesim hızı) katalogları, `ownedLogs/selectedLog/ownedChisels/selectedChisel`, `woodTurning.level/stars/shelf`, `buyLog`, `selectLog`, `buyChisel`, `selectChisel`, `turnStars`. `awardWoodTurning({ score, level, freeDesign })` eski çağrılarla uyumlu. Sürüm `?v=16` (tüm sürümlü sayfalar).
+
+### Testler
+
+- `node --check`, `git diff --check` temiz; aktif kodda localStorage yok.
+- Playwright 1440 px ve 390×844: gerçek sürüklemelerle beş seviye, ödül, seviye atlama, mağaza alımı ve yenileme sonrası kalıcılık; misafir oynayıp sonuçtan giriş yapınca ödülün alınması; hile önizlemesi kayıt yapmadan; 320/390/1000/1440 px ve yatay telefonda taşma ve konsol hatası yok.

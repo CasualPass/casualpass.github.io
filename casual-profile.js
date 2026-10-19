@@ -19,6 +19,8 @@
     const ARENA_WIN_BONUS = 6;
     const VEKTOR_REWARD_CAP = 40;
     const VEKTOR_WIN_BONUS = 10;
+    const TURN_SHELF_SIZE = 12;
+    const TURN_MAX_LEVEL = 999;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -52,6 +54,23 @@
         walnut: { id: 'walnut', name: 'Ceviz', description: 'Koyu damarlı', price: 90 },
         cherry: { id: 'cherry', name: 'Kiraz', description: 'Kızıl tonlu', price: 180 },
         ebony: { id: 'ebony', name: 'Abanoz', description: 'Gece siyahı', price: 360 }
+    };
+
+    // Wood Turning lathe stock (cosmetic) and chisels (cut speed).
+    const logs = {
+        beech: { id: 'beech', name: 'Kayın', description: 'Açık ve sade', price: 0 },
+        oak: { id: 'oak', name: 'Meşe', description: 'Belirgin halkalar', price: 120 },
+        walnut: { id: 'walnut', name: 'Ceviz', description: 'Koyu ve sıcak', price: 260 },
+        cherry: { id: 'cherry', name: 'Kiraz', description: 'Kızıl tonlu', price: 420 },
+        zebrano: { id: 'zebrano', name: 'Zebrano', description: 'Çizgili egzotik', price: 700 },
+        ebony: { id: 'ebony', name: 'Abanoz', description: 'Gece siyahı', price: 1100 }
+    };
+
+    const chisels = {
+        steel: { id: 'steel', name: 'Çelik Keski', description: 'Standart kesim', price: 0, speed: 1 },
+        carbide: { id: 'carbide', name: 'Karbür Keski', description: '%35 daha hızlı', price: 150, speed: 1.35 },
+        damascus: { id: 'damascus', name: 'Şam Çeliği', description: '%70 daha hızlı', price: 400, speed: 1.7 },
+        diamond: { id: 'diamond', name: 'Elmas Keski', description: '2 kat hızlı', price: 900, speed: 2.1 }
     };
 
     const camos = {
@@ -134,12 +153,16 @@
             selectedWood: 'pine',
             ownedCamos: ['standard'],
             selectedCamo: 'standard',
+            ownedLogs: ['beech'],
+            selectedLog: 'beech',
+            ownedChisels: ['steel'],
+            selectedChisel: 'steel',
             dailyBonusDate: '',
             sessionRewardDate: '',
             rebirths: 0,
             lifetimeEarned: 0,
             activities: [],
-            woodTurning: { jobs: 0, bestScore: 0, totalEarned: 0, lastReward: 0 },
+            woodTurning: { jobs: 0, bestScore: 0, totalEarned: 0, lastReward: 0, level: 1, stars: 0, shelf: [] },
             createdAt: now,
             updatedAt: now
         };
@@ -160,6 +183,23 @@
         return 2 ** rebirthCountOf(profile);
     }
 
+    // Shelf entries are [level, score]; the piece is redrawn from its level.
+    function cleanShelf(value) {
+        if (!Array.isArray(value)) return [];
+        return value.filter((item) => Array.isArray(item)).slice(0, TURN_SHELF_SIZE).map((item) => [
+            Math.min(TURN_MAX_LEVEL, Math.max(1, Math.floor(Number(item[0]) || 1))),
+            Math.min(100, Math.max(0, Math.floor(Number(item[1]) || 0)))
+        ]);
+    }
+
+    function turnStars(score) {
+        const safe = Number(score) || 0;
+        if (safe >= 95) return 3;
+        if (safe >= 85) return 2;
+        if (safe >= 70) return 1;
+        return 0;
+    }
+
     function cleanProfile(profile) {
         const safe = profile && typeof profile === 'object' ? profile : {};
         const ownedPaints = Array.isArray(safe.ownedPaints) ? safe.ownedPaints.filter((id) => paints[id]) : ['natural', 'honey'];
@@ -173,6 +213,10 @@
         if (!ownedWoods.includes('pine')) ownedWoods.unshift('pine');
         const ownedCamos = Array.isArray(safe.ownedCamos) ? safe.ownedCamos.filter((id) => camos[id]) : ['standard'];
         if (!ownedCamos.includes('standard')) ownedCamos.unshift('standard');
+        const ownedLogs = Array.isArray(safe.ownedLogs) ? safe.ownedLogs.filter((id) => logs[id]) : ['beech'];
+        if (!ownedLogs.includes('beech')) ownedLogs.unshift('beech');
+        const ownedChisels = Array.isArray(safe.ownedChisels) ? safe.ownedChisels.filter((id) => chisels[id]) : ['steel'];
+        if (!ownedChisels.includes('steel')) ownedChisels.unshift('steel');
         const activities = Array.isArray(safe.activities) ? safe.activities.slice(0, MAX_ACTIVITIES).filter((item) => item && typeof item.label === 'string') : [];
         return {
             id: canonicalUsername(safe.id),
@@ -189,6 +233,10 @@
             selectedWood: ownedWoods.includes(safe.selectedWood) ? safe.selectedWood : 'pine',
             ownedCamos,
             selectedCamo: ownedCamos.includes(safe.selectedCamo) ? safe.selectedCamo : 'standard',
+            ownedLogs,
+            selectedLog: ownedLogs.includes(safe.selectedLog) ? safe.selectedLog : 'beech',
+            ownedChisels,
+            selectedChisel: ownedChisels.includes(safe.selectedChisel) ? safe.selectedChisel : 'steel',
             dailyBonusDate: String(safe.dailyBonusDate || ''),
             sessionRewardDate: String(safe.sessionRewardDate || ''),
             rebirths: Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(safe.rebirths) || 0))),
@@ -198,7 +246,10 @@
                 jobs: Math.max(0, Math.floor(Number(safe.woodTurning?.jobs) || 0)),
                 bestScore: Math.min(100, Math.max(0, Math.floor(Number(safe.woodTurning?.bestScore) || 0))),
                 totalEarned: Math.max(0, Math.floor(Number(safe.woodTurning?.totalEarned) || 0)),
-                lastReward: Math.max(0, Math.floor(Number(safe.woodTurning?.lastReward) || 0))
+                lastReward: Math.max(0, Math.floor(Number(safe.woodTurning?.lastReward) || 0)),
+                level: Math.min(TURN_MAX_LEVEL, Math.max(1, Math.floor(Number(safe.woodTurning?.level) || 1))),
+                stars: Math.max(0, Math.floor(Number(safe.woodTurning?.stars) || 0)),
+                shelf: cleanShelf(safe.woodTurning?.shelf)
             },
             createdAt: safe.createdAt || new Date().toISOString(),
             updatedAt: safe.updatedAt || new Date().toISOString()
@@ -299,18 +350,81 @@
         return Math.round(base * office.multiplier);
     }
 
+    // result.level is the level that was played; a starred piece advances to the next level
+    // and lands on the shelf. Free design levels pay 1.5x.
     function awardWoodTurning(result) {
-        if (cheatsActive()) return { profile: current(), reward: 0 };
+        if (cheatsActive()) return { profile: current(), reward: 0, stars: 0, advanced: false };
         const score = Math.min(100, Math.max(0, Math.round(Number(result?.score) || 0)));
+        const stars = turnStars(score);
+        const bonus = result?.freeDesign ? 1.5 : 1;
         let reward = 0;
+        let advanced = false;
         const profile = update((draft) => {
-            reward = grant(draft, rewardForScore(score, draft.officeLevel), 'Wood Turning ödülü');
-            draft.woodTurning.jobs += 1;
-            draft.woodTurning.bestScore = Math.max(draft.woodTurning.bestScore, score);
-            draft.woodTurning.totalEarned += reward;
-            draft.woodTurning.lastReward = reward;
+            const turn = draft.woodTurning;
+            const level = Math.max(1, Math.floor(Number(result?.level) || turn.level));
+            reward = grant(draft, Math.round(rewardForScore(score, draft.officeLevel) * bonus), `Wood Turning · Seviye ${level}`);
+            turn.jobs += 1;
+            turn.bestScore = Math.max(turn.bestScore, score);
+            turn.totalEarned += reward;
+            turn.lastReward = reward;
+            if (stars > 0) {
+                turn.stars += stars;
+                turn.shelf = [[level, score], ...turn.shelf].slice(0, TURN_SHELF_SIZE);
+                if (level === turn.level) {
+                    turn.level = Math.min(TURN_MAX_LEVEL, turn.level + 1);
+                    advanced = true;
+                }
+            }
         });
-        return { profile, reward };
+        return { profile, reward, stars, advanced };
+    }
+
+    function buyLog(logId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
+        const log = logs[logId];
+        if (!log) throw new Error('Ahşap bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedLogs.includes(logId)) {
+                if (draft.balance < log.price) throw new Error('Bu ahşap için yeterli CasualMoney yok.');
+                draft.balance -= log.price;
+                draft.ownedLogs.push(logId);
+                addActivity(draft, `${log.name} kütüğü`, -log.price);
+            }
+            draft.selectedLog = logId;
+        });
+    }
+
+    function selectLog(logId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
+        if (!logs[logId]) throw new Error('Ahşap bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedLogs.includes(logId)) throw new Error('Önce bu ahşabı satın almalısın.');
+            draft.selectedLog = logId;
+        });
+    }
+
+    function buyChisel(chiselId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
+        const chisel = chisels[chiselId];
+        if (!chisel) throw new Error('Keski bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedChisels.includes(chiselId)) {
+                if (draft.balance < chisel.price) throw new Error('Bu keski için yeterli CasualMoney yok.');
+                draft.balance -= chisel.price;
+                draft.ownedChisels.push(chiselId);
+                addActivity(draft, chisel.name, -chisel.price);
+            }
+            draft.selectedChisel = chiselId;
+        });
+    }
+
+    function selectChisel(chiselId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
+        if (!chisels[chiselId]) throw new Error('Keski bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedChisels.includes(chiselId)) throw new Error('Önce bu keskiyi satın almalısın.');
+            draft.selectedChisel = chiselId;
+        });
     }
 
     function owlRewardForScore(score) {
@@ -582,6 +696,8 @@
             draft.ownedOwls = Object.keys(owls);
             draft.ownedWoods = Object.keys(woods);
             draft.ownedCamos = Object.keys(camos);
+            draft.ownedLogs = Object.keys(logs);
+            draft.ownedChisels = Object.keys(chisels);
             draft.officeLevel = offices.length;
             draft.selectedPaint = draft.selectedPaint || 'honey';
         });
@@ -592,14 +708,15 @@
     }
 
     window.CasualProfile = Object.freeze({
-        paints, themes, owls, woods, camos, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
+        paints, themes, owls, woods, camos, logs, chisels, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
         validateUsername, rewardForScore, awardWoodTurning, buyPaint, selectPaint, buyTheme, selectTheme,
         upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
         buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
         sonHatRewardForCoins, awardSonHatRun,
+        buyLog, selectLog, buyChisel, selectChisel, turnStars,
         buyCamo, selectCamo, arenaRewardForMatch, awardArenaMatch, vektorRewardForMatch, awardVektorMatch,
         SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM,
-        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM, ARENA_REWARD_CAP, ARENA_CM_PER_KILL, ARENA_WIN_BONUS, VEKTOR_REWARD_CAP, VEKTOR_WIN_BONUS
+        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM, ARENA_REWARD_CAP, ARENA_CM_PER_KILL, ARENA_WIN_BONUS, VEKTOR_REWARD_CAP, VEKTOR_WIN_BONUS, TURN_SHELF_SIZE
     });
 })();

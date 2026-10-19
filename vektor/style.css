@@ -251,7 +251,7 @@ textarea { width: 100%; margin-bottom: 12px; padding: 8px 10px; color: var(--vk-
 .agent-card { padding: 0; display: flex; flex-direction: column; border: 1px solid var(--vk-line); background: rgba(15, 25, 35, .8); text-align: left; transition: transform .12s, border-color .12s; }
 .agent-card:hover { transform: translateY(-2px); }
 .agent-card.active { border-color: var(--agent); box-shadow: 0 0 0 2px var(--agent); }
-.portrait { height: 92px; display: grid; place-items: center; color: rgba(15, 25, 35, .85); background: linear-gradient(160deg, var(--agent), color-mix(in srgb, var(--agent) 35%, #0f1923)); font-family: var(--num); font-size: 70px; font-weight: 600; line-height: 1; }
+.portrait { height: 78px; display: grid; place-items: center; color: rgba(15, 25, 35, .85); background: linear-gradient(160deg, var(--agent), color-mix(in srgb, var(--agent) 35%, #0f1923)); font-family: var(--num); font-size: 70px; font-weight: 600; line-height: 1; }
 .agent-meta { padding: 6px 8px 8px; display: flex; flex-direction: column; }
 .agent-meta b { font-family: var(--num); font-size: 24px; font-weight: 500; letter-spacing: .04em; line-height: 1; }
 .agent-meta small { color: var(--vk-muted); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -320,3 +320,11 @@ textarea { width: 100%; margin-bottom: 12px; padding: 8px 10px; color: var(--vk-
 @media (prefers-reduced-motion: reduce) {
     #roundbanner.show, #killfeed div, #spike-timer, #revealed { animation: none; }
 }
+
+/* ---------- Harita seçimi ---------- */
+.map-preview { margin-top: 8px; display: flex; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--vk-line); background: rgba(15, 25, 35, .6); }
+.map-preview canvas { width: 60px; height: 84px; flex: none; image-rendering: pixelated; }
+.map-info { min-width: 0; display: flex; flex-direction: column; }
+.map-info b { font-family: var(--num); font-size: 28px; font-weight: 500; letter-spacing: .04em; line-height: 1; }
+.map-info small { color: var(--vk-red); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.map-info p { margin: 4px 0 0; color: var(--vk-muted); font-size: 13px; line-height: 1.4; }
