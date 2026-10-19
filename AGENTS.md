@@ -261,3 +261,17 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 
 - Sitede service worker yok; ana ekrana eklenen uygulama ve GitHub Pages önbelleği (10 dk) eski HTML'i tutabiliyordu. `version.json` eklendi; `shared-settings.js` (`?v=8`, tüm sayfalar) açılışta ve uygulamaya dönülünce bu dosyayı önbelleksiz okur, sürüm çerezdekinden farklıysa sayfayı `?v=<sürüm>` ile yeniden yükler. **Her yayında `version.json` içindeki `v` değeri değiştirilmeli.**
 - Yanlışlıkla eklenen `shots/dash_top.png` silindi.
+
+## 2026-10-19 — PWA ve çevrimdışı oyun
+
+- `manifest.webmanifest`, `icons/` (192, 512, maskable 512, apple-touch 180, favicon): ana ekrana eklenince tam ekran uygulama olarak açılır. Tüm sayfalarda manifest/simge/`apple-mobile-web-app-*` etiketleri; dashboard ve Hakkında'da `<meta name="cp-page" content="hub">`.
+- `sw.js` (`tools/sw.template.js`'ten `tools/build-sw.py` ile üretilir): sitedeki tüm dosyaları ve sayfaların `?v=` ile istediği tam adresleri kurulumda önbelleğe alır. Sayfalar ağ öncelikli (çevrimiçiyken taze, değilse önbellek), diğer dosyalar o sürümün önbelleğinden; Google Fonts çalışma anında önbelleğe alınır. `version.json` aynı içerik özetini taşır.
+- **Her yayından önce `python3 tools/build-sw.py` çalıştırılmalı**; dosyalar değişince sürüm değişir, eski önbellek silinir.
+- `shared-settings.js` (`?v=9`): service worker'ı kaydeder; uygulamaya dönülünce `version.json`'ı önbelleksiz okuyup yeni sürüm varsa service worker'ı günceller. Yeni dosyalar hazır olunca dashboard/Hakkında hemen, oyun sayfaları yalnızca açılışın ilk 6 sn'sinde yenilenir (oyun ortasında sayfa yenilenmez; sonraki açılışta yeni sürüm gelir).
+- `chess-game/vendor/chess.js`: chess.js 0.10.3 npm paketinden (lisans yanında); Chess artık CDN'e bağlı değil.
+- Çevrimdışı çalışmayanlar: Arena FPS ve Vektör'ün çevrimiçi odaları (PeerJS sunucusu gerekir), freesound.org'dan gelen birkaç tıklama sesi (Snake, 2048, XOX, Wood Turning; sessiz kalır).
+
+### Testler
+
+- Playwright: ilk açılışta 81 adres önbelleğe alındı, sayfa service worker kontrolünde; internet kesikken 12 sayfanın hepsi açıldı (Chess motoru ve Three.js yüklü, sayfa hatası yok), Vektör'de tek oyunculu maç başladı.
+- Güncelleme: Hakkında sayfası değiştirilip `build-sw.py` çalıştırıldı, uygulamaya dönüş olayıyla sayfa yeni içerikle yenilendi ve eski önbellek silindi.

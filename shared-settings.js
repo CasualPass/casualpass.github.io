@@ -120,30 +120,58 @@ window.CasualSettings = Object.freeze({
 loadSettings();
 document.addEventListener('DOMContentLoaded', applySettings);
 
-// Ana ekrana eklenen uygulama ve tarayıcı önbelleği eski HTML'i tutabilir: açılışta ve uygulamaya
-// dönüldüğünde sitenin sürümünü önbelleksiz okur, değiştiyse sayfayı önbelleği atlayarak yeniler.
-(function checkSiteVersion() {
+// Çevrimdışı oyun ve güncelleme: sw.js tüm dosyaları önbelleğe alır. Yeni bir sürüm yayınlanınca
+// (version.json değişir) service worker güncellenir; sayfa yalnızca oyun ortasında değilse yenilenir:
+// dashboard/Hakkında her zaman, oyun sayfaları yalnızca açılışın ilk saniyelerinde.
+(function siteUpdates() {
     const KEY = 'cp_site_version';
-    const url = new URL('version.json', document.currentScript ? document.currentScript.src : location.href).href;
+    const base = document.currentScript ? document.currentScript.src : location.href;
+    const versionUrl = new URL('version.json', base).href;
+    const openedAt = performance.now();
+    const hub = () => Boolean(document.querySelector('meta[name="cp-page"][content="hub"]'));
+    const safeToReload = () => hub() || performance.now() - openedAt < 6000;
+    let registration = null;
+    let pending = false;
+
+    function reload() {
+        if (!safeToReload()) { pending = true; return; }
+        const next = new URL(location.href);
+        next.searchParams.delete('v');
+        location.replace(next.href);
+    }
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        navigator.serviceWorker.register(new URL('sw.js', base).href).then((reg) => { registration = reg; }).catch(() => {});
+        let controlled = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // The first install only takes control; a later swap means new files are ready.
+            if (controlled) reload();
+            controlled = true;
+        });
+    }
+
     let busy = false;
     async function check() {
-        if (busy) return;
+        if (busy || !navigator.onLine) return;
         busy = true;
         try {
-            const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+            const res = await fetch(`${versionUrl}?t=${Date.now()}`, { cache: 'no-store' });
             const { v } = await res.json();
             const seen = getCookieValue(KEY);
             if (v && seen !== v) {
                 setCookieValue(KEY, v);
                 if (seen) {
-                    const next = new URL(location.href);
-                    next.searchParams.set('v', v);
-                    location.replace(next.href);
+                    if (registration) registration.update().catch(() => {});
+                    else reload();
                 }
             }
         } catch { /* çevrimdışı */ }
         busy = false;
     }
     check();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        if (pending && hub()) { reload(); return; }
+        check();
+    });
 }());
