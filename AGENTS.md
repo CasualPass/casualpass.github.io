@@ -256,3 +256,8 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 - `about.html`: Tüm oyunların amacı, kontrolleri ve CM kazanımı; oyunlara hızlı bağlantılar ve her kartta "Oyna" düğmesi. Dashboard stilini (`style.css?v=18`) kullanır.
 - `index.html`, `style.css`: Üst çubuğa "Oyunlar" ve "Hakkında" bağlantıları. 720 px altında üst çubuk taşmasın diye logo yanındaki "CasualPass" yazısı gizlenir.
 - Test: Playwright 1440/390/320 px — dashboard'dan Hakkında'ya ve geri gidiş, 11 kart, yatay taşma ve sayfa hatası yok.
+
+## 2026-10-19 — Kendiliğinden güncelleme
+
+- Sitede service worker yok; ana ekrana eklenen uygulama ve GitHub Pages önbelleği (10 dk) eski HTML'i tutabiliyordu. `version.json` eklendi; `shared-settings.js` (`?v=8`, tüm sayfalar) açılışta ve uygulamaya dönülünce bu dosyayı önbelleksiz okur, sürüm çerezdekinden farklıysa sayfayı `?v=<sürüm>` ile yeniden yükler. **Her yayında `version.json` içindeki `v` değeri değiştirilmeli.**
+- Yanlışlıkla eklenen `shots/dash_top.png` silindi.
