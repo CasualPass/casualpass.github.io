@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hakkında — CasualPass</title>
+    <meta name="description" content="CasualPass oyunları: her oyunun amacı, kontrolleri ve CasualMoney kazanma yolları.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-settings.css?v=6">
+    <link rel="stylesheet" href="style.css?v=18">
+    <script src="shared-settings.js?v=7"></script>
+</head>
+
+<body class="theme-liquid">
+    <a class="skip-link" href="#oyunlar">İçeriğe geç</a>
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <a class="brand" href="index.html" aria-label="CasualPass dashboard">
+            <span class="brand-mark" aria-hidden="true">CP</span>
+            <span>CasualPass</span>
+        </a>
+        <nav class="topnav" aria-label="Site">
+            <a href="index.html#games">Oyunlar</a>
+            <a href="about.html" aria-current="page">Hakkında</a>
+        </nav>
+    </header>
+
+    <main class="dashboard">
+        <section class="about-hero">
+            <p class="eyebrow">HAKKINDA</p>
+            <h1>Oyunlar ve nasıl oynanır</h1>
+            <p>CasualPass, tarayıcıda anında açılan reklamsız mini oyunlardan oluşur. Hesap gerekmez: profilin, CasualMoney (CM) bakiyen ve satın aldıkların yalnızca bu tarayıcının çerezlerinde saklanır. Dashboard'dan oturumu başlatınca +15 CM, günlük ödülle +20 CM alırsın; oyunlarda kazandığın CM ile tema, boya, baykuş, ahşap ve silah kaplaması açarsın.</p>
+            <nav class="about-toc" aria-label="Oyunlar">
+                <a href="#wood-turning">Wood Turning</a><a href="#snake">Snake</a><a href="#g2048">2048</a><a href="#xox">XOX</a><a href="#chess">Chess</a><a href="#son-hat">Son Hat</a><a href="#owl">Minerva Owl</a><a href="#blocks">Wood Blocks</a><a href="#arena">Arena FPS</a><a href="#vektor">Vektör</a>
+            </nav>
+        </section>
+
+        <section class="about-grid" id="oyunlar">
+            <article class="about-card" id="wood-turning">
+                <header><h2>Wood Turning</h2><span class="tag">Ustalık</span></header>
+                <p>Torna tezgâhında dönen kütüğü siparişteki şekle getir. Her seviye yeni bir parça ister; yıldız topladıkça seviye atlarsın.</p>
+                <h3>Nasıl oynanır</h3>
+                <ul>
+                    <li><b>Oy:</b> Kütüğün üstünde basılı tutup sürükle; keski hedef çizgisine kadar keser. Kaba, Oluk ve İnce uç farklı profil açar. Kırmızı yerler fazla derin kesilmiştir.</li>
+                    <li><b>Zımpara:</b> Yüzeyi gezerek pürüzleri al.</li>
+                    <li><b>Boya:</b> Siparişteki renk bantlarını doğru yerlere boya. Her 5. seviye serbest tasarımdır.</li>
+                    <li>Sonuçta parçan istenenle karşılaştırılır: puan ve 1–3 yıldız.</li>
+                </ul>
+                <h3>Kazanç</h3>
+                <p>Puana ve atölye seviyesine göre CM. Mağazadan daha hızlı keskiler, yeni ahşaplar ve boyalar alınır; yıldızlı işler koleksiyon rafında durur.</p>
+                <a class="play" href="wood-turning/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="snake">
+                <header><h2>Snake</h2><span class="tag">Refleks</span></header>
+                <p>Yemi yedikçe yılan uzar ve hızlanır. Duvara ya da kendi kuyruğuna çarparsan oyun biter.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> ya da <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> ile yön değiştir.</li>
+                    <li>Telefonda ekranı kaydır.</li>
+                </ul>
+                <p>Rekorun ve skor tablon bu tarayıcıda saklanır.</p>
+                <a class="play" href="snake-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="g2048">
+                <header><h2>2048</h2><span class="tag">Zekâ</span></header>
+                <p>Taşları bir yöne kaydır; aynı sayılar birleşip ikiye katlanır. Hedef 2048 taşına ulaşmak; tahta dolup hamle kalmazsa oyun biter.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li>Ok tuşları ya da <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>.</li>
+                    <li>Telefonda tahtayı kaydır.</li>
+                </ul>
+                <p>İpucu: büyük taşı bir köşede tut, o köşeden uzaklaştıran yöne az kaydır.</p>
+                <a class="play" href="2048-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="xox">
+                <header><h2>XOX</h2><span class="tag">Strateji</span></header>
+                <p>3×3 tahtada sırayla X ve O koy. Yatay, dikey ya da çapraz üçlüyü ilk kuran kazanır; tahta dolarsa berabere.</p>
+                <h3>Nasıl oynanır</h3>
+                <ul>
+                    <li>Boş kareye tıkla ya da dokun.</li>
+                    <li>Bota karşı ya da aynı cihazda bir arkadaşınla oyna.</li>
+                </ul>
+                <a class="play" href="xox-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="chess">
+                <header><h2>Chess</h2><span class="tag">Taktik</span></header>
+                <p>Klasik satranç kuralları: rakibin şahını mat et. Rakibin yapay zekâ CasualFish'tir; zorluğunu seçebilirsin.</p>
+                <h3>Nasıl oynanır</h3>
+                <ul>
+                    <li>Taşına tıkla, gidebileceği kareler işaretlenir; hedef kareye tıkla.</li>
+                    <li>Rok, geçerken alma ve piyon terfisi desteklenir.</li>
+                </ul>
+                <a class="play" href="chess-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="son-hat">
+                <header><h2>Son Hat</h2><span class="tag">Hayatta kal · Beta</span></header>
+                <p>Birliğin köprüde ileri koşar ve her asker kendiliğinden ateş eder. Mavi kapılar (+N, ×2) birliği büyütür, kırmızılar küçültür; kapıları vurmak onları iyileştirir. Numaralı sandıkları vurup kırarak daha iyi silah, helikopter ve ateş hızı kazan. Zombi sürülerini ve bölüm sonu boss'unu yen.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li>Sürükle ya da <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd> ile şerit seç. <kbd>Esc</kbd> / <kbd>P</kbd> duraklatır.</li>
+                </ul>
+                <h3>Üs</h3>
+                <p>Kazandığın altınla binalar kur ve yükselt (Kışla, Silah Atölyesi, madenler…), kahraman çağır ve takımına ekle. Madenler sen yokken de üretir. Koşu başına 8 altın = 1 CM (en çok 40).</p>
+                <a class="play" href="son-hat/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="owl">
+                <header><h2>Minerva Owl</h2><span class="tag">Uçuş</span></header>
+                <p>Baykuşu mermer sütunların arasından geçir; her sütun 1 puan. Sütuna ya da yere çarparsan uçuş biter.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li><kbd>Boşluk</kbd>, <kbd>↑</kbd>, <kbd>W</kbd>, tıklama ya da dokunma ile kanat çırp. <kbd>Esc</kbd> duraklatır.</li>
+                </ul>
+                <h3>Kazanç</h3>
+                <p>Her 2 puan 1 CM (en çok 40). CM ile Kar, Peçeli, Puhu, Gece ve Altın baykuşları açılır.</p>
+                <a class="play" href="owl-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="blocks">
+                <header><h2>Wood Blocks</h2><span class="tag">Bulmaca</span></header>
+                <p>9×9 tahtaya her turda gelen 3 parçayı yerleştir. Dolan satır, sütun ve 3×3 kareler silinir. Hiçbir parça sığmayınca oyun biter.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li>Parçayı sürükleyip bırak (telefonda parça parmağının üstünde görünür).</li>
+                    <li>Klavye: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> parça seçer, oklar taşır, <kbd>Enter</kbd> bırakır, <kbd>Esc</kbd> vazgeçer.</li>
+                </ul>
+                <h3>Puan</h3>
+                <p>Her kare 1 puan, silinen her grup 18 puan; aynı hamlede birden fazla grup ve art arda silmeler bonus verir. Her 50 puan 1 CM; CM ile Ceviz, Kiraz, Abanoz ahşaplar açılır.</p>
+                <a class="play" href="wood-blocks/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="arena">
+                <header><h2>Arena FPS</h2><span class="tag">Çok oyunculu</span></header>
+                <p>Botlara karşı ya da arkadaşlarınla serbest ölüm maçı. Süre bitince ya da hedef öldürmeye ulaşan kazanır.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> hareket, fare nişan, sol tık ateş, sağ tık nişan/dürbün, <kbd>R</kbd> şarjör, <kbd>G</kbd> el bombası, <kbd>Boşluk</kbd> zıpla, <kbd>Tab</kbd> skor.</li>
+                    <li>Telefonda sol çubuk yürür, sağ taraf bakar, düğmeler ateş eder.</li>
+                </ul>
+                <h3>Çevrimiçi</h3>
+                <p>"Oda aç" ile 6 haneli kod al, arkadaşın "Katıl" ekranına yazsın. Öldürme başına 2 CM, birincilik +6 CM (en çok 40). Silah kaplamaları CM ile açılır.</p>
+                <a class="play" href="fps-game/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card" id="vektor">
+                <header><h2>Vektör</h2><span class="tag">Taktik 5v5</span></header>
+                <p>İki takım raunt raunt savaşır. Saldırırken çekirdeği bir bölgeye kur ve patlamasını bekle; savunurken kurulmasını engelle ya da çöz. Hedef raunda ilk ulaşan takım kazanır; yarıda taraflar değişir.</p>
+                <h3>Kontroller</h3>
+                <ul>
+                    <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> hareket, <kbd>Shift</kbd> sessiz yürü, <kbd>Z</kbd> çömel, sol tık ateş, sağ tık nişan.</li>
+                    <li><kbd>B</kbd> satın alma, <kbd>C</kbd> <kbd>Q</kbd> <kbd>E</kbd> yetenekler, <kbd>X</kbd> nihai, <kbd>F</kbd> basılı tut: kur/çöz, <kbd>Tab</kbd> skor.</li>
+                </ul>
+                <h3>İpuçları</h3>
+                <p>Durarak ateş et: koşarken mermiler dağılır. Raunt başında kredini silah, kalkan ve yeteneğe harca. 8 ajan ve 4 harita (Liman, Kumsaray, Üçyol, Buzul) var. Öldürme ve kazanılan raunt başına 1 CM, zafer +10 CM (en çok 40).</p>
+                <a class="play" href="vektor/index.html">Oyna →</a>
+            </article>
+
+            <article class="about-card wide">
+                <header><h2>Hile kodları ve ilerleme</h2><span class="tag">Notlar</span></header>
+                <p>Sağ alttaki "Kod gir" düğmesiyle eğlence amaçlı hileler açılabilir; hile açıkken rekor, ödül ve satın alma kaydedilmez. İlerleme cihazlar arasında taşınmaz; çerezleri silersen sıfırlanır.</p>
+            </article>
+        </section>
+    </main>
+
+    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>İlerleme yalnızca bu tarayıcının çerezlerinde saklanır.</small></footer>
+</body>
+
+</html>

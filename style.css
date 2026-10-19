@@ -96,3 +96,28 @@ footer { padding: 19px 0 96px; display: flex; align-items: center; gap: 18px; co
 @media (max-width: 390px) { .cheat-card { column-gap: 8px; }.cheat-name { font-size: 15px; }.cheat-status { font-size: 9px; } }
 @media (max-width: 500px) { .cheat-session { align-items: stretch; flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { .game-card:hover, .session-button:hover, .cheat-card:hover, .cheat-action:not(:disabled):hover { transform: none; } }
+
+/* ---------- Gezinme ve Hakkında sayfası ---------- */
+.topnav { display: flex; gap: 4px; margin-right: auto; margin-left: 28px; }
+.topnav a { min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; color: var(--dashboard-muted); border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; }
+.topnav a:hover { color: var(--cp-text); background: var(--dashboard-surface); }
+.topnav a[aria-current="page"] { color: var(--cp-text); background: var(--dashboard-surface-strong); border: 1px solid var(--dashboard-border); }
+.about-hero { padding: 34px 0 18px; }
+.about-hero h1 { margin: 6px 0 10px; font-size: clamp(34px, 6vw, 58px); letter-spacing: -.05em; line-height: 1; }
+.about-hero p { max-width: 720px; margin: 0; color: var(--dashboard-muted); font-size: 16px; line-height: 1.6; }
+.about-toc { margin: 18px 0 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+.about-toc a { min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid var(--dashboard-border); border-radius: 999px; background: var(--dashboard-surface); font-size: 13px; font-weight: 700; text-decoration: none; }
+.about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding-bottom: 40px; }
+.about-card { scroll-margin-top: 16px; padding: 22px; border: 1px solid var(--dashboard-border); border-radius: var(--dashboard-radius); background: var(--dashboard-surface); }
+.about-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.about-card h2 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
+.about-card .tag { color: var(--dashboard-accent); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.about-card p { margin: 10px 0; color: var(--dashboard-muted); line-height: 1.55; }
+.about-card h3 { margin: 14px 0 6px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+.about-card ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.about-card kbd { padding: 1px 6px; border: 1px solid var(--dashboard-border); border-radius: 6px; font: inherit; font-size: 12px; font-weight: 700; }
+.about-card .play { display: inline-flex; min-height: 42px; align-items: center; margin-top: 14px; padding: 0 16px; color: #111510; border-radius: 12px; background: var(--dashboard-accent); font-weight: 800; text-decoration: none; }
+.about-card.wide { grid-column: 1 / -1; }
+@media (max-width: 860px) { .about-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .brand > span:last-child { display: none; }.topnav { margin-left: 10px; }.topnav a { padding: 0 10px; font-size: 13px; } }
+@media (max-width: 400px) { .topnav a { padding: 0 8px; } }

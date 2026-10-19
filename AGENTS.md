@@ -250,3 +250,9 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 
 - `node --check`, `git diff --check` temiz; aktif kodda localStorage yok.
 - Playwright 1440 px ve 390×844: gerçek sürüklemelerle beş seviye, ödül, seviye atlama, mağaza alımı ve yenileme sonrası kalıcılık; misafir oynayıp sonuçtan giriş yapınca ödülün alınması; hile önizlemesi kayıt yapmadan; 320/390/1000/1440 px ve yatay telefonda taşma ve konsol hatası yok.
+
+## 2026-10-19 — Hakkında sayfası
+
+- `about.html`: Tüm oyunların amacı, kontrolleri ve CM kazanımı; oyunlara hızlı bağlantılar ve her kartta "Oyna" düğmesi. Dashboard stilini (`style.css?v=18`) kullanır.
+- `index.html`, `style.css`: Üst çubuğa "Oyunlar" ve "Hakkında" bağlantıları. 720 px altında üst çubuk taşmasın diye logo yanındaki "CasualPass" yazısı gizlenir.
+- Test: Playwright 1440/390/320 px — dashboard'dan Hakkında'ya ve geri gidiş, 11 kart, yatay taşma ve sayfa hatası yok.
