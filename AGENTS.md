@@ -161,3 +161,21 @@ Eymen'in paylaştığı tek dosyalık "HTML5 + WebRTC Multiplayer FPS v4" oyunun
 - iPhone 12 dokunmatik emülasyonu (yatay 844×390 ve dikey 390×844): sanal çubukla yürüme, sağ tarafla bakış, Ateş düğmesiyle atış, duraklatma; yatay taşma yok.
 - Dashboard 1440, 1000, 390, 320 px: yatay taşma yok, "Dokuz oyun aynı ekranda."
 - Not: SwiftShader yazılım GPU'su bu ortamda karesi pahalı çizdiği için FPS ölçümleri gerçek cihazları temsil etmiyor; JS tarafı 5 sn'lik profilde ~100 ms'e indi ve maç sırasında shader yeniden derlenmiyor.
+
+## 2026-10-19 — Arena FPS doku kalitesi
+
+### Yapılanlar
+
+- `fps-game/script.js`: Tek renkli yüzeyler yerine dosya indirmeden üretilen dokular. Döşenebilir (kenarları birleşen) fraktal değer gürültüsü ve kenar sarmalı çizimle 11 yüzey: çim (tek tek çim yaprakları, kuru lekeler), asfalt (kenar çizgileri, aşınmış orta şerit, çatlaklar), sıva, beton (panel derzleri, kalıp delikleri), çatı, sandık (çerçeve, çapraz destek, tahta damarı, çivi), oluklu metal, kum torbası, kaya, ağaç kabuğu, yaprak. Dokular çoğunlukla açık gri; malzeme rengi onları renklendirir, böylece her bina/konteyner rengi aynı dokuyu paylaşır.
+- Birleştirilmiş statik geometriye dünya koordinatlı kutu UV'si verildi (her yüzeyde aynı piksel yoğunluğu); sandıklar kendi kutu UV'sini korur.
+- Zemine düşük frekanslı köşe renkleri (açık/koyu ve kuru çimen lekeleri) eklendi; çim dokusunun tekrarı görünmez.
+- Silahlar: Çöl/Orman/Kutup/Kızıl kaplamalar gerçek kamuflaj deseniyle boyanır; Standart ve Altın fırçalanmış metal ve ahşap damarı kullanır.
+- Kalite: Düşük 256 px, Orta 512 px, Yüksek 1024 px (çim ve asfalt; diğerleri en çok 512 px). Anizotropi Düşük 1, Orta 4, Yüksek 8. Ayardan kalite değişince dokular yeniden çizilir.
+- Hata düzeltmesi: güneşin gölge kamerası sınırları ayarlandıktan sonra `updateProjectionMatrix()` çağrılmıyordu; "Yüksek"te gölgeler yalnızca harita merkezinin ±5 m'sinde çıkıyordu. Artık tüm haritada.
+- `index.html` betik sürümü `?v=2`.
+
+### Testler
+
+- `node --check fps-game/script.js` başarılı.
+- Playwright: Orta ve Yüksek kalitede bina, konteyner, sandık, yol, kaya ve kamuflajlı silah ekran görüntüleri; konsolda hata yok.
+- Önceki tek oyunculu, iki tarayıcılı WebRTC ve iPhone 12 dokunmatik (Düşük kalite) testleri yeniden geçti.

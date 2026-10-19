@@ -43,7 +43,8 @@ Ardından `http://127.0.0.1:4173/` adresini aç.
 Arena FPS, depodaki `fps-game/vendor/` klasöründen `three.js` (r128) ve `PeerJS` (1.5.4) yükler; CDN'e bağlı değildir (lisanslar `fps-game/vendor/LICENSES.md`). Çok oyunculu odalar için oyuncular PeerJS'in ücretsiz sinyal sunucusu üzerinden eşleşir, ardından oyun verisi doğrudan WebRTC ile akar. Host merkezli (yıldız) yapıda konumlar 12 baytlık ikili kayıtlarla, en fazla 15 Hz ve güvenilmez/sırasız kanaldan gönderilir; yalnızca isabet, ölüm ve bomba gibi olaylar güvenilir kanaldan gider.
 
 - İki cihaz doğrudan bağlanamazsa menüdeki **Gelişmiş bağlantı (TURN)** alanına kendi TURN sağlayıcının `iceServers` listesini yapıştırabilirsin; liste hiçbir yere kaydedilmez.
-- Kendi PeerJS sinyal sunucunu kullanmak için sayfayı `?signal=sunucu:port` ile aç (ör. `fps-game/index.html?signal=127.0.0.1:9000`).
+- Oyun internet üzerinden çalışır; LAN'a bağlı değildir. Eşleşme için internette PeerJS sunucusu gerekir, ardından veri iki tarayıcı arasında doğrudan akar. Aynı Wi-Fi'deki cihazlar otomatik olarak yerel ağ üzerinden bağlanır.
+- İnternetsiz bir yerel ağda oynamak ya da kendi PeerJS sinyal sunucunu kullanmak için sayfayı `?signal=sunucu:port` ile aç (ör. `fps-game/index.html?signal=192.168.1.20:9000`).
 - Oyun durumu her oyuncunun kendi tarayıcısında hesaplandığı için Arena FPS rekabetçi/hileye dayanıklı bir oyun değildir; arkadaşlarla oynamak içindir.
 
 ## GitHub Pages
