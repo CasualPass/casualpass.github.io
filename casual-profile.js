@@ -17,6 +17,8 @@
     const ARENA_REWARD_CAP = 40;
     const ARENA_CM_PER_KILL = 2;
     const ARENA_WIN_BONUS = 6;
+    const VEKTOR_REWARD_CAP = 40;
+    const VEKTOR_WIN_BONUS = 10;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -471,6 +473,23 @@
         return { profile, reward };
     }
 
+    function vektorRewardForMatch(result) {
+        const kills = Math.max(0, Math.floor(Number(result?.kills) || 0));
+        const rounds = Math.max(0, Math.floor(Number(result?.rounds) || 0));
+        return Math.min(VEKTOR_REWARD_CAP, kills + rounds + (result?.won ? VEKTOR_WIN_BONUS : 0));
+    }
+
+    function awardVektorMatch(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = vektorRewardForMatch(result);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, result?.won ? 'Vektör zaferi' : 'Vektör maçı');
+        });
+        return { profile, reward };
+    }
+
     function buyCamo(camoId) {
         if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
         const camo = camos[camoId];
@@ -579,8 +598,8 @@
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
         buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
         sonHatRewardForCoins, awardSonHatRun,
-        buyCamo, selectCamo, arenaRewardForMatch, awardArenaMatch,
+        buyCamo, selectCamo, arenaRewardForMatch, awardArenaMatch, vektorRewardForMatch, awardVektorMatch,
         SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM,
-        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM, ARENA_REWARD_CAP, ARENA_CM_PER_KILL, ARENA_WIN_BONUS
+        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM, ARENA_REWARD_CAP, ARENA_CM_PER_KILL, ARENA_WIN_BONUS, VEKTOR_REWARD_CAP, VEKTOR_WIN_BONUS
     });
 })();

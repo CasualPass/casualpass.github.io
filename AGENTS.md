@@ -179,3 +179,43 @@ Eymen'in paylaştığı tek dosyalık "HTML5 + WebRTC Multiplayer FPS v4" oyunun
 - `node --check fps-game/script.js` başarılı.
 - Playwright: Orta ve Yüksek kalitede bina, konteyner, sandık, yol, kaya ve kamuflajlı silah ekran görüntüleri; konsolda hata yok.
 - Önceki tek oyunculu, iki tarayıcılı WebRTC ve iPhone 12 dokunmatik (Düşük kalite) testleri yeniden geçti.
+
+## 2026-10-19 — Vektör (5'e 5 taktik kahraman nişancı)
+
+### Amaç
+
+Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen bir oyun. Riot'un adı, logosu, ajan/silah/harita adları ve varlıkları kullanılmadı; oynanış ve görünüm türün kendi diliyle, özgün adlarla yeniden kuruldu.
+
+### Yapılanlar
+
+- `vektor/`: Arena FPS motoru (Three.js, prosedürel dokular, birleştirilmiş statik geometri, A*, WebRTC yıldız ağ) üzerine yeni oyun. `script.js` tek dosya, ~5000 satır.
+  - **Harita "Liman"**: 2 m hücreli ızgaradan oyulan, iki kurma bölgeli (A/B), orta alanlı, boğazlı ve ara geçitli Akdeniz liman kasabası. Bölgeye göre renkli sıva duvarlar, süpürgelik ve korniş, kiremit saçaklar, saksılar, duvar dışında çatılar ve çan kulesi. Bölge zeminleri boyalı, duvarlarda büyük A/B harfleri. Satın alma evresinde doğuş bariyerleri.
+  - **Raunt sistemi**: satın alma (25 sn) → raunt (100 sn) → çekirdek kurulunca 45 sn → raunt sonu. Kazanmak için 5/7/13 raunt; `hedef − 1` raunttan sonra taraf değişir. Eleme, süre dolması, patlama ve çözme sonuçları.
+  - **Çekirdek**: rastgele bir saldırgan taşır; ölünce düşer, ilk geçen saldırgan alır. Bölgede F basılı 4 sn kurma, 7 sn çözme (3,5 sn'de yarı kayıt). Kurulunca hızlanan bip ve kırmızı ışık.
+  - **Ekonomi**: başlangıç 800, galibiyet 3000, yenilgi 1900/2400/2900, öldürme 200, kurma 300 (tüm saldırganlara), tavan 9000; devre arasında sıfırlanır. Herkes kendi kredisini aynı kurallarla hesaplar.
+  - **Satın alma menüsü** (B): tabanca, hafif, tüfek, keskin, kalkanlar, yetenek şarjları; silah görselleri gerçek 3B modellerden beyaz siluet olarak çizilir. Bu raunt alınan geri satılabilir.
+  - **Silahlar**: Pim, Ölçü, Arı, Saçma, Kartal (mesafeden bağımsız tek kafa), Şahin (susturuculu), Yayla (gövdeye tek atış), bıçak, çekirdek. Kafa/gövde/bacak çarpanı ve mesafe düşüşü.
+  - **İsabet modeli**: duran ilk mermi isabetli; koşarken büyük, yürürken (Shift) küçük dağılım; havada çok kötü; çömelmek ve nişan almak iyileştirir. Tüfekte önce yukarı, sonra sağa sola kayan sabit tarama kalıbı; ara verince sıfırlanır. Hızlı ivmelenme ve daha hızlı fren (karşı-strafe). Vurulunca kısa yavaşlama. Koşan düşmanın ayak sesi duvar arkasından duyulur, yürüyen sessizdir.
+  - **Ajanlar** (C/Q/E + X nihai, 6 puan): Kor (alev topu, kör edici, atılım, cehennem), Sis (bataklık, gölge, duman, gece perdesi), Ok (şok oku, parlama, keşif oku, av), Kale (tuzak teli, kalkan duvarı, onarım, kilit). E her raunt ücretsiz yenilenir; nihai puanı öldürme, ölüm, kurma ve çözmeden gelir.
+  - **Görünüm**: düşmanlar kırmızı dış hatlı (ters gövde), görünür kılınınca hat duvarın arkasından görünür; müttefiklerin üstünde camgöbeği işaret ve isim. Lacivert/kırmızı/kırık beyaz HUD: üstte takım ajan çipleri ve skor/süre, solda harita (düşmanlar yalnızca görülünce), sağda öldürme akışı (silah siluetiyle), altta can/kalkan, yetenek çubuğu ve cephane; raunt ve öldürme afişleri; ölünce ölüm kamerası, sonra takım arkadaşını izleme.
+  - **Botlar**: takım planı (hedef bölge, lobide bekleme, giriş, kurma; savunmada bölge tutma, çekirdek kurulunca geri alma ve çözme), satın alma mantığı (tabanca raundu, eko, zorunlu alım, tam alım), durup ateş etme, takım bilgisi paylaşımı, ses ve vurulmaya tepki, rol tabanlı yetenek kullanımı.
+  - **Çevrimiçi**: 13 baytlık kayıt (silah ve çekirdek baytı eklendi). Katılan oyuncu insanı az olan takıma girer, takım doluysa bir botun yerini alır; ayrılanın yerine bot geçer. Raunt, evre, çekirdek ve skor host'tan; istemci olayları doğrulanır.
+  - Dokunmatik: çubuk (az itince yürüme), bakış, Ateş/Nişan/Zıpla/Çömel/R/Silah/F ve C/Q/E/X/satın alma düğmeleri.
+  - Çömelme Ctrl yerine Z: Ctrl+W sekmeyi kapatır ve sayfa engelleyemez.
+  - `?debug` testler için `window.VektorDebug` açar; `?signal=host:port` kendi PeerJS sunucusu.
+- `casual-profile.js`: `vektorRewardForMatch`, `awardVektorMatch` (öldürme + kazanılan raunt başına 1 CM, zafer +10, maç başına en fazla 40 CM, yeniden doğuş çarpanı). Sürüm `?v=15` (tüm sürümlü sayfalar).
+- `index.html`, `style.css`: 10. kart (Vektör); masaüstü ve tablet grid 5 sütun (2 satır). Wood Blocks kart çiziminin kareleri `.game-art`'ın `align-items: center` kuralı yüzünden 0 yükseklikteydi; `align-items: stretch` ile düzeldi. Stil `?v=17`.
+- Rekor `cp_vektor_best`, ayarlar `cp_vektor_prefs` çerezlerinde; istatistik `recordGameResult('Vektör', …)`.
+
+### Testler
+
+- `node --check` ve ESLint (`no-undef`, `no-unused-vars`) temiz.
+- Playwright (Chromium, SwiftShader): botların tam raunt oynaması (çatışma, taşıyıcı ölünce çekirdeğin düşmesi ve alınması, A'ya kurma, savunmanın çözmesi); satın alma, geri satma, kalkan ve yetenek alımı; satın alma evresinde duman; bota ateş edip öldürme (+200 kredi, +1 nihai puan); oyuncunun kurması (+300) ve savunmada çözmesi; ölüm sonrası müttefik izleme; dört ajanın tüm C/Q/E/X yetenekleri; tam maç (kayıp serisi ekonomisi, devre arası taraf değişimi ve kredi sıfırlama, 9000 tavanı, 5–4 zafer, +15 CM, yeni maç).
+- İki tarayıcılı gerçek WebRTC (yerel PeerJS): katılanın rakip takımda bir botun yerini alması, raunt ve ekonomi senkronu, istemcinin host'u öldürmesi, host botunun yeteneğinin istemcide görünmesi; konsolda hata yok.
+- iPhone 12 dokunmatik (yatay/dikey): taşma yok, çubukla hareket, satın alma menüsü. Dashboard 1440/1000/390/320 px taşma yok.
+
+### Bilinen bağlam ve riskler
+
+- Botlar basit kurallarla oynar; insan takım arkadaşı gibi iletişim kurmaz.
+- Çevrimiçi isabet ve kredi istemci tarafındadır; arkadaş oyunu içindir.
+- Duman ve görünürlük her istemcide yerel hesaplanır; küçük zaman farkları olabilir.
