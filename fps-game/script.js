@@ -160,6 +160,7 @@
     sun.position.set(55, 90, 30);
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left: -85, right: 85, top: 85, bottom: -85, near: 10, far: 220 });
+    sun.shadow.camera.updateProjectionMatrix();
     sun.shadow.bias = -0.0006;
     scene.add(sun, sun.target);
     // Lights stay in the scene at zero intensity so the light count, and the compiled shaders, never change.
@@ -215,42 +216,391 @@
             scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); });
         }
         scene.fog.far = prefs.q === 'low' ? 115 : 150;
-        const aniso = prefs.q === 'low' ? 1 : Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        [grassTex, roadTex].forEach((t) => { if (t.anisotropy !== aniso) { t.anisotropy = aniso; t.needsUpdate = true; } });
+        const aniso = prefs.q === 'low' ? 1 : Math.min(prefs.q === 'high' ? 8 : 4, renderer.capabilities.getMaxAnisotropy());
+        textureAniso = aniso;
+        allTextures.forEach((t) => { if (t.anisotropy !== aniso) { t.anisotropy = aniso; t.needsUpdate = true; } });
+        paintSurfaces(textureSize());
         resize();
     }
 
     /* ---------- Harita ---------- */
 
-    function makeTexture(size, repeatX, repeatY, paint) {
-        const c = document.createElement('canvas');
-        c.width = c.height = size;
-        paint(c.getContext('2d'), size);
-        const tex = new THREE.CanvasTexture(c);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(repeatX, repeatY);
-        return tex;
-    }
+    /* ---------- Dokular (prosedürel, dosya indirmeden) ---------- */
 
-    function speckle(g, size, count, colors) {
-        for (let i = 0; i < count; i++) {
-            g.fillStyle = colors[i % colors.length];
-            g.fillRect(Math.random() * size, Math.random() * size, 1 + Math.random() * 2, 1 + Math.random() * 3);
+    const smooth = (t) => t * t * (3 - 2 * t);
+
+    // Tileable fractal value noise: every octave's lattice wraps, so tiles join without seams.
+    function noiseCanvas(n, cells, octaves, seed) {
+        const r = mulberry32(seed);
+        const acc = new Float32Array(n * n);
+        let amp = 1;
+        for (let o = 0; o < octaves; o++) {
+            const c = cells << o;
+            const lat = new Float32Array(c * c).map(() => r());
+            for (let y = 0; y < n; y++) {
+                const fy = (y / n) * c;
+                const y0 = Math.floor(fy);
+                const y1 = (y0 + 1) % c;
+                const ty = smooth(fy - y0);
+                for (let x = 0; x < n; x++) {
+                    const fx = (x / n) * c;
+                    const x0 = Math.floor(fx);
+                    const x1 = (x0 + 1) % c;
+                    const tx = smooth(fx - x0);
+                    const top = lerp(lat[y0 * c + x0], lat[y0 * c + x1], tx);
+                    const bottom = lerp(lat[y1 * c + x0], lat[y1 * c + x1], tx);
+                    acc[y * n + x] += lerp(top, bottom, ty) * amp;
+                }
+            }
+            amp *= 0.5;
+        }
+        let lo = Infinity;
+        let hi = -Infinity;
+        for (const v of acc) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+        const c = document.createElement('canvas');
+        c.width = c.height = n;
+        const g = c.getContext('2d');
+        const img = g.createImageData(n, n);
+        for (let i = 0; i < acc.length; i++) {
+            const v = Math.round(((acc[i] - lo) / (hi - lo || 1)) * 255);
+            img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v;
+            img.data[i * 4 + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        return c;
+    }
+    const NOISE_LO = noiseCanvas(128, 4, 5, 11);
+    const NOISE_HI = noiseCanvas(128, 16, 3, 23);
+
+    // Lay a noise tile over the whole texture `reps` times per side with a blend mode.
+    function overlay(g, S, img, reps, alpha, op = 'multiply') {
+        g.save();
+        g.globalAlpha = alpha;
+        g.globalCompositeOperation = op;
+        const t = S / reps;
+        for (let i = 0; i < reps; i++) for (let j = 0; j < reps; j++) g.drawImage(img, i * t, j * t, t, t);
+        g.restore();
+    }
+    // Draw a shape and its copies across the edges so the texture still tiles.
+    function wrapped(S, x, y, r, draw) {
+        for (const dx of [-S, 0, S]) {
+            for (const dy of [-S, 0, S]) {
+                const px = x + dx;
+                const py = y + dy;
+                if (px > -r && px < S + r && py > -r && py < S + r) draw(px, py);
+            }
         }
     }
+    function blob(g, S, x, y, r, color) {
+        g.fillStyle = color;
+        wrapped(S, x, y, r, (px, py) => { g.beginPath(); g.arc(px, py, r, 0, TAU); g.fill(); });
+    }
+    function dots(g, S, count, size, colors) {
+        for (let i = 0; i < count; i++) {
+            g.fillStyle = colors[i % colors.length];
+            const w = size * (0.5 + Math.random());
+            g.fillRect(Math.random() * S, Math.random() * S, w, w);
+        }
+    }
+    function crackLines(g, S, count, color, width) {
+        g.strokeStyle = color;
+        g.lineWidth = width;
+        g.lineCap = 'round';
+        for (let i = 0; i < count; i++) {
+            let x = Math.random() * S;
+            let y = Math.random() * S;
+            let a = Math.random() * TAU;
+            g.beginPath();
+            g.moveTo(x, y);
+            for (let k = 0; k < 9; k++) {
+                a += rand(-0.7, 0.7);
+                x += Math.cos(a) * S * 0.035;
+                y += Math.sin(a) * S * 0.035;
+                g.lineTo(x, y);
+            }
+            g.stroke();
+        }
+    }
+    const gray = (v, a = 1) => `rgba(${v},${v},${v},${a})`;
 
-    const grassTex = makeTexture(256, 36, 36, (g, s) => {
-        g.fillStyle = '#4a6b3c';
-        g.fillRect(0, 0, s, s);
-        speckle(g, s, 3200, ['rgba(36,66,28,.55)', 'rgba(98,134,72,.5)', 'rgba(122,112,70,.35)', 'rgba(70,104,52,.6)']);
-    });
-    const roadTex = makeTexture(128, 35, 1, (g, s) => {
-        g.fillStyle = '#55524c';
-        g.fillRect(0, 0, s, s);
-        speckle(g, s, 1400, ['rgba(30,30,30,.35)', 'rgba(130,126,118,.3)']);
-        g.fillStyle = 'rgba(235,225,180,.85)';
-        g.fillRect(0, s / 2 - 3, s * 0.55, 6);
-    });
+    // Surface textures are mostly light greys; the material colour tints them, so one texture
+    // serves every building or container colour. scale = metres per tile (world-space UVs),
+    // box = keep the box's own 0..1 UVs (a crate face shows one whole crate side).
+    const SURFACES = {
+        grass: { paint(g, S, k) {
+            g.fillStyle = '#557a43';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.5);
+            overlay(g, S, NOISE_HI, 2, 0.28, 'overlay');
+            for (let i = 0; i < 7; i++) {
+                const x = Math.random() * S;
+                const y = Math.random() * S;
+                const r = S * rand(0.08, 0.18);
+                wrapped(S, x, y, r, (px, py) => {
+                    const grd = g.createRadialGradient(px, py, 0, px, py, r);
+                    grd.addColorStop(0, 'rgba(170,160,80,.22)');
+                    grd.addColorStop(1, 'rgba(170,160,80,0)');
+                    g.fillStyle = grd;
+                    g.fillRect(px - r, py - r, r * 2, r * 2);
+                });
+            }
+            const greens = ['#3c612f', '#6a9550', '#4f7a3d', '#86a85d', '#355a2a', '#7a9a4c'];
+            g.lineCap = 'round';
+            for (let i = 0; i < 9000 * k * k; i++) {
+                const x = Math.random() * S;
+                const y = Math.random() * S;
+                const len = rand(3, 9) * k;
+                const a = rand(-0.35, 0.35);
+                g.strokeStyle = greens[i % greens.length];
+                g.globalAlpha = rand(0.35, 0.75);
+                g.lineWidth = Math.max(1, k * rand(0.8, 1.6));
+                wrapped(S, x, y, len, (px, py) => {
+                    g.beginPath();
+                    g.moveTo(px, py);
+                    g.lineTo(px + Math.sin(a) * len, py - Math.cos(a) * len);
+                    g.stroke();
+                });
+            }
+            g.globalAlpha = 1;
+            dots(g, S, 500 * k * k, 2 * k, ['rgba(110,90,60,.45)', 'rgba(230,225,160,.5)']);
+        } },
+        asphalt: { paint(g, S, k) {
+            g.fillStyle = '#62605a';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.45);
+            overlay(g, S, NOISE_HI, 3, 0.35);
+            dots(g, S, 7000 * k * k, 1.6 * k, ['rgba(150,146,138,.55)', 'rgba(30,30,30,.45)', 'rgba(110,106,98,.5)']);
+            for (let i = 0; i < 4; i++) blob(g, S, Math.random() * S, S * rand(0.2, 0.8), S * rand(0.03, 0.07), 'rgba(20,20,20,.12)');
+            crackLines(g, S, 5, 'rgba(25,25,25,.5)', 1.4 * k);
+            const line = S * 0.022;
+            g.fillStyle = 'rgba(232,230,216,.9)';
+            g.fillRect(0, S * 0.04, S, line);
+            g.fillRect(0, S * 0.94 - line, S, line);
+            g.fillStyle = 'rgba(236,212,120,.92)';
+            g.fillRect(S * 0.05, S * 0.5 - line / 2, S * 0.5, line);
+            overlay(g, S, NOISE_HI, 4, 0.3); // aşınmış boya
+        } },
+        plaster: { scale: 3, paint(g, S, k) {
+            g.fillStyle = '#efe9df';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.12);
+            overlay(g, S, NOISE_HI, 3, 0.1);
+            for (let i = 0; i < 40 * k; i++) {
+                const x = Math.random() * S;
+                const w = rand(2, 7) * k;
+                const grd = g.createLinearGradient(0, 0, 0, S);
+                grd.addColorStop(0, 'rgba(70,60,50,.09)');
+                grd.addColorStop(1, 'rgba(70,60,50,0)');
+                g.fillStyle = grd;
+                g.fillRect(x, 0, w, S);
+            }
+            dots(g, S, 2600 * k * k, 1.4 * k, ['rgba(90,80,70,.25)', 'rgba(255,255,255,.4)']);
+            crackLines(g, S, 2, 'rgba(80,70,60,.3)', 1 * k);
+        } },
+        concrete: { scale: 4, paint(g, S, k) {
+            g.fillStyle = '#e0e0dc';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.38);
+            overlay(g, S, NOISE_HI, 3, 0.28);
+            dots(g, S, 1800 * k * k, 1.6 * k, ['rgba(40,40,40,.28)', 'rgba(255,255,255,.35)']);
+            g.strokeStyle = 'rgba(40,40,40,.45)';
+            g.lineWidth = 3 * k;
+            for (const v of [1.5 * k, S / 2]) {
+                g.beginPath(); g.moveTo(v, 0); g.lineTo(v, S); g.stroke();
+                g.beginPath(); g.moveTo(0, v); g.lineTo(S, v); g.stroke();
+            }
+            for (const x of [S / 4, (3 * S) / 4]) {
+                for (const y of [S / 4, (3 * S) / 4]) {
+                    const grd = g.createLinearGradient(0, y, 0, y + S * 0.2);
+                    grd.addColorStop(0, 'rgba(60,55,50,.12)');
+                    grd.addColorStop(1, 'rgba(60,55,50,0)');
+                    g.fillStyle = grd;
+                    g.fillRect(x - 3 * k, y, 6 * k, S * 0.2);
+                    blob(g, S, x, y, 4.5 * k, 'rgba(255,255,255,.35)');
+                    blob(g, S, x, y, 3 * k, 'rgba(30,30,30,.55)');
+                }
+            }
+        } },
+        roof: { scale: 2.5, paint(g, S, k) {
+            g.fillStyle = '#d8d8d8';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.38);
+            dots(g, S, 5000 * k * k, 1.6 * k, ['rgba(40,40,40,.3)', 'rgba(255,255,255,.4)', 'rgba(120,120,120,.35)']);
+            for (let i = 0; i < 4; i++) {
+                const y = (i * S) / 4;
+                g.fillStyle = 'rgba(255,255,255,.18)';
+                g.fillRect(0, y, S, 5 * k);
+                g.fillStyle = 'rgba(0,0,0,.22)';
+                g.fillRect(0, y + 5 * k, S, 2 * k);
+            }
+            overlay(g, S, NOISE_HI, 2, 0.25);
+        } },
+        crate: { box: true, paint(g, S, k) {
+            const planks = 5;
+            const h = S / planks;
+            for (let i = 0; i < planks; i++) {
+                g.fillStyle = gray(Math.round(rand(205, 240)));
+                g.fillRect(0, i * h, S, h);
+                g.strokeStyle = 'rgba(110,80,50,.22)';
+                g.lineWidth = Math.max(1, 1.2 * k);
+                for (let l = 0; l < 12; l++) {
+                    const y0 = i * h + rand(4, h - 4);
+                    const ph = rand(0, TAU);
+                    g.beginPath();
+                    for (let x = 0; x <= S; x += 8 * k) g.lineTo(x, y0 + Math.sin(x / (40 * k) + ph) * 2.5 * k);
+                    g.stroke();
+                }
+                if (Math.random() < 0.6) {
+                    g.fillStyle = 'rgba(90,60,35,.4)';
+                    g.beginPath();
+                    g.ellipse(rand(0.2, 0.8) * S, i * h + h / 2, 7 * k, 3.5 * k, 0, 0, TAU);
+                    g.fill();
+                }
+                g.fillStyle = 'rgba(40,25,10,.6)';
+                g.fillRect(0, i * h, S, 3 * k);
+            }
+            const bw = S * 0.11;
+            g.save();
+            g.translate(S / 2, S / 2);
+            g.rotate(Math.PI / 4);
+            g.fillStyle = gray(222);
+            g.fillRect(-S * 0.75, -bw / 2, S * 1.5, bw);
+            g.strokeStyle = 'rgba(40,25,10,.55)';
+            g.lineWidth = 3 * k;
+            g.strokeRect(-S * 0.75, -bw / 2, S * 1.5, bw);
+            g.restore();
+            g.fillStyle = gray(228);
+            for (const [x, y, w, hh] of [[0, 0, S, bw], [0, S - bw, S, bw], [0, 0, bw, S], [S - bw, 0, bw, S]]) g.fillRect(x, y, w, hh);
+            g.strokeStyle = 'rgba(40,25,10,.6)';
+            g.lineWidth = 3 * k;
+            g.strokeRect(bw, bw, S - 2 * bw, S - 2 * bw);
+            g.strokeRect(1.5 * k, 1.5 * k, S - 3 * k, S - 3 * k);
+            for (const x of [bw / 2, S - bw / 2]) for (const y of [bw / 2, S - bw / 2]) blob(g, S, x, y, 3 * k, 'rgba(50,50,50,.8)');
+            overlay(g, S, NOISE_HI, 2, 0.16);
+            overlay(g, S, NOISE_LO, 1, 0.14);
+        } },
+        metal: { scale: 2.4, paint(g, S, k) {
+            const ribs = 12;
+            for (let x = 0; x < S; x++) {
+                const v = 0.72 + 0.28 * (0.5 + 0.5 * Math.cos((x / S) * ribs * TAU));
+                g.fillStyle = gray(Math.round(v * 245));
+                g.fillRect(x, 0, 1, S);
+            }
+            overlay(g, S, NOISE_LO, 1, 0.22);
+            overlay(g, S, NOISE_HI, 2, 0.2);
+            for (let i = 0; i < 40 * k * k; i++) blob(g, S, Math.random() * S, Math.random() * S, rand(2, 11) * k, 'rgba(120,60,25,.16)');
+            g.strokeStyle = 'rgba(255,255,255,.22)';
+            g.lineWidth = Math.max(1, k);
+            for (let i = 0; i < 60 * k; i++) {
+                const x = Math.random() * S;
+                const y = Math.random() * S;
+                g.beginPath(); g.moveTo(x, y); g.lineTo(x + rand(-14, 14) * k, y + rand(-4, 4) * k); g.stroke();
+            }
+        } },
+        sandbag: { scale: 1.8, paint(g, S, k) {
+            g.fillStyle = '#5e5440';
+            g.fillRect(0, 0, S, S);
+            const bh = S / 4;
+            const bwid = S / 2;
+            for (let row = 0; row < 4; row++) {
+                const off = (row % 2) * (bwid / 2);
+                for (let i = -1; i <= 2; i++) {
+                    const x = i * bwid + off + 3 * k;
+                    const y = row * bh + 3 * k;
+                    const w = bwid - 6 * k;
+                    const hh = bh - 6 * k;
+                    const grd = g.createRadialGradient(x + w / 2, y + hh * 0.4, hh * 0.1, x + w / 2, y + hh / 2, w * 0.6);
+                    grd.addColorStop(0, '#f1e8cf');
+                    grd.addColorStop(1, '#a3957a');
+                    g.fillStyle = grd;
+                    g.beginPath();
+                    if (g.roundRect) g.roundRect(x, y, w, hh, hh * 0.45); else g.rect(x, y, w, hh);
+                    g.fill();
+                }
+            }
+            g.strokeStyle = 'rgba(60,50,30,.07)';
+            g.lineWidth = 1;
+            for (let v = 0; v < S; v += 3 * k) {
+                g.beginPath(); g.moveTo(v, 0); g.lineTo(v, S); g.stroke();
+                g.beginPath(); g.moveTo(0, v); g.lineTo(S, v); g.stroke();
+            }
+            overlay(g, S, NOISE_HI, 2, 0.2);
+        } },
+        rock: { scale: 2.2, paint(g, S, k) {
+            g.fillStyle = '#d6d6d3';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.6);
+            overlay(g, S, NOISE_HI, 2, 0.42);
+            crackLines(g, S, 3, 'rgba(255,255,255,.2)', 2 * k);
+            crackLines(g, S, 7, 'rgba(30,30,30,.4)', 1.4 * k);
+            for (let i = 0; i < 26 * k * k; i++) blob(g, S, Math.random() * S, Math.random() * S, rand(3, 12) * k, 'rgba(110,125,70,.22)');
+            dots(g, S, 2400 * k * k, 1.6 * k, ['rgba(0,0,0,.25)', 'rgba(255,255,255,.3)']);
+        } },
+        bark: { scale: 1.4, paint(g, S, k) {
+            g.fillStyle = '#dcd6cd';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_HI, 2, 0.3);
+            g.lineCap = 'round';
+            for (let i = 0; i < 70 * k; i++) {
+                const x0 = Math.random() * S;
+                const ph = rand(0, TAU);
+                g.strokeStyle = `rgba(40,28,18,${rand(0.3, 0.6)})`;
+                g.lineWidth = rand(2, 5) * k;
+                for (const dx of [-S, 0, S]) {
+                    g.beginPath();
+                    for (let y = -10; y <= S + 10; y += 8 * k) g.lineTo(x0 + dx + Math.sin(y / (30 * k) + ph) * 4 * k, y);
+                    g.stroke();
+                }
+            }
+            overlay(g, S, NOISE_LO, 1, 0.25);
+        } },
+        leaves: { scale: 2.2, paint(g, S, k) {
+            g.fillStyle = '#a8a8a8';
+            g.fillRect(0, 0, S, S);
+            for (let i = 0; i < 2600 * k * k; i++) {
+                const x = Math.random() * S;
+                const y = Math.random() * S;
+                const a = rand(0, TAU);
+                const w = rand(3, 7) * k;
+                g.fillStyle = gray(Math.round(rand(110, 255)));
+                wrapped(S, x, y, w, (px, py) => { g.beginPath(); g.ellipse(px, py, w, w * 0.45, a, 0, TAU); g.fill(); });
+            }
+            overlay(g, S, NOISE_LO, 1, 0.35);
+        } }
+    };
+
+    const allTextures = [];
+    let textureAniso = 1;
+    function makeCanvasTexture() {
+        const c = document.createElement('canvas');
+        c.width = c.height = 4;
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.anisotropy = textureAniso;
+        allTextures.push(tex);
+        return tex;
+    }
+    Object.values(SURFACES).forEach((spec) => { spec.tex = makeCanvasTexture(); });
+    let surfaceSize = 0;
+    // Big ground-covering textures go to 1024 px on "Yüksek"; the rest stop at 512 px.
+    function paintSurfaces(size) {
+        if (size === surfaceSize) return;
+        surfaceSize = size;
+        for (const [name, spec] of Object.entries(SURFACES)) {
+            const S = name === 'grass' || name === 'asphalt' ? size : Math.min(size, 512);
+            const c = document.createElement('canvas');
+            c.width = c.height = S;
+            spec.paint(c.getContext('2d'), S, S / 512);
+            spec.tex.image = c;
+            spec.tex.needsUpdate = true;
+        }
+    }
+    const textureSize = () => ({ low: 256, mid: 512, high: 1024 }[prefs.q]);
+    paintSurfaces(textureSize());
+    const grassTex = SURFACES.grass.tex;
+    const roadTex = SURFACES.asphalt.tex;
+    grassTex.repeat.set(45, 45);
+    roadTex.repeat.set(35, 1);
 
     const solids = []; // çarpışma kutuları (AABB)
     const occluders = []; // oyuncu mermisinin durduğu meshler
@@ -259,9 +609,50 @@
     const treeSpots = [];
     const SPAWNS = [[0, 10], [-50, -8], [50, 8], [0, -52], [0, 55], [-52, 50], [52, -50], [-20, 0], [24, 0], [0, -36], [36, -48], [-36, 44]];
     const matCache = {};
-    const lam = (color) => (matCache[color] ||= new THREE.MeshLambertMaterial({ color }));
+    const SURFACE_OF_COLOR = {
+        0x9a8671: 'plaster', 0x6f7a86: 'plaster', 0xa06c4d: 'plaster', 0x7d8c6c: 'plaster', 0xb09a80: 'plaster', 0x8a7a9a: 'plaster',
+        0x4a4f58: 'roof', 0x3a3f4d: 'concrete', 0x5d6470: 'concrete', 0x6c7380: 'concrete', 0x444a55: 'concrete', 0x9b9b9b: 'concrete',
+        0x8b6a3e: 'crate', 0x9a7a4a: 'crate', 0x7a5a30: 'crate',
+        0xb5493f: 'metal', 0x3f6ab5: 'metal', 0x3fa05a: 'metal', 0xd89a2b: 'metal',
+        0x8d7d5a: 'sandbag', 0x7d7f84: 'rock', 0x6b4a2b: 'bark'
+    };
+    function lam(color, surface = SURFACE_OF_COLOR[color]) {
+        const key = surface ? `${color}:${surface}` : color;
+        if (!matCache[key]) {
+            // Textures average a little under white, so textured colours get a small lift.
+            const m = new THREE.MeshLambertMaterial({ color: new THREE.Color(color).multiplyScalar(surface ? 1.12 : 1), map: surface ? SURFACES[surface].tex : null });
+            m.userData.surface = surface || null;
+            matCache[key] = m;
+        }
+        return matCache[key];
+    }
 
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(MAP * 2 + 40, MAP * 2 + 40), new THREE.MeshLambertMaterial({ map: grassTex }));
+    // Large, slow colour patches across the ground hide the grass texture's repetition.
+    function groundGeometry() {
+        const size = MAP * 2 + 40;
+        const geo = new THREE.PlaneGeometry(size, size, 60, 60);
+        const pos = geo.attributes.position;
+        const hash = (x, z) => { const h = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return h - Math.floor(h); };
+        const vnoise = (x, z) => {
+            const x0 = Math.floor(x);
+            const z0 = Math.floor(z);
+            const tx = smooth(x - x0);
+            const tz = smooth(z - z0);
+            return lerp(lerp(hash(x0, z0), hash(x0 + 1, z0), tx), lerp(hash(x0, z0 + 1), hash(x0 + 1, z0 + 1), tx), tz);
+        };
+        const colors = [];
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const z = -pos.getY(i);
+            const light = 0.84 + 0.26 * (0.65 * vnoise(x / 22, z / 22) + 0.35 * vnoise(x / 7 + 40, z / 7));
+            const dry = smooth(clamp((vnoise(x / 30 + 90, z / 30) - 0.55) * 3, 0, 1));
+            colors.push(light * (1 + 0.1 * dry), light * (1 - 0.02 * dry), light * (1 - 0.18 * dry));
+        }
+        geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        return geo;
+    }
+
+    const ground = new THREE.Mesh(groundGeometry(), new THREE.MeshLambertMaterial({ map: grassTex, vertexColors: true }));
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
@@ -392,9 +783,9 @@
         const g = 0x2e5e34 + Math.floor(rnd() * 3) * 0x0a0800;
         const trunk = new THREE.Mesh(trunkGeo, lam(0x6b4a2b));
         trunk.position.set(x, 1.5, z);
-        const c1 = new THREE.Mesh(coneGeo1, lam(g));
+        const c1 = new THREE.Mesh(coneGeo1, lam(g, 'leaves'));
         c1.position.set(x, 4.2, z);
-        const c2 = new THREE.Mesh(coneGeo2, lam(g + 0x050500));
+        const c2 = new THREE.Mesh(coneGeo2, lam(g + 0x050500, 'leaves'));
         c2.position.set(x, 5.9, z);
         [trunk, c1, c2].forEach((m) => { m.userData.static = true; scene.add(m); });
         occluders.push(trunk);
@@ -429,7 +820,7 @@
         if (!freeSpot(x, z, 1.2)) continue;
         const gcol = [0x2f6b3a, 0x3a7a3f, 0x2a5c33][Math.floor(rnd() * 3)];
         for (let k = 0; k < 4; k++) {
-            const b = new THREE.Mesh(bushGeo, lam(gcol));
+            const b = new THREE.Mesh(bushGeo, lam(gcol, 'leaves'));
             const s = 0.9 + rnd() * 0.5;
             b.scale.set(s, s * 0.85, s);
             b.position.set(x + (rnd() - 0.5) * 1.8, 0.6, z + (rnd() - 0.5) * 1.8);
@@ -459,16 +850,35 @@
             const count = parts.reduce((n, g) => n + g.attributes.position.count, 0);
             const pos = new Float32Array(count * 3);
             const nor = new Float32Array(count * 3);
+            const uv = new Float32Array(count * 2);
+            const spec = SURFACES[material.userData.surface];
             let o = 0;
             for (const g of parts) {
+                const n = g.attributes.position.count;
                 pos.set(g.attributes.position.array, o * 3);
                 nor.set(g.attributes.normal.array, o * 3);
-                o += g.attributes.position.count;
+                if (spec && spec.box && g.attributes.uv) uv.set(g.attributes.uv.array, o * 2);
+                o += n;
                 g.dispose();
+            }
+            if (spec && !spec.box) {
+                // World-space box mapping: every face gets the same texel density, whatever the box size.
+                for (let i = 0; i < count; i++) {
+                    const ax = Math.abs(nor[i * 3]);
+                    const ay = Math.abs(nor[i * 3 + 1]);
+                    const az = Math.abs(nor[i * 3 + 2]);
+                    const x = pos[i * 3];
+                    const y = pos[i * 3 + 1];
+                    const z = pos[i * 3 + 2];
+                    const [u, v] = ay >= ax && ay >= az ? [x, z] : ax >= az ? [z, y] : [x, y];
+                    uv[i * 2] = u / spec.scale;
+                    uv[i * 2 + 1] = v / spec.scale;
+                }
             }
             const geo = new THREE.BufferGeometry();
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+            if (spec) geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
             geo.computeBoundingSphere();
             const mesh = new THREE.Mesh(geo, material);
             mesh.castShadow = true;
@@ -692,14 +1102,81 @@
 
     /* ---------- Silahlar ve modeller ---------- */
 
+    // Patterned camos paint the whole gun except its dark parts; the plain ones get brushed metal and wood grain.
+    const CAMO_PATTERNS = {
+        desert: ['#c9b48a', '#b59a6a', '#8a7350', '#6b5a3e'],
+        forest: ['#55703f', '#2c3a24', '#6b5a32', '#82955c'],
+        arctic: ['#e9eef2', '#c4ced6', '#9aa7b3', '#ffffff'],
+        crimson: ['#8e2230', '#5a1a1f', '#3a0d14', '#b8434c']
+    };
+    const weaponTex = {};
+    function weaponTexture(kind) {
+        if (weaponTex[kind]) return weaponTex[kind];
+        const S = 256;
+        const k = S / 512;
+        const c = document.createElement('canvas');
+        c.width = c.height = S;
+        const g = c.getContext('2d');
+        const pattern = CAMO_PATTERNS[kind];
+        if (pattern) {
+            g.fillStyle = pattern[0];
+            g.fillRect(0, 0, S, S);
+            pattern.slice(1).forEach((color) => {
+                for (let i = 0; i < 16; i++) {
+                    const cx = Math.random() * S;
+                    const cy = Math.random() * S;
+                    for (let j = 0; j < 5; j++) blob(g, S, cx + rand(-18, 18), cy + rand(-10, 10), rand(8, 20), color);
+                }
+            });
+            overlay(g, S, NOISE_HI, 2, 0.12);
+        } else if (kind === 'grain') {
+            g.fillStyle = gray(228);
+            g.fillRect(0, 0, S, S);
+            g.strokeStyle = 'rgba(90,60,35,.28)';
+            for (let l = 0; l < 40; l++) {
+                const y0 = Math.random() * S;
+                const ph = rand(0, TAU);
+                g.lineWidth = rand(0.6, 1.6);
+                g.beginPath();
+                for (let x = 0; x <= S; x += 4) g.lineTo(x, y0 + Math.sin(x / 26 + ph) * 3);
+                g.stroke();
+            }
+            overlay(g, S, NOISE_LO, 1, 0.15);
+        } else {
+            g.fillStyle = gray(226);
+            g.fillRect(0, 0, S, S);
+            for (let i = 0; i < 900; i++) {
+                g.fillStyle = gray(Math.round(rand(150, 255)), rand(0.08, 0.18));
+                g.fillRect(Math.random() * S - S / 2, Math.random() * S, S * rand(0.2, 1), 1);
+            }
+            overlay(g, S, NOISE_HI, 2, 0.15);
+            dots(g, S, 120, 2 * k, ['rgba(0,0,0,.25)']);
+        }
+        const tex = makeCanvasTexture();
+        tex.image = c;
+        tex.needsUpdate = true;
+        weaponTex[kind] = tex;
+        return tex;
+    }
+
     const camoMats = {};
     function camoMaterials(id) {
         if (camoMats[id]) return camoMats[id];
         const style = CAMO_STYLES[id] || CAMO_STYLES.standard;
-        const make = (color) => (style.shiny
-            ? new THREE.MeshPhongMaterial({ color, shininess: 90, specular: 0xfff0b0 })
-            : new THREE.MeshLambertMaterial({ color }));
-        camoMats[id] = { metal: make(style.metal), dark: make(style.dark), wood: make(style.wood), acc: make(style.acc), glass: lam(0x335577) };
+        const make = (color, map) => {
+            const c = new THREE.Color(color).multiplyScalar(1.1);
+            return style.shiny
+                ? new THREE.MeshPhongMaterial({ color: c, map, shininess: 90, specular: 0xfff0b0 })
+                : new THREE.MeshLambertMaterial({ color: c, map });
+        };
+        const glass = lam(0x335577);
+        if (CAMO_PATTERNS[id]) {
+            const t = weaponTexture(id);
+            camoMats[id] = { metal: make(0xf2f2f2, t), wood: make(0xd6d6d6, t), acc: make(0xb4b4b4, t), dark: make(style.dark, weaponTexture('brushed')), glass };
+        } else {
+            const brushed = weaponTexture('brushed');
+            camoMats[id] = { metal: make(style.metal, brushed), dark: make(style.dark, brushed), wood: make(style.wood, weaponTexture('grain')), acc: make(style.acc, brushed), glass };
+        }
         return camoMats[id];
     }
     const flashMat = new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -3326,6 +3803,7 @@
             }),
             end: () => endMatch(),
             look(pitch) { player.pitch = clamp(pitch, -1.5, 1.5); },
+            place(x, z, yaw) { player.x = x; player.z = z; player.y = 0; player.yaw = yaw; },
             near(nid) {
                 const a = actors.get(nid);
                 if (!a) return false;
