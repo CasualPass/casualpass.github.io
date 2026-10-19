@@ -119,3 +119,31 @@ window.CasualSettings = Object.freeze({
 
 loadSettings();
 document.addEventListener('DOMContentLoaded', applySettings);
+
+// Ana ekrana eklenen uygulama ve tarayıcı önbelleği eski HTML'i tutabilir: açılışta ve uygulamaya
+// dönüldüğünde sitenin sürümünü önbelleksiz okur, değiştiyse sayfayı önbelleği atlayarak yeniler.
+(function checkSiteVersion() {
+    const KEY = 'cp_site_version';
+    const url = new URL('version.json', document.currentScript ? document.currentScript.src : location.href).href;
+    let busy = false;
+    async function check() {
+        if (busy) return;
+        busy = true;
+        try {
+            const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+            const { v } = await res.json();
+            const seen = getCookieValue(KEY);
+            if (v && seen !== v) {
+                setCookieValue(KEY, v);
+                if (seen) {
+                    const next = new URL(location.href);
+                    next.searchParams.set('v', v);
+                    location.replace(next.href);
+                }
+            }
+        } catch { /* çevrimdışı */ }
+        busy = false;
+    }
+    check();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+}());
