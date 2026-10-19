@@ -2,7 +2,7 @@
 
 ## Proje özeti
 
-CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat` ve `owl-game` sayfalarına doğrudan bağlanır.
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks` ve `fps-game` sayfalarına doğrudan bağlanır.
 
 ## 2026-08-31 — Çerez odaklı dashboard yenilemesi
 
@@ -123,3 +123,41 @@ Eymen'in Last War: Survival Game açıklaması ve altı mağaza görseline göre
 - Playwright (Chromium), yönlendiren basit bir botla: Bölüm 1 ve 5 yükseltmesiz kazanıldı, Bölüm 10 yükseltmesiz kaybedildi, orta seviye üsle (Karargâh 4, savaş binaları 4, üç Sv 3 kahraman) Bölüm 10 kazanıldı.
 - Üs akışı: üretimi toplama, boş arsaya Çiftlik/Silah Atölyesi kurma, Karargâh yükseltme, kahraman çağırma ve takıma ekleme; kayıt çerezi 289 bayt.
 - 320, 390, 1000, 1440 px'te yatay taşma yok; konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hatası.
+
+## 2026-10-19 — Arena FPS (çok oyunculu nişancı)
+
+### Amaç
+
+Eymen'in paylaştığı tek dosyalık "HTML5 + WebRTC Multiplayer FPS v4" oyununu CasualPass'e eklemek ve "çok daha gelişmiş" hâle getirmek.
+
+### Yapılanlar
+
+- `fps-game/`: Paylaşılan harita (sabit tohum), 4 silah, ADS/dürbün, kayma/çömelme/zıplama, çalılıkta saklanma, kafadan vuruş ve 13 baytlık ikili konum paketi korundu. Eklenenler:
+  - **Botlar** (yalnızca tek oyunculu/host'ta simüle edilir): 1 m'lik ızgarada A* ile yol bulma (string pulling), görüş/duyma/vurulma algısı, tepki süresi, oturan nişan hatası, şerit (strafe) hareketi, silaha göre tercih mesafesi, seri atış. Kolay/Normal/Zor.
+  - **Maç sistemi**: süre (3/5/10 dk) ve öldürme hedefi (10/20/30), skor tablosu (Tab), maç sonu sıralaması, yeniden başlatma; host çevrimiçi maçta 25 sn sonra kendiliğinden yeni maç açar.
+  - **Ağ**: host her tikte kendi kaydını, botları ve diğer istemcileri tek pakette toplar (1 + 12·N bayt); istemci yalnızca kendini yollar ve host başkası adına konum kabul etmez. Uzak oyuncular 100 ms gecikmeli anlık görüntü ara değerlemesiyle çizilir. İsabeti atan bildirir, hasarı hedefin sahibi uygular; host isabeti yalnızca hedefin bağlantısına iletir. Olaylar doğrulanır/sınırlanır; isimler yalnızca `textContent` ile basılır. TURN listesi artık `eval`/`new Function` ile değil yalnızca `JSON.parse` ile okunur ve kaydedilmez (aktif kodda localStorage yok).
+  - El bombası (G; sekme fiziği, görüş hattı kontrollü alan hasarı), can yenilenmesi, 2 sn doğuş kalkanı, hasar yönü göstergesi, isabet/öldürme işaretleri, seri bildirimleri, ölüm kamerası, radar (yalnızca ateş edenler görünür), isim etiketleri (yalnızca görüş hattındaysa), mermi izleri, geri tepme toparlanması, adım/konumsal (stereo) sesler.
+  - Dokunmatik kontroller: sol sanal çubuk (sonuna kadar itince koşu), sağ taraf bakış, Ateş/Nişan/Zıpla/Çömel/R/Silah/Bomba düğmeleri.
+  - Ayarlar (`cp_arena_prefs` çerezi): hassasiyet, görüş açısı, ses, grafik kalitesi (Düşük: düşük çözünürlük ve anizotropi yok; Yüksek: gölgeler). Maç seçenekleri de aynı çerezde.
+  - Performans: ~800 statik mesh malzemeye göre birleştirilir (~35 çizim çağrısı); efektler hiç dispose edilmeyen havuzlardan gelir (son malzeme dispose edilince three.js shader programını silip bir sonraki atışta yeniden derliyordu); efekt shader'ları maç başında derlenir; tam ekran gizli katmanlar (liquid temanın bulanık blob'ları, `backdrop-filter`, görünmez hasar flaşı) kaldırıldı; HUD yalnızca değer değişince DOM'a yazar; başarısız bot rotası her karede yeniden aranmıyor.
+  - `vendor/three.min.js` (three@0.128.0) ve `vendor/peerjs.min.js` (peerjs@1.5.4) npm paketlerinden değiştirilmeden kopyalandı; lisanslar `vendor/LICENSES.md`.
+  - `?debug` yalnızca testler için salt-okunur `window.ArenaDebug` açar; `?signal=host:port` kendi PeerJS sunucusunu kullanır.
+- `casual-profile.js`: `camos` kataloğu (Standart ücretsiz; Çöl 100, Orman 180, Kutup 260, Kızıl 420, Altın 800 CM), `ownedCamos`/`selectedCamo`, `buyCamo`, `selectCamo`, `arenaRewardForMatch`, `awardArenaMatch` (öldürme başına 2 CM, birincilik +6 CM, maç başına en fazla 40 CM, yeniden doğuş çarpanı). `unlockAll` kaplamaları da açar. Sürüm `?v=14`.
+- `casual-cheats.js`: ölümsüzlük yalnızca tek oyunculu Arena'da geçerli (çevrimiçi maçta arkadaşlara karşı işlemez); `allopen` kaplamaları önizlemeye açar; `score set`/`score plus` tek oyunculu maçta öldürme sayısına uygulanır. Sürüm `?v=8`. Maç sırasında "Kod gir" düğmesi ateş düğmelerinin üstüne binmesin diye gizlenir.
+- `index.html`, `style.css`: Dashboard'a 9. kart (Arena FPS); masaüstü grid 9, tablet 3 sütun (3×3). Stil `?v=16`.
+- Rekor (maçtaki en çok öldürme) `cp_arena_best` çerezinde; istatistik `recordGameResult('Arena FPS', …)`. Hile açıkken rekor, ödül ve satın alma kaydedilmez.
+
+### Bilinen bağlam ve riskler
+
+- Çok oyunculu mod PeerJS'in herkese açık sinyal sunucusuna (0.peerjs.com) bağlıdır; sunucu kapalıysa oda açılamaz (tek oyunculu mod çalışır). Simetrik NAT arkasındaki cihazlar TURN olmadan bağlanamayabilir.
+- İstemci tarafı isabet kaydı: hile yapan bir istemci sahte isabet yollayabilir. Hasar 0–250 ile sınırlanır; arkadaş oyunu için kabul edilmiştir.
+- Yalnızca host simüle eder: host ayrılınca oda kapanır (host göçü yok).
+
+### Testler
+
+- `node --check`: `fps-game/script.js`, `casual-profile.js`, `casual-cheats.js` başarılı.
+- Playwright (Chromium, SwiftShader): tek oyunculu maç başlatma, botların doğup gezmesi ve birbirleriyle savaşması; gerçek fare girdisiyle bota nişan alıp öldürme ve öldürme akışı; silah değiştirme, şarjör, el bombası (kendi ayağına atınca 100 → 12 can), W ile hareket, Tab skor tablosu, işaretçi kilidi bırakınca duraklatma/devam; maç sonu (+40 CM tavanı, istatistik, rekor), yeni maç ve menüye dönüş.
+- İki ayrı tarayıcı bağlamı ve yerel PeerJS sunucusuyla (`?signal=127.0.0.1:9000`) gerçek WebRTC: oda kodu ile katılma, host konumunun istemcide birebir görünmesi, istemcinin host'u vurup öldürmesi (iki tarafta aynı skor ve öldürme akışı), bomba senkronu, host maçı bitirince istemcide sonuç ekranı (+8 CM) ve "Host bekleniyor", host yeni maç açınca istemcinin oyuna dönmesi, istemci ayrılınca host'ta silinmesi, host ayrılınca istemcinin "Host ile bağlantı koptu." ile menüye dönmesi. Konsolda hata yok.
+- iPhone 12 dokunmatik emülasyonu (yatay 844×390 ve dikey 390×844): sanal çubukla yürüme, sağ tarafla bakış, Ateş düğmesiyle atış, duraklatma; yatay taşma yok.
+- Dashboard 1440, 1000, 390, 320 px: yatay taşma yok, "Dokuz oyun aynı ekranda."
+- Not: SwiftShader yazılım GPU'su bu ortamda karesi pahalı çizdiği için FPS ölçümleri gerçek cihazları temsil etmiyor; JS tarafı 5 sn'lik profilde ~100 ms'e indi ve maç sırasında shader yeniden derlenmiyor.

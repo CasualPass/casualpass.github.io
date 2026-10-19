@@ -14,6 +14,9 @@
     const BLOCKS_POINTS_PER_CM = 50;
     const SONHAT_REWARD_CAP = 40;
     const SONHAT_COINS_PER_CM = 8;
+    const ARENA_REWARD_CAP = 40;
+    const ARENA_CM_PER_KILL = 2;
+    const ARENA_WIN_BONUS = 6;
 
     const paints = {
         natural: { id: 'natural', name: 'Doğal Ahşap', color: '#c98a4a', price: 0 },
@@ -47,6 +50,15 @@
         walnut: { id: 'walnut', name: 'Ceviz', description: 'Koyu damarlı', price: 90 },
         cherry: { id: 'cherry', name: 'Kiraz', description: 'Kızıl tonlu', price: 180 },
         ebony: { id: 'ebony', name: 'Abanoz', description: 'Gece siyahı', price: 360 }
+    };
+
+    const camos = {
+        standard: { id: 'standard', name: 'Standart', description: 'Mat çelik', price: 0 },
+        desert: { id: 'desert', name: 'Çöl', description: 'Kum ve kahve', price: 100 },
+        forest: { id: 'forest', name: 'Orman', description: 'Yaprak yeşili', price: 180 },
+        arctic: { id: 'arctic', name: 'Kutup', description: 'Buz beyazı', price: 260 },
+        crimson: { id: 'crimson', name: 'Kızıl', description: 'Koyu kırmızı', price: 420 },
+        golden: { id: 'golden', name: 'Altın', description: 'Parlak altın', price: 800 }
     };
 
     const offices = [
@@ -118,6 +130,8 @@
             selectedOwl: 'minerva',
             ownedWoods: ['pine'],
             selectedWood: 'pine',
+            ownedCamos: ['standard'],
+            selectedCamo: 'standard',
             dailyBonusDate: '',
             sessionRewardDate: '',
             rebirths: 0,
@@ -155,6 +169,8 @@
         if (!ownedOwls.includes('minerva')) ownedOwls.unshift('minerva');
         const ownedWoods = Array.isArray(safe.ownedWoods) ? safe.ownedWoods.filter((id) => woods[id]) : ['pine'];
         if (!ownedWoods.includes('pine')) ownedWoods.unshift('pine');
+        const ownedCamos = Array.isArray(safe.ownedCamos) ? safe.ownedCamos.filter((id) => camos[id]) : ['standard'];
+        if (!ownedCamos.includes('standard')) ownedCamos.unshift('standard');
         const activities = Array.isArray(safe.activities) ? safe.activities.slice(0, MAX_ACTIVITIES).filter((item) => item && typeof item.label === 'string') : [];
         return {
             id: canonicalUsername(safe.id),
@@ -169,6 +185,8 @@
             selectedOwl: ownedOwls.includes(safe.selectedOwl) ? safe.selectedOwl : 'minerva',
             ownedWoods,
             selectedWood: ownedWoods.includes(safe.selectedWood) ? safe.selectedWood : 'pine',
+            ownedCamos,
+            selectedCamo: ownedCamos.includes(safe.selectedCamo) ? safe.selectedCamo : 'standard',
             dailyBonusDate: String(safe.dailyBonusDate || ''),
             sessionRewardDate: String(safe.sessionRewardDate || ''),
             rebirths: Math.min(MAX_REBIRTHS, Math.max(0, Math.floor(Number(safe.rebirths) || 0))),
@@ -437,6 +455,46 @@
         });
     }
 
+    function arenaRewardForMatch(result) {
+        const kills = Math.max(0, Math.floor(Number(result?.kills) || 0));
+        return Math.min(ARENA_REWARD_CAP, kills * ARENA_CM_PER_KILL + (result?.won ? ARENA_WIN_BONUS : 0));
+    }
+
+    function awardArenaMatch(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = arenaRewardForMatch(result);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, result?.won ? 'Arena FPS birinciliği' : 'Arena FPS maçı');
+        });
+        return { profile, reward };
+    }
+
+    function buyCamo(camoId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar mağaza alışverişi duraklatıldı.');
+        const camo = camos[camoId];
+        if (!camo) throw new Error('Kaplama bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedCamos.includes(camoId)) {
+                if (draft.balance < camo.price) throw new Error('Bu kaplama için yeterli CasualMoney yok.');
+                draft.balance -= camo.price;
+                draft.ownedCamos.push(camoId);
+                addActivity(draft, `${camo.name} silah kaplaması`, -camo.price);
+            }
+            draft.selectedCamo = camoId;
+        });
+    }
+
+    function selectCamo(camoId) {
+        if (cheatsActive()) throw new Error('Hileleri kapatana kadar seçimler kaydedilmez.');
+        if (!camos[camoId]) throw new Error('Kaplama bulunamadı.');
+        return update((draft) => {
+            if (!draft.ownedCamos.includes(camoId)) throw new Error('Önce bu kaplamayı satın almalısın.');
+            draft.selectedCamo = camoId;
+        });
+    }
+
     function upgradeOffice() {
         if (cheatsActive()) throw new Error('Hileleri kapatana kadar ilerleme kaydedilmez.');
         return update((draft) => {
@@ -504,6 +562,7 @@
             draft.ownedThemes = Object.keys(themes);
             draft.ownedOwls = Object.keys(owls);
             draft.ownedWoods = Object.keys(woods);
+            draft.ownedCamos = Object.keys(camos);
             draft.officeLevel = offices.length;
             draft.selectedPaint = draft.selectedPaint || 'honey';
         });
@@ -514,13 +573,14 @@
     }
 
     window.CasualProfile = Object.freeze({
-        paints, themes, owls, woods, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
+        paints, themes, owls, woods, camos, offices, current, login, logout, startSession, claimDailyBonus, todayKey,
         validateUsername, rewardForScore, awardWoodTurning, buyPaint, selectPaint, buyTheme, selectTheme,
         upgradeOffice, clearActivities, spend, unlockAll, formatMoney, rebirthStatus, rebirth, earnMultiplier,
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
         buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
         sonHatRewardForCoins, awardSonHatRun,
+        buyCamo, selectCamo, arenaRewardForMatch, awardArenaMatch,
         SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM,
-        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM
+        SONHAT_REWARD_CAP, SONHAT_COINS_PER_CM, ARENA_REWARD_CAP, ARENA_CM_PER_KILL, ARENA_WIN_BONUS
     });
 })();

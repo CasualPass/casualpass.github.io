@@ -10,6 +10,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 - **Son Hat (Beta):** Last War tarzı zombi koşusu. Şerit seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah ve helikopter kap, boss’u durdur. Ganimetle üssünde bina kur, madenlerden altın/demir/yiyecek topla, kahraman çağırıp üç kişilik takım kur. Koşu başına en fazla 40 CM (8 altın = 1 CM).
 - **Minerva Owl:** Minerva'nın baykuşuyla mermer sütunların arasından süzül; CasualMoney ile yeni baykuşlar aç.
 - **Wood Blocks:** Ahşap blokları 9×9 tahtaya yerleştir; dolu satır, sütun ve 3×3 kareleri sil, CasualMoney ile yeni ahşaplar aç.
+- **Arena FPS:** Üç boyutlu, çok oyunculu nişancı. Botlara karşı tek başına oyna ya da oda açıp 6 haneli kodu arkadaşlarına gönder; WebRTC ile tarayıcıdan tarayıcıya bağlanılır. Dört silah, el bombası, kayma/çömelme, çalılıkta saklanma, radar, skor tablosu ve dokunmatik kontroller vardır.
 
 ## Çerez tabanlı profil ve CasualMoney
 
@@ -21,6 +22,7 @@ CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullan
 - Minerva Owl'da her 2 sütun 1 CM kazandırır (uçuş başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır).
 - Wood Blocks'ta her 50 puan 1 CM kazandırır (oyun başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). `Çam` varsayılan ahşaptır; `Ceviz` (90 CM), `Kiraz` (180 CM) ve `Abanoz` (360 CM) CasualMoney ile açılır.
 - Minerva varsayılan baykuştur; `Kar Baykuşu` (80 CM), `Peçeli Baykuş` (150 CM), `Puhu` (260 CM), `Gece Baykuşu` (420 CM) ve `Altın Baykuş` (750 CM) CasualMoney ile açılır.
+- Arena FPS'te her öldürme 2 CM, maç birinciliği +6 CM kazandırır (maç başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). `Standart` varsayılan silah kaplamasıdır; `Çöl` (100 CM), `Orman` (180 CM), `Kutup` (260 CM), `Kızıl` (420 CM) ve `Altın` (800 CM) CasualMoney ile açılır.
 - `Liquid` varsayılan temadır; `Paper` (30 CM), `Neon` (180 CM) ve `Retro` (300 CM) temaları CasualMoney ile açılır.
 - Çerezleri silmek profil, bakiye ve ilerlemeyi de siler. Bu bilerek seçilmiş, yalnızca-çerez tasarımının sonucudur.
 
@@ -35,6 +37,14 @@ python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
 Ardından `http://127.0.0.1:4173/` adresini aç.
+
+### Arena FPS ve çok oyunculu bağlantı
+
+Arena FPS, depodaki `fps-game/vendor/` klasöründen `three.js` (r128) ve `PeerJS` (1.5.4) yükler; CDN'e bağlı değildir (lisanslar `fps-game/vendor/LICENSES.md`). Çok oyunculu odalar için oyuncular PeerJS'in ücretsiz sinyal sunucusu üzerinden eşleşir, ardından oyun verisi doğrudan WebRTC ile akar. Host merkezli (yıldız) yapıda konumlar 12 baytlık ikili kayıtlarla, en fazla 15 Hz ve güvenilmez/sırasız kanaldan gönderilir; yalnızca isabet, ölüm ve bomba gibi olaylar güvenilir kanaldan gider.
+
+- İki cihaz doğrudan bağlanamazsa menüdeki **Gelişmiş bağlantı (TURN)** alanına kendi TURN sağlayıcının `iceServers` listesini yapıştırabilirsin; liste hiçbir yere kaydedilmez.
+- Kendi PeerJS sinyal sunucunu kullanmak için sayfayı `?signal=sunucu:port` ile aç (ör. `fps-game/index.html?signal=127.0.0.1:9000`).
+- Oyun durumu her oyuncunun kendi tarayıcısında hesaplandığı için Arena FPS rekabetçi/hileye dayanıklı bir oyun değildir; arkadaşlarla oynamak içindir.
 
 ## GitHub Pages
 
