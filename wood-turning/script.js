@@ -1,199 +1,127 @@
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
 
+    const N = 200;
+    const MIN_R = .06;
+    const BASE_CUT_RATE = 3.4;
+    const TOUCH_OFFSET = 58;
+    const SPIN_SPEED = 8.5;
+    const TAU = Math.PI * 2;
+
     const canvas = document.getElementById('lathe-canvas');
     const ctx = canvas.getContext('2d');
+    const wrap = document.getElementById('canvas-wrap');
     const targetCanvas = document.getElementById('target-canvas');
-    const targetCtx = targetCanvas.getContext('2d');
+    const compareCanvas = document.getElementById('compare-canvas');
+    const shelfCanvas = document.getElementById('shelf-canvas');
 
-    const WIDTH = canvas.width;
-    const HEIGHT = canvas.height;
-    const CENTER_Y = 270;
-    const PIECE_START = 135;
-    const PIECE_END = 865;
-    const SAMPLE_COUNT = 181;
-    const MAX_RADIUS = 132;
-    const MIN_RADIUS = 18;
-    const WOOD_BASE = '#b87437';
-
-    const tools = {
-        rough: { radius: 12, strength: .54, edgeLift: 7 },
-        detail: { radius: 4, strength: .72, edgeLift: 1 },
-        round: { radius: 9, strength: .58, edgeLift: 12 }
+    const $ = (id) => document.getElementById(id);
+    const el = {
+        levelNumber: $('level-number'), levelTag: $('level-tag'), topBalance: $('top-balance'), wallet: $('wallet-button'),
+        orderNumber: $('order-number'), targetName: $('target-name'), targetClient: $('target-client'),
+        liveScore: $('live-score-value'), matchFill: $('match-fill'), matchLabel: document.querySelector('.match-chip small'),
+        hint: $('gesture-hint'), banner: $('stage-banner'),
+        carveTools: $('carve-tools'), sandTools: $('sand-tools'), paintTools: $('paint-tools'),
+        sandFill: $('sand-fill'), sandCoverage: $('sand-coverage'), palette: $('paint-palette'),
+        next: $('next-stage'), reset: $('reset-stage'),
+        compactAvatar: $('compact-avatar'), compactName: $('compact-name'), compactStatus: $('compact-status'), profileAction: $('profile-action'),
+        shopList: $('shop-list'), shelfCount: $('shelf-count'),
+        jobs: $('jobs-count'), stars: $('stars-count'), best: $('best-score'), earned: $('total-earned'),
+        loginModal: $('login-modal'), loginForm: $('login-form'), loginError: $('login-error'), username: $('game-username'),
+        resultModal: $('result-modal'), resultKicker: $('result-kicker'), resultTitle: $('result-title'), resultStars: $('result-stars'),
+        resultScore: $('result-score'), resultShape: $('result-shape'), resultSand: $('result-sand'), resultPaint: $('result-paint'),
+        rewardValue: $('reward-value'), rewardMultiplier: $('reward-multiplier'), guestWarning: $('guest-warning'),
+        retry: $('retry-level'), newOrder: $('new-order'), confetti: $('confetti'), toast: $('game-toast')
     };
 
-    const stageCopy = {
-        carve: {
-            kicker: 'AŞAMA 01 / 03',
-            title: 'Formu ortaya çıkar.',
-            description: 'Keskiyi ahşabın kenarına getirip hedef çizgisi boyunca sürükle.',
-            next: 'Zımparaya geç',
-            hint: 'Ahşabın üstünde basılı tut ve sürükle'
-        },
-        sand: {
-            kicker: 'AŞAMA 02 / 03',
-            title: 'Pürüzleri yumuşat.',
-            description: 'Zımparayı yüzey boyunca gezdir; keskin geçişleri dengelerken tüm parçayı tara.',
-            next: 'Boyamaya geç',
-            hint: 'Zımparayı yüzey boyunca gezdir'
-        },
-        paint: {
-            kicker: 'AŞAMA 03 / 03',
-            title: 'İmzanı renkle at.',
-            description: 'Paletinden bir renk seç ve parçanın yüzeyini tamamen boya.',
-            next: 'Siparişi teslim et',
-            hint: 'Seçili boyayı yüzeye uygula'
-        }
-    };
+    // ---------- Catalog data ----------
 
-    function gaussian(t, center, width, height) {
-        return height * Math.exp(-Math.pow((t - center) / width, 2));
-    }
-
-    const jobs = [
-        {
-            name: 'Nordik Vazo',
-            client: 'Mina Kaya',
-            initials: 'MK',
-            note: 'Dengeli bir gövde ve ince bir boyun istiyorum.',
-            profile(t) {
-                return 29 + gaussian(t, .09, .11, 72) + gaussian(t, .36, .22, 70) + gaussian(t, .64, .12, 21) + gaussian(t, .9, .075, 30) + gaussian(t, .99, .025, 13);
-            }
-        },
-        {
-            name: 'Satranç Şahı',
-            client: 'Baran Aksoy',
-            initials: 'BA',
-            note: 'Güçlü bir taban ve okunaklı bir taç profili olsun.',
-            profile(t) {
-                return 26 + gaussian(t, .1, .115, 86) + gaussian(t, .31, .095, 39) + gaussian(t, .55, .055, 25) + gaussian(t, .73, .075, 34) + gaussian(t, .91, .09, 45);
-            }
-        },
-        {
-            name: 'Masa Şamdanı',
-            client: 'Lara Demir',
-            initials: 'LD',
-            note: 'İnce bir gövde, yumuşak boğumlar ve geniş bir ayak.',
-            profile(t) {
-                return 23 + gaussian(t, .08, .12, 92) + gaussian(t, .28, .055, 29) + gaussian(t, .48, .05, 21) + gaussian(t, .68, .055, 31) + gaussian(t, .91, .1, 57);
-            }
-        },
-        {
-            name: 'Çam Biblo',
-            client: 'Efe Can',
-            initials: 'EC',
-            note: 'Katmanları belirgin, tepesi zarif bir çam ağacı arıyorum.',
-            profile(t) {
-                const tiers = gaussian(t, .18, .105, 88) + gaussian(t, .4, .09, 70) + gaussian(t, .61, .075, 53) + gaussian(t, .79, .06, 36);
-                return 20 + tiers + gaussian(t, .94, .045, 15);
-            }
-        }
+    // Profiles are authored as [t, radius] points, t from the headstock (0) to the tailstock (1),
+    // radius as a fraction of the blank. Pieces that stand upright on the shelf have their base at t = 0.
+    const SHAPES = [
+        { id: 'halter', name: 'Halter', client: 'Spor Salonu Ece', pts: [[0, .7], [.08, .72], [.18, .72], [.23, .62], [.27, .3], [.73, .3], [.77, .62], [.82, .72], [.92, .72], [1, .7]] },
+        { id: 'oklava', name: 'Oklava', client: 'Fırıncı Nesrin', pts: [[0, .2], [.06, .26], [.1, .22], [.15, .3], [.18, .6], [.22, .64], [.78, .64], [.82, .6], [.85, .3], [.9, .22], [.94, .26], [1, .2]] },
+        { id: 'kalem', name: 'Kurşun Kalem', client: 'Öğretmen Deniz', pts: [[0, .36], [.04, .4], [.08, .4], [.1, .34], [.72, .34], [.8, .26], [.9, .14], [.97, .07], [1, .06]] },
+        { id: 'sopa', name: 'Beyzbol Sopası', client: 'Koç Baran', pts: [[0, .3], [.03, .4], [.07, .38], [.1, .22], [.32, .22], [.52, .3], [.72, .46], [.88, .58], [.96, .58], [1, .44]] },
+        { id: 'roket', name: 'Oyuncak Roket', client: 'Minik Ada', pts: [[0, .55], [.06, .66], [.1, .66], [.13, .42], [.2, .46], [.62, .46], [.76, .4], [.88, .26], [.96, .12], [1, .07]] },
+        { id: 'lobut', name: 'Bowling Lobutu', client: 'Salon Sahibi Can', pts: [[0, .42], [.08, .52], [.2, .6], [.34, .54], [.5, .3], [.58, .22], [.68, .24], [.8, .34], [.9, .32], [.97, .2], [1, .12]] },
+        { id: 'topac', name: 'Topaç', client: 'Dede Hüsnü', pts: [[0, .08], [.1, .16], [.3, .46], [.5, .8], [.6, .82], [.65, .62], [.7, .3], [.76, .22], [.86, .24], [.94, .22], [1, .16]] },
+        { id: 'mantar', name: 'Mantar', client: 'Bahçıvan Selin', pts: [[0, .4], [.08, .36], [.36, .3], [.52, .34], [.58, .52], [.66, .8], [.78, .86], [.88, .78], [.95, .55], [1, .22]] },
+        { id: 'kase', name: 'Kâse Profili', client: 'Çömlekçi Elif', pts: [[0, .3], [.08, .32], [.12, .25], [.18, .33], [.36, .56], [.56, .74], [.76, .84], [.92, .88], [1, .86]] },
+        { id: 'vazo', name: 'Nordik Vazo', client: 'Mina Kaya', pts: [[0, .5], [.05, .55], [.1, .44], [.2, .62], [.38, .8], [.54, .72], [.68, .4], [.8, .3], [.9, .36], [.96, .48], [1, .45]] },
+        { id: 'tokmak', name: 'Marangoz Tokmağı', client: 'Usta Rıza', pts: [[0, .18], [.04, .22], [.08, .18], [.48, .2], [.53, .26], [.58, .2], [.62, .66], [.68, .76], [.92, .76], [.97, .68], [1, .58]] },
+        { id: 'can', name: 'Masa Çanı', client: 'Otel Resepsiyonu', pts: [[0, .2], [.07, .26], [.12, .18], [.2, .22], [.25, .32], [.42, .4], [.6, .5], [.78, .66], [.9, .84], [.96, .88], [1, .8]] },
+        { id: 'matruska', name: 'Matruşka', client: 'Koleksiyoncu Vera', pts: [[0, .58], [.06, .62], [.3, .8], [.48, .74], [.6, .54], [.65, .52], [.78, .6], [.9, .52], [.97, .34], [1, .2]] },
+        { id: 'kadeh', name: 'Kadeh', client: 'Şef Arda', pts: [[0, .62], [.06, .64], [.1, .22], [.38, .15], [.43, .24], [.48, .17], [.55, .3], [.72, .6], [.9, .68], [1, .64]] },
+        { id: 'piyon', name: 'Satranç Piyonu', client: 'Satranç Kulübü', pts: [[0, .7], [.07, .72], [.11, .6], [.15, .66], [.2, .48], [.44, .3], [.54, .28], [.59, .44], [.64, .3], [.72, .46], [.82, .52], [.92, .44], [1, .14]] },
+        { id: 'ayak', name: 'Masa Ayağı', client: 'Mobilyacı Kerem', pts: [[0, .5], [.08, .5], [.12, .64], [.17, .4], [.26, .56], [.34, .36], [.68, .3], [.84, .44], [.89, .6], [.95, .6], [1, .5]] },
+        { id: 'fener', name: 'Deniz Feneri', client: 'Kaptan Murat', pts: [[0, .76], [.06, .76], [.09, .6], [.54, .42], [.57, .6], [.62, .6], [.65, .36], [.78, .36], [.81, .5], [.9, .4], [1, .12]] },
+        { id: 'samdan', name: 'Masa Şamdanı', client: 'Lara Demir', pts: [[0, .76], [.08, .76], [.12, .4], [.2, .3], [.27, .44], [.33, .3], [.5, .24], [.6, .36], [.66, .24], [.8, .26], [.87, .52], [.95, .56], [1, .5]] },
+        { id: 'vezir', name: 'Satranç Veziri', client: 'Satranç Kulübü', pts: [[0, .72], [.07, .72], [.1, .6], [.14, .66], [.18, .46], [.5, .28], [.6, .32], [.65, .5], [.7, .34], [.82, .56], [.88, .58], [.92, .42], [.96, .3], [1, .2]] },
+        { id: 'sah', name: 'Satranç Şahı', client: 'Büyükusta Kaan', pts: [[0, .72], [.07, .72], [.1, .6], [.13, .66], [.17, .46], [.45, .3], [.55, .36], [.6, .5], [.64, .34], [.75, .46], [.82, .5], [.86, .32], [.9, .22], [.94, .34], [.97, .3], [1, .12]] }
     ];
 
-    const state = {
-        stage: 'carve',
-        jobIndex: -1,
-        job: null,
-        target: [],
-        current: [],
-        sandCoverage: [],
-        paintCoverage: [],
-        paintColors: [],
-        roughness: [],
-        particles: [],
-        activeTool: 'rough',
-        guestPaint: 'honey',
-        cheatPaint: null,
-        pointer: { down: false, inside: false, x: 0, y: 0 },
-        gestureUsed: false,
-        stageSnapshot: null,
-        completed: false,
-        pendingResult: null,
-        returnToResult: false,
-        lastTime: performance.now()
+    const WOOD_LOOK = {
+        beech: { light: [232, 192, 146], dark: [198, 146, 98], freq: 9, ring: .38, fiber: .28 },
+        oak: { light: [220, 176, 116], dark: [142, 98, 54], freq: 7, ring: .72, fiber: .36 },
+        walnut: { light: [148, 102, 68], dark: [72, 45, 29], freq: 8, ring: .58, fiber: .32 },
+        cherry: { light: [204, 118, 76], dark: [138, 66, 38], freq: 8, ring: .46, fiber: .26 },
+        zebrano: { light: [228, 202, 146], dark: [66, 46, 28], freq: 15, ring: 1, fiber: .2, stripe: true },
+        ebony: { light: [62, 51, 46], dark: [20, 16, 15], freq: 10, ring: .5, fiber: .45 }
     };
 
-    const elements = {
-        orderNumber: document.getElementById('order-number'),
-        clientAvatar: document.getElementById('client-avatar'),
-        clientName: document.getElementById('client-name'),
-        targetName: document.getElementById('target-name'),
-        targetNote: document.getElementById('target-note'),
-        accuracyRing: document.getElementById('accuracy-ring'),
-        accuracyValue: document.getElementById('accuracy-value'),
-        accuracyLabel: document.getElementById('accuracy-label'),
-        liveScoreValue: document.getElementById('live-score-value'),
-        liveScoreTarget: document.getElementById('live-score-target'),
-        stageKicker: document.getElementById('stage-kicker'),
-        stageTitle: document.getElementById('stage-title'),
-        stageDescription: document.getElementById('stage-description'),
-        gestureHint: document.getElementById('gesture-hint'),
-        carveTools: document.getElementById('carve-tools'),
-        sandTools: document.getElementById('sand-tools'),
-        paintTools: document.getElementById('paint-tools'),
-        nextStage: document.getElementById('next-stage'),
-        resetStage: document.getElementById('reset-stage'),
-        sandCoverage: document.getElementById('sand-coverage'),
-        sanderSize: document.getElementById('sander-size'),
-        paintCoverage: document.getElementById('paint-coverage'),
-        paintPalette: document.getElementById('paint-palette'),
-        topBalance: document.getElementById('top-balance'),
-        walletButton: document.getElementById('wallet-button'),
-        compactAvatar: document.getElementById('compact-avatar'),
-        compactName: document.getElementById('compact-name'),
-        compactStatus: document.getElementById('compact-status'),
-        profileAction: document.getElementById('profile-action'),
-        officeName: document.getElementById('office-name'),
-        officeMultiplier: document.getElementById('office-multiplier'),
-        upgradeOffice: document.getElementById('upgrade-office'),
-        upgradeCost: document.getElementById('upgrade-cost'),
-        paintStoreList: document.getElementById('paint-store-list'),
-        paintCount: document.getElementById('paint-count'),
-        jobsCount: document.getElementById('jobs-count'),
-        bestScore: document.getElementById('best-score'),
-        totalEarned: document.getElementById('total-earned'),
-        loginModal: document.getElementById('login-modal'),
-        resultModal: document.getElementById('result-modal'),
-        loginForm: document.getElementById('login-form'),
-        loginError: document.getElementById('login-error'),
-        username: document.getElementById('game-username'),
-        resultScore: document.getElementById('result-score'),
-        resultShape: document.getElementById('result-shape'),
-        resultSand: document.getElementById('result-sand'),
-        resultPaint: document.getElementById('result-paint'),
-        rewardValue: document.getElementById('reward-value'),
-        rewardMultiplier: document.getElementById('reward-multiplier'),
-        guestWarning: document.getElementById('guest-warning'),
-        confetti: document.getElementById('confetti'),
-        toast: document.getElementById('game-toast')
+    const CHISEL_LOOK = {
+        steel: { blade: ['#e6ebef', '#8a959e'], ferrule: '#c9a14a', handle: ['#b4713c', '#6f3e1d'] },
+        carbide: { blade: ['#9aa3ab', '#3b4148'], ferrule: '#e2bc54', handle: ['#2f3338', '#141618'] },
+        damascus: { blade: ['#c9ced3', '#5b6168'], ferrule: '#b87333', handle: ['#7a2f22', '#3d150f'], wave: true },
+        diamond: { blade: ['#e8fbff', '#7bc7e0'], ferrule: '#f2f6f8', handle: ['#3a5f8c', '#1b2d47'], sparkle: true }
     };
 
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
+    const TOOLS = {
+        rough: { half: 15, lift: (d) => (Math.abs(d) < 12 ? 0 : (Math.abs(d) - 12) * 2.2) },
+        round: { half: 13, lift: (d) => 13 - Math.sqrt(Math.max(0, 169 - d * d)) },
+        detail: { half: 9, lift: (d) => Math.abs(d) * 1.35 }
+    };
 
-    function average(values) {
-        return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-    }
+    const STAGES = {
+        carve: { label: 'Şekillendir', next: 'Zımparaya geç', hint: 'Basılı tut, keskiyi kütüğe sür', chip: 'ŞEKİL' },
+        sand: { label: 'Zımparala', next: 'Boyaya geç', hint: 'Zımparayı parça boyunca gezdir', chip: 'ŞEKİL' },
+        paint: { label: 'Boya', next: 'Teslim et', hint: 'Renk seç, bantları boya', chip: 'BOYA' }
+    };
 
-    function mix(a, b, amount) {
-        return a + (b - a) * amount;
-    }
+    const paintIds = Object.keys(CasualProfile.paints);
+    const paintRgb = paintIds.map((id) => hexRgb(CasualProfile.paints[id].color));
 
-    function formatMultiplier(value) {
-        return `x${Number(value).toFixed(2).replace('.', ',')}`;
-    }
+    // ---------- Helpers ----------
 
+    function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+    function hexRgb(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    function rng(seed) {
+        let a = seed >>> 0;
+        return () => {
+            a = (a + 0x6D2B79F5) >>> 0;
+            let t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+    function formatMultiplier(v) { return `x${Number(v).toFixed(2).replace('.', ',')}`; }
     function initials(name) {
-        return String(name || '?').split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toLocaleUpperCase('tr-TR');
+        return String(name || '?').split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toLocaleUpperCase('tr-TR');
     }
+    function cheatsOpen() { return Boolean(window.CasualCheats?.features()); }
+    function cheatsOn() { return Boolean(window.CasualCheats?.active()); }
 
     let toastTimer;
     function showToast(message) {
-        elements.toast.textContent = message;
-        elements.toast.classList.add('show');
+        el.toast.textContent = message;
+        el.toast.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => elements.toast.classList.remove('show'), 2400);
+        toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2400);
     }
 
     function playSound(name) {
@@ -204,897 +132,1581 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.volume = name === 'pop' ? .35 : .24;
         audio.play().catch(() => {});
     }
+    function effectsOn() { return typeof cpSettings === 'undefined' || cpSettings.effects; }
 
-    const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    let lastFocused = null;
+    // Smooth Catmull-Rom through the authored points, sampled to N radii.
+    function sampleShape(pts) {
+        const out = new Float32Array(N);
+        for (let i = 0; i < N; i += 1) {
+            const t = i / (N - 1);
+            let k = 0;
+            while (k < pts.length - 2 && pts[k + 1][0] < t) k += 1;
+            const p0 = pts[Math.max(0, k - 1)], p1 = pts[k], p2 = pts[k + 1], p3 = pts[Math.min(pts.length - 1, k + 2)];
+            const u = clamp((t - p1[0]) / Math.max(1e-6, p2[0] - p1[0]), 0, 1);
+            const u2 = u * u, u3 = u2 * u;
+            const r = .5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3);
+            out[i] = clamp(r, MIN_R + .02, .9);
+        }
+        return out;
+    }
+    const shapeProfiles = SHAPES.map((s) => sampleShape(s.pts));
 
-    function openModal(modal) {
-        lastFocused = document.activeElement;
-        modal.classList.add('active');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        const preferred = modal.querySelector('[data-initial-focus]');
-        const target = preferred
-            || Array.from(modal.querySelectorAll(FOCUSABLE)).find((node) => !node.hidden && !node.disabled);
-        if (target) setTimeout(() => target.focus(), 40);
+    // A level fixes the shape, the requested colour bands and how strict the scoring is.
+    const levelCache = new Map();
+    function levelSpec(level) {
+        if (levelCache.has(level)) return levelCache.get(level);
+        const random = rng(level * 7919 + 17);
+        const shapeIndex = level <= SHAPES.length ? level - 1 : 3 + Math.floor(random() * (SHAPES.length - 3));
+        const profile = shapeProfiles[shapeIndex];
+        const free = level >= 5 && level % 5 === 0;
+        const bandCount = level <= 2 ? 1 : level <= 6 ? 2 : level <= 12 ? 3 : 3 + Math.floor(random() * 2);
+
+        const grooves = [];
+        for (let i = 16; i < N - 16; i += 1) {
+            let lowest = true;
+            for (let d = -6; d <= 6; d += 1) if (profile[i + d] < profile[i]) lowest = false;
+            const rise = Math.min(Math.max(...profile.slice(i - 14, i)), Math.max(...profile.slice(i + 1, i + 15))) - profile[i];
+            if (lowest && rise > .04 && (!grooves.length || i - grooves[grooves.length - 1] > 10)) grooves.push(i);
+        }
+        let cuts = [];
+        if (grooves.length >= bandCount - 1) {
+            const pool = grooves.slice();
+            while (cuts.length < bandCount - 1) cuts.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+        } else {
+            for (let b = 1; b < bandCount; b += 1) cuts.push(Math.round((b / bandCount + (random() - .5) * .08) * (N - 1)));
+        }
+        cuts = cuts.sort((a, b) => a - b);
+
+        const pool = paintIds.filter((id) => id !== 'natural');
+        const colors = [];
+        for (let b = 0; b < bandCount; b += 1) {
+            let pick;
+            do pick = pool[Math.floor(random() * pool.length)];
+            while (pick === colors[b - 1] || (bandCount <= pool.length && colors.includes(pick) && random() < .8));
+            colors.push(pick);
+        }
+        const bands = new Int8Array(N);
+        let band = 0;
+        for (let i = 0; i < N; i += 1) {
+            while (band < cuts.length && i >= cuts[band]) band += 1;
+            bands[i] = paintIds.indexOf(colors[band]);
+        }
+        const spec = { level, shape: SHAPES[shapeIndex], profile, free, colors: [...new Set(colors)], bands, strict: 230 + Math.min(level, 40) * 3 };
+        levelCache.set(level, spec);
+        return spec;
     }
 
-    function closeModal(modal) {
-        modal.classList.remove('active');
-        modal.setAttribute('aria-hidden', 'true');
-        if (!document.querySelector('.modal-overlay.active')) document.body.style.overflow = '';
-        const restore = lastFocused;
-        lastFocused = null;
-        if (restore && restore !== document.body && document.contains(restore)
-            && !restore.closest('[aria-hidden="true"]')) restore.focus();
+    // ---------- State ----------
+
+    const state = {
+        stage: 'carve',
+        spec: null,
+        level: 1,
+        guestLevel: 1,
+        current: new Float32Array(N),
+        rough: new Float32Array(N),
+        sand: new Float32Array(N),
+        paintIdx: new Int8Array(N),
+        paintCov: new Float32Array(N),
+        snapshot: null,
+        tool: 'rough',
+        brush: -1,
+        cheatLog: null,
+        cheatChisel: null,
+        cheatPaint: null,
+        pointer: { down: false, inside: false, touch: false, x: 0, y: 0, id: null },
+        tip: { x: 0, y: 0, side: 1 },
+        spin: 0,
+        spinSpeed: SPIN_SPEED,
+        particles: [],
+        curlMeter: 0,
+        cutLevel: 0,
+        completed: false,
+        pending: null,
+        returnToResult: false,
+        gestureUsed: false,
+        shop: 'chisels',
+        last: performance.now()
+    };
+
+    function profile() { return CasualProfile.current(); }
+    function activeLevel() {
+        const p = profile();
+        return p && !cheatsOn() ? p.woodTurning.level : state.guestLevel;
+    }
+    function selectedLog() {
+        const p = profile();
+        return (cheatsOpen() && state.cheatLog) || p?.selectedLog || 'beech';
+    }
+    function selectedChisel() {
+        const p = profile();
+        return (cheatsOpen() && state.cheatChisel) || p?.selectedChisel || 'steel';
+    }
+    function ownedPaints() {
+        if (cheatsOpen()) return paintIds.slice();
+        return profile()?.ownedPaints || ['natural', 'honey'];
     }
 
-    function sampleX(index) {
-        return PIECE_START + (index / (SAMPLE_COUNT - 1)) * (PIECE_END - PIECE_START);
+    // ---------- Layout ----------
+
+    // Geometry lives in "lathe space": the axis runs along x. On tall portrait screens the whole
+    // scene is drawn rotated a quarter turn (headstock at the bottom) so the piece can be bigger.
+    const L = { W: 0, H: 0, dpr: 1, rot: false, LW: 0, LH: 0, ps: 0, pe: 0, len: 0, cy: 0, R: 0, restY: 0, bedY: 0, hs: 0 };
+    const bgCanvas = document.createElement('canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    const floorCanvas = document.createElement('canvas');
+    const floorCtx = floorCanvas.getContext('2d');
+    let floorMarks = 0;
+
+    function layout() {
+        const rect = wrap.getBoundingClientRect();
+        const W = Math.max(280, Math.round(rect.width));
+        const H = Math.max(220, Math.round(rect.height));
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        if (W === L.W && H === L.H && dpr === L.dpr) return;
+        const rot = H > W * 1.15;
+        const LW = rot ? H : W, LH = rot ? W : H;
+        Object.assign(L, { W, H, dpr, rot, LW, LH });
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        L.hs = clamp(LW * .075, 26, 84);
+        L.ps = L.hs + 8;
+        L.pe = LW - L.hs - 8;
+        L.len = L.pe - L.ps;
+        L.R = Math.min(LH * (rot ? .3 : .29), L.len * .19);
+        L.cy = Math.max(L.R + 14, LH * (rot ? .4 : .42));
+        L.restY = L.cy + L.R + 16;
+        L.bedY = Math.min(LH - 22, L.restY + 34);
+        for (const c of [bgCanvas, floorCanvas]) { c.width = canvas.width; c.height = canvas.height; }
+        floorMarks = 0;
+        drawBackground();
+        state.tip.x = state.tip.x || (L.ps + L.len * .5);
+        state.tip.y = L.restY + 4;
     }
 
-    function buildTarget(job) {
-        return Array.from({ length: SAMPLE_COUNT }, (_, index) => {
-            const t = index / (SAMPLE_COUNT - 1);
-            const raw = clamp(job.profile(t), MIN_RADIUS + 2, MAX_RADIUS - 8);
-            const endTaper = clamp(Math.min(t / .025, (1 - t) / .025), 0, 1);
-            return mix(42, raw, endTaper);
-        });
+    function baseTransform(g) {
+        if (L.rot) g.setTransform(0, -L.dpr, L.dpr, 0, 0, L.H * L.dpr);
+        else g.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
     }
 
-    function beginOrder(forceNext = false) {
-        let nextIndex = Math.floor(Math.random() * jobs.length);
-        if ((forceNext || jobs.length > 1) && nextIndex === state.jobIndex) nextIndex = (nextIndex + 1) % jobs.length;
-        state.jobIndex = nextIndex;
-        state.job = jobs[nextIndex];
-        state.target = buildTarget(state.job);
-        state.current = Array.from({ length: SAMPLE_COUNT }, (_, index) => {
-            const edge = Math.min(index, SAMPLE_COUNT - 1 - index);
-            return edge < 3 ? mix(42, MAX_RADIUS, edge / 3) : MAX_RADIUS;
-        });
-        state.sandCoverage = Array(SAMPLE_COUNT).fill(0);
-        state.paintCoverage = Array(SAMPLE_COUNT).fill(0);
-        state.paintColors = Array(SAMPLE_COUNT).fill(WOOD_BASE);
-        state.roughness = Array.from({ length: SAMPLE_COUNT }, (_, index) => .45 + .16 * Math.sin(index * 2.37));
-        state.particles = [];
-        state.stageSnapshot = null;
+    function isPaper() { return document.body.classList.contains('theme-paper'); }
+
+    function drawBackground() {
+        const g = bgCtx;
+        const { LW: W, LH: H, cy, R } = L;
+        baseTransform(g);
+        const paper = isPaper();
+        const wall = g.createLinearGradient(0, 0, 0, H);
+        wall.addColorStop(0, paper ? '#efe5d6' : '#2b1e15');
+        wall.addColorStop(1, paper ? '#d8c8b1' : '#120c08');
+        g.fillStyle = wall;
+        g.fillRect(0, 0, W, H);
+
+        // Pegboard
+        g.fillStyle = paper ? 'rgba(90,60,30,.12)' : 'rgba(0,0,0,.28)';
+        for (let y = 14; y < cy - R - 8; y += 18) for (let x = 12 + ((y / 18) % 2) * 9; x < W; x += 18) {
+            g.beginPath(); g.arc(x, y, 1.6, 0, TAU); g.fill();
+        }
+        const lamp = g.createRadialGradient(W * .5, cy - R * 1.4, 10, W * .5, cy, Math.max(W, H) * .7);
+        lamp.addColorStop(0, paper ? 'rgba(255,240,210,.55)' : 'rgba(255,190,110,.2)');
+        lamp.addColorStop(1, 'rgba(255,190,110,0)');
+        g.fillStyle = lamp;
+        g.fillRect(0, 0, W, H);
+
+        // Bed and legs
+        const bedTop = L.bedY;
+        const bed = g.createLinearGradient(0, bedTop, 0, bedTop + 22);
+        bed.addColorStop(0, '#59646a'); bed.addColorStop(.25, '#8f9aa0'); bed.addColorStop(1, '#2c3337');
+        g.fillStyle = 'rgba(0,0,0,.25)';
+        g.fillRect(L.hs * .4, bedTop + 20, W - L.hs * .8, 8);
+        g.fillStyle = bed;
+        g.fillRect(L.hs * .3, bedTop, W - L.hs * .6, 22);
+        g.fillStyle = '#1d2326';
+        g.fillRect(L.hs * .6, bedTop + 22, 16, H - bedTop - 22);
+        g.fillRect(W - L.hs * .6 - 16, bedTop + 22, 16, H - bedTop - 22);
+
+        // Tool rest with its post
+        const restMid = L.ps + L.len * .5;
+        g.fillStyle = '#262c30';
+        g.fillRect(restMid - 7, L.restY, 14, bedTop - L.restY);
+        const rest = g.createLinearGradient(0, L.restY - 4, 0, L.restY + 6);
+        rest.addColorStop(0, '#c7d0d5'); rest.addColorStop(1, '#4b5459');
+        g.fillStyle = rest;
+        roundRect(g, L.ps - 6, L.restY - 4, L.len + 12, 9, 4);
+        g.fill();
+
+        // Headstock
+        const hsW = L.hs;
+        const head = g.createLinearGradient(0, cy - R * 1.2, 0, bedTop);
+        head.addColorStop(0, '#3f7a6e'); head.addColorStop(.5, '#2c5b52'); head.addColorStop(1, '#1b3b35');
+        g.fillStyle = head;
+        roundRect(g, 0, cy - Math.max(R * 1.05, 40), hsW, bedTop - (cy - Math.max(R * 1.05, 40)), 10);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,.12)';
+        g.fillRect(4, cy - Math.max(R * 1.05, 40) + 4, hsW - 8, 4);
+        // Tailstock
+        g.fillStyle = head;
+        const tsTop = cy - Math.max(R * .7, 30);
+        roundRect(g, W - hsW, tsTop, hsW, bedTop - tsTop, 10);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,.12)';
+        g.fillRect(W - hsW + 4, tsTop + 4, hsW - 8, 4);
+        // Quill
+        const quill = g.createLinearGradient(0, cy - 9, 0, cy + 9);
+        quill.addColorStop(0, '#dfe5e8'); quill.addColorStop(1, '#5d676c');
+        g.fillStyle = quill;
+        g.fillRect(L.pe + 6, cy - 8, W - hsW - L.pe - 4, 16);
+    }
+
+    function roundRect(g, x, y, w, h, r) {
+        g.beginPath();
+        g.moveTo(x + r, y);
+        g.arcTo(x + w, y, x + w, y + h, r);
+        g.arcTo(x + w, y + h, x, y + h, r);
+        g.arcTo(x, y + h, x, y, r);
+        g.arcTo(x, y, x + w, y, r);
+        g.closePath();
+    }
+
+    // ---------- Wood renderer ----------
+    // Each visible pixel of the turned piece is shaded as a point on a surface of revolution:
+    // a 3D ring texture (offset pith, so rings sweep as it spins), fibre noise, tool ridges
+    // until sanded, paint, and Blinn-Phong light.
+
+    const ANG = 1024;
+    const COS = new Float32Array(ANG), SIN = new Float32Array(ANG);
+    for (let i = 0; i < ANG; i += 1) { COS[i] = Math.cos(i / ANG * TAU); SIN[i] = Math.sin(i / ANG * TAU); }
+    const VL = 1024;
+    const ASIN = new Float32Array(VL), SQ = new Float32Array(VL);
+    for (let i = 0; i < VL; i += 1) { const v = i / (VL - 1) * 2 - 1; ASIN[i] = Math.asin(v); SQ[i] = Math.sqrt(1 - v * v); }
+    const FW = 1024, FH = 256;
+    const FIB = new Float32Array(FW * FH);
+    (function buildFibres() {
+        const r = rng(99);
+        const grid = new Float32Array(32 * 32).map(() => r());
+        const grid2 = new Float32Array(64 * 64).map(() => r());
+        const smooth = (t) => t * t * (3 - 2 * t);
+        const sample = (g, n, x, y) => {
+            const xi = Math.floor(x), yi = Math.floor(y), fx = smooth(x - xi), fy = smooth(y - yi);
+            const a = g[(yi % n) * n + (xi % n)], b = g[(yi % n) * n + ((xi + 1) % n)];
+            const c = g[((yi + 1) % n) * n + (xi % n)], d = g[((yi + 1) % n) * n + ((xi + 1) % n)];
+            return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
+        };
+        // Tileable both ways; long along x (the grain direction), fine across the circumference.
+        for (let y = 0; y < FH; y += 1) for (let x = 0; x < FW; x += 1) {
+            FIB[y * FW + x] = sample(grid, 32, x / 32, y / 8) * .6 + sample(grid2, 64, x / 16, y / 4) * .4;
+        }
+    })();
+    const WARP = new Float32Array(N);
+    (function buildWarp() {
+        const r = rng(7);
+        const a = r() * 6, b = r() * 6;
+        for (let i = 0; i < N; i += 1) { const t = i / N; WARP[i] = Math.sin(t * 7.3 + a) * .9 + Math.sin(t * 17.1 + b) * .35; }
+    })();
+
+    const pieceCanvas = document.createElement('canvas');
+    const pieceCtx = pieceCanvas.getContext('2d');
+    let pieceImage = null, pieceData = null;
+
+    // Key light from the screen's upper left, expressed in lathe space for both orientations.
+    function lightFor(rotated) {
+        const [x, y, z] = rotated ? [.72, -.36, .6] : [-.36, -.72, .6];
+        const n = Math.hypot(x, y, z);
+        const l = [x / n, y / n, z / n];
+        const h = [l[0], l[1], l[2] + 1];
+        const hn = Math.hypot(...h);
+        return { l, h: h.map((c) => c / hn) };
+    }
+    const LIGHTS = [lightFor(false), lightFor(true)];
+
+    function renderPiece(target, o) {
+        const bw = Math.max(8, Math.round(o.len * o.q));
+        const bh = Math.max(8, Math.round(o.R * 2 * o.q) + 2);
+        if (!pieceImage || pieceImage.width !== bw || pieceImage.height !== bh) {
+            pieceCanvas.width = bw; pieceCanvas.height = bh;
+            pieceImage = pieceCtx.createImageData(bw, bh);
+            pieceData = new Uint32Array(pieceImage.data.buffer);
+        }
+        const data = pieceData;
+        data.fill(0);
+        const look = WOOD_LOOK[o.log] || WOOD_LOOK.beech;
+        const prof = o.profile;
+        const Rq = o.R * o.q;
+        const cyq = bh / 2;
+        const colStep = (N - 1) / Math.max(1, bw - 1);
+        const spinIdx = o.spin / TAU * ANG;
+        const pithX = .16, pithZ = .05;
+        const lr = look.light[0], lg = look.light[1], lb = look.light[2];
+        const dr = look.dark[0] - lr, dg = look.dark[1] - lg, db = look.dark[2] - lb;
+        const ringK = look.ring, fibK = look.fiber, freq = look.freq;
+        const ridgeFreq = .9 / o.q;
+        const light = LIGHTS[o.rot ? 1 : 0];
+        const [lx, ly, lz] = light.l, [hx, hy, hz] = light.h;
+
+        for (let col = 0; col < bw; col += 1) {
+            const s = col * colStep;
+            const i = Math.min(N - 2, s | 0);
+            const f = s - i;
+            const r = prof[i] + (prof[i + 1] - prof[i]) * f;
+            const rpx = r * Rq;
+            if (rpx < .5) continue;
+            // Normals come from a wider window so tiny depth differences don't strobe the light.
+            const ia = Math.max(0, i - 2), ib = Math.min(N - 1, i + 3);
+            const slope = (prof[ib] - prof[ia]) / ((ib - ia) / colStep) * Rq * -1;
+            const inv = 1 / Math.sqrt(slope * slope + 1);
+            const warp = WARP[i] + (WARP[i + 1] - WARP[i]) * f;
+            const xIdx = (col / o.q * .5) & (FW - 1);
+            const rough = o.rough ? o.rough[i] : 0;
+            const sanded = o.sand ? o.sand[i] : 1;
+            const ridge = rough * (1 - sanded) * .06 * Math.sin(col * ridgeFreq);
+            const pIdx = o.paintIdx ? o.paintIdx[i] : -1;
+            const pCov = pIdx >= 0 ? (o.paintCov ? o.paintCov[i] : 1) : 0;
+            const pc = pIdx >= 0 ? paintRgb[pIdx] : null;
+            const gloss = pCov > .5 ? 2 : sanded > .5 ? 1 : 0;
+            const specK = gloss === 2 ? .55 : gloss === 1 ? .22 : .1;
+            const y0 = Math.max(0, Math.floor(cyq - rpx - 1));
+            const y1 = Math.min(bh - 1, Math.ceil(cyq + rpx + 1));
+            for (let y = y0; y <= y1; y += 1) {
+                const dy = y + .5 - cyq;
+                const ady = dy < 0 ? -dy : dy;
+                let a = rpx - ady + .5;
+                if (a <= 0) continue;
+                if (a > 1) a = 1;
+                let v = dy / rpx;
+                if (v > 1) v = 1; else if (v < -1) v = -1;
+                const vi = ((v + 1) * .5 * (VL - 1)) | 0;
+                const cz = SQ[vi];
+                const ai = ((ASIN[vi] / TAU * ANG + spinIdx) | 0) & (ANG - 1);
+                const px = r * COS[ai] - pithX, pz = r * SIN[ai] - pithZ;
+                const ring = Math.sqrt(px * px + pz * pz) * freq + warp;
+                let fr = ring - Math.floor(ring);
+                let w;
+                if (look.stripe) w = fr > .55 ? (fr > .62 ? 1 : (fr - .55) / .07) : 0;
+                else { w = fr * fr; w *= w; }
+                const fib = FIB[((ai >> 2) & (FH - 1)) * FW + xIdx] - .5;
+                let tone = ringK * w + fibK * fib + ridge;
+                if (tone < -.3) tone = -.3; else if (tone > 1.2) tone = 1.2;
+                let cr = lr + dr * tone, cg = lg + dg * tone, cb = lb + db * tone;
+                if (pc) {
+                    const k = pCov * (.92 + fib * .1);
+                    cr += (pc[0] * (1 + fib * .08) - cr) * k; cg += (pc[1] * (1 + fib * .08) - cg) * k; cb += (pc[2] * (1 + fib * .08) - cb) * k;
+                }
+                const nx = slope * inv, ny = v * inv, nz = cz * inv;
+                let diff = nx * lx + ny * ly + nz * lz;
+                if (diff < 0) diff = 0;
+                let sp = nx * hx + ny * hy + nz * hz;
+                if (sp < 0) sp = 0;
+                sp *= sp; sp *= sp; sp *= sp;
+                if (gloss) { sp *= sp; if (gloss === 2) sp *= sp; }
+                const shade = .34 + diff * .8;
+                const spec = sp * specK * 255;
+                let R8 = cr * shade + spec, G8 = cg * shade + spec, B8 = cb * shade + spec;
+                if (R8 > 255) R8 = 255; if (G8 > 255) G8 = 255; if (B8 > 255) B8 = 255;
+                data[y * bw + col] = ((a * 255) << 24) | ((B8 | 0) << 16) | ((G8 | 0) << 8) | (R8 | 0);
+            }
+        }
+        pieceCtx.putImageData(pieceImage, 0, 0);
+        target.drawImage(pieceCanvas, 0, 0, bw, bh, o.x, o.cy - bh / o.q / 2, o.len, bh / o.q);
+    }
+
+    function pieceQuality(len, R) {
+        const want = effectsOn() ? Math.min(2, window.devicePixelRatio || 1) : 1;
+        return clamp(Math.min(want, Math.sqrt(240000 / Math.max(1, len * R * 2))), .6, 2);
+    }
+
+    // ---------- Level flow ----------
+
+    function freshBlank() {
+        state.current.fill(1);
+        state.rough.fill(0);
+        state.sand.fill(0);
+        state.paintIdx.fill(-1);
+        state.paintCov.fill(0);
+    }
+
+    function beginLevel(level) {
+        state.level = level;
+        state.spec = levelSpec(level);
+        freshBlank();
+        state.snapshot = null;
+        state.particles.length = 0;
         state.completed = false;
-        state.pendingResult = null;
-        state.gestureUsed = false;
-        elements.gestureHint.classList.remove('hidden');
-
-        const profile = CasualProfile.current();
-        const orderNo = (profile?.woodTurning.jobs || 0) + 1;
-        elements.orderNumber.textContent = `#${String(orderNo).padStart(3, '0')}`;
-        elements.clientAvatar.textContent = state.job.initials;
-        elements.clientName.textContent = state.job.client;
-        elements.targetName.textContent = state.job.name;
-        elements.liveScoreTarget.textContent = state.job.name;
-        elements.targetNote.textContent = state.job.note;
-        setStage('carve');
-        drawTargetPreview();
+        state.pending = null;
+        state.spinSpeed = SPIN_SPEED;
+        floorCtx.clearRect(0, 0, floorCanvas.width, floorCanvas.height);
+        floorMarks = 0;
+        const p = profile();
+        el.levelNumber.textContent = level;
+        el.levelTag.hidden = !state.spec.free;
+        el.orderNumber.textContent = `#${String((p?.woodTurning.jobs || 0) + 1).padStart(3, '0')}`;
+        el.targetName.textContent = state.spec.shape.name;
+        el.targetClient.textContent = state.spec.free ? 'Serbest tasarım · renkler senin' : state.spec.shape.client;
+        state.brush = paintIds.indexOf(state.spec.free ? (ownedPaints()[1] || 'honey') : state.spec.colors[0]);
+        setStage('carve', true);
+        drawTargetCard();
         updateMetrics();
     }
 
-    function profilePath(context, values, centerY = CENTER_Y, xStart = PIECE_START, xEnd = PIECE_END, scale = 1) {
-        context.beginPath();
-        values.forEach((radius, index) => {
-            const x = xStart + (index / (values.length - 1)) * (xEnd - xStart);
-            const y = centerY - radius * scale;
-            if (index === 0) context.moveTo(x, y);
-            else context.lineTo(x, y);
-        });
-        for (let index = values.length - 1; index >= 0; index -= 1) {
-            const x = xStart + (index / (values.length - 1)) * (xEnd - xStart);
-            context.lineTo(x, centerY + values[index] * scale);
-        }
-        context.closePath();
-    }
-
-    function drawTargetPreview() {
-        const w = targetCanvas.width;
-        const h = targetCanvas.height;
-        targetCtx.clearRect(0, 0, w, h);
-        const gradient = targetCtx.createLinearGradient(0, 25, 0, h - 25);
-        gradient.addColorStop(0, '#d9e0d4');
-        gradient.addColorStop(.48, '#ffffff');
-        gradient.addColorStop(1, '#8c9688');
-        profilePath(targetCtx, state.target, h / 2, 22, w - 22, .46);
-        targetCtx.fillStyle = gradient;
-        targetCtx.fill();
-        targetCtx.strokeStyle = 'rgba(185,255,102,.8)';
-        targetCtx.lineWidth = 2;
-        targetCtx.stroke();
-        targetCtx.beginPath();
-        targetCtx.moveTo(10, h / 2);
-        targetCtx.lineTo(w - 10, h / 2);
-        targetCtx.strokeStyle = 'rgba(255,255,255,.15)';
-        targetCtx.setLineDash([4, 6]);
-        targetCtx.stroke();
-        targetCtx.setLineDash([]);
-    }
-
-    function shapeScore() {
-        let absoluteError = 0;
-        let overcut = 0;
-        for (let index = 0; index < SAMPLE_COUNT; index += 1) {
-            const difference = Math.abs(state.current[index] - state.target[index]);
-            absoluteError += difference;
-            overcut += Math.max(0, state.target[index] - state.current[index]);
-        }
-        const meanError = absoluteError / SAMPLE_COUNT;
-        const meanOvercut = overcut / SAMPLE_COUNT;
-        return clamp(Math.round(100 - meanError * .84 - meanOvercut * .72), 0, 100);
-    }
-
-    function sandScore() {
-        return clamp(Math.round(average(state.sandCoverage) * 100), 0, 100);
-    }
-
-    function paintScore() {
-        return clamp(Math.round(average(state.paintCoverage) * 100), 0, 100);
-    }
-
-    function overallScore() {
-        return clamp(Math.round(shapeScore() * .82 + sandScore() * .1 + paintScore() * .08), 0, 100);
-    }
-
-    function accuracyCopy(score) {
-        if (score >= 96) return 'Usta işi';
-        if (score >= 88) return 'Neredeyse kusursuz';
-        if (score >= 75) return 'İyi gidiyor';
-        if (score >= 58) return 'Form belirginleşiyor';
-        return 'Ham kütük';
-    }
-
-    function updateMetrics() {
-        const shape = shapeScore();
-        elements.accuracyValue.textContent = shape;
-        elements.accuracyRing.style.setProperty('--score', shape);
-        elements.accuracyLabel.textContent = accuracyCopy(shape);
-        elements.liveScoreValue.textContent = `${shape}%`;
-        elements.sandCoverage.textContent = `${sandScore()}%`;
-        elements.paintCoverage.textContent = `${paintScore()}%`;
-    }
-
-    function setStage(stage) {
+    function setStage(stage, quiet) {
         state.stage = stage;
         clearResetConfirm();
         document.body.dataset.stage = stage;
-        const copy = stageCopy[stage];
-        elements.stageKicker.textContent = copy.kicker;
-        elements.stageTitle.textContent = copy.title;
-        elements.stageDescription.textContent = copy.description;
-        elements.nextStage.querySelector('span').textContent = copy.next;
-        elements.gestureHint.querySelector('p').textContent = copy.hint;
-        elements.gestureHint.classList.remove('hidden');
+        const copy = STAGES[stage];
+        el.next.querySelector('span').textContent = copy.next;
+        el.hint.querySelector('p').textContent = copy.hint;
+        el.hint.classList.remove('hidden');
         state.gestureUsed = false;
-
-        elements.carveTools.hidden = stage !== 'carve';
-        elements.sandTools.hidden = stage !== 'sand';
-        elements.paintTools.hidden = stage !== 'paint';
-
+        el.carveTools.hidden = stage !== 'carve';
+        el.sandTools.hidden = stage !== 'sand';
+        el.paintTools.hidden = stage !== 'paint';
+        el.matchLabel.textContent = copy.chip;
         const order = ['carve', 'sand', 'paint'];
-        const activeIndex = order.indexOf(stage);
-        document.querySelectorAll('.stage-list li').forEach((item, index) => {
+        document.querySelectorAll('.stage-track li').forEach((item, index) => {
             item.classList.toggle('active', item.dataset.step === stage);
-            item.classList.toggle('done', index < activeIndex);
+            item.classList.toggle('done', index < order.indexOf(stage));
         });
-
-        renderPaintPalette();
-        playSound('click');
-    }
-
-    function canvasPoint(event) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            x: ((event.clientX - rect.left) / rect.width) * WIDTH,
-            y: ((event.clientY - rect.top) / rect.height) * HEIGHT
-        };
-    }
-
-    function nearestIndex(x) {
-        return Math.round(((x - PIECE_START) / (PIECE_END - PIECE_START)) * (SAMPLE_COUNT - 1));
-    }
-
-    function selectedPaint() {
-        const profile = CasualProfile.current();
-        const id = window.CasualCheats?.features() && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
-        return CasualProfile.paints[id] || CasualProfile.paints.honey;
-    }
-
-    function useTool(point) {
-        const index = nearestIndex(point.x);
-        if (index < 0 || index >= SAMPLE_COUNT) return;
-        const radial = Math.abs(point.y - CENTER_Y);
-
-        if (state.stage === 'carve') carveAt(index, radial, point);
-        if (state.stage === 'sand') sandAt(index, radial, point);
-        if (state.stage === 'paint') paintAt(index, radial, point);
-    }
-
-    function carveAt(index, radial, point) {
-        if (radial > state.current[index] + 28 || radial < MIN_RADIUS) return;
-        const tool = tools[state.activeTool];
-        let removed = 0;
-
-        for (let offset = -tool.radius; offset <= tool.radius; offset += 1) {
-            const sample = index + offset;
-            if (sample < 2 || sample >= SAMPLE_COUNT - 2) continue;
-            const normalized = Math.abs(offset) / Math.max(1, tool.radius);
-            const falloff = Math.cos(normalized * Math.PI * .5);
-            const edgeLift = state.activeTool === 'round'
-                ? tool.edgeLift * normalized * normalized
-                : tool.edgeLift * normalized;
-            const desiredRadius = clamp(radial + edgeLift, MIN_RADIUS, state.current[sample]);
-            const before = state.current[sample];
-            state.current[sample] = Math.min(before, mix(before, desiredRadius, tool.strength * falloff));
-            removed += before - state.current[sample];
-            state.roughness[sample] = clamp(state.roughness[sample] + .12 * falloff, 0, 1);
+        renderPalette();
+        if (!quiet) {
+            el.banner.textContent = copy.label;
+            el.banner.classList.remove('show');
+            void el.banner.offsetWidth;
+            el.banner.classList.add('show');
+            playSound('click');
         }
+        updateMetrics();
+    }
 
-        if (removed > .25) {
-            addParticles(point, '#dca85e', Math.min(7, 2 + Math.floor(removed / 8)), 3.6);
+    // ---------- Scoring ----------
+
+    function shapeScore() {
+        const target = state.spec.profile;
+        let err = 0, over = 0;
+        for (let i = 0; i < N; i += 1) {
+            const d = state.current[i] - target[i];
+            err += Math.abs(d);
+            if (d < 0) over -= d;
+        }
+        return clamp(Math.round(100 - (err / N) * state.spec.strict - (over / N) * 140), 0, 100);
+    }
+    function sandScore() {
+        let s = 0;
+        for (let i = 0; i < N; i += 1) s += Math.min(1, state.sand[i]);
+        return clamp(Math.round(s / N * 100), 0, 100);
+    }
+    function paintScore() {
+        let s = 0;
+        for (let i = 0; i < N; i += 1) {
+            if (state.paintIdx[i] < 0) continue;
+            if (state.spec.free || state.paintIdx[i] === state.spec.bands[i]) s += state.paintCov[i];
+        }
+        return clamp(Math.round(s / N * 100), 0, 100);
+    }
+    function overallScore(shape, sand, paint) {
+        return clamp(Math.round(shape * .7 + paint * .25 + sand * .05), 0, 100);
+    }
+
+    let metricsQueued = false;
+    function updateMetrics() {
+        if (metricsQueued) return;
+        metricsQueued = true;
+        requestAnimationFrame(() => {
+            metricsQueued = false;
+            const value = state.stage === 'paint' ? paintScore() : shapeScore();
+            el.liveScore.textContent = `${value}%`;
+            el.matchFill.style.width = `${value}%`;
+            el.matchFill.dataset.good = value >= 85 ? 'yes' : 'no';
+            const sand = sandScore();
+            el.sandCoverage.textContent = `${sand}%`;
+            el.sandFill.style.width = `${sand}%`;
+            el.next.classList.toggle('ready', (state.stage === 'carve' && value >= 88) || (state.stage === 'sand' && sand >= 90) || (state.stage === 'paint' && value >= 90));
+        });
+    }
+
+    // ---------- Tools ----------
+
+    function sampleAtX(x) { return (x - L.ps) / L.len * (N - 1); }
+    function xAtSample(i) { return L.ps + i / (N - 1) * L.len; }
+    function radiusAtX(x) {
+        const s = clamp(sampleAtX(x), 0, N - 1);
+        const i = Math.min(N - 2, s | 0);
+        return state.current[i] + (state.current[i + 1] - state.current[i]) * (s - i);
+    }
+
+    function updateTip(dt) {
+        const p = state.pointer;
+        const tx = clamp(p.x, L.ps - 4, L.pe + 4);
+        let ty;
+        if (state.stage === 'carve' && p.down) {
+            const side = p.y < L.cy ? -1 : 1;
+            state.tip.side = side;
+            ty = p.touch ? p.y - TOUCH_OFFSET * side : p.y;
+            if (side === 1) ty = Math.max(ty, L.cy + MIN_R * L.R);
+            else ty = Math.min(ty, L.cy - MIN_R * L.R);
+        } else {
+            state.tip.side = 1;
+            ty = L.restY - 2;
+        }
+        const k = 1 - Math.exp(-dt * 28);
+        state.tip.x += (tx - state.tip.x) * k;
+        state.tip.y += (ty - state.tip.y) * k;
+    }
+
+    function carve(dt) {
+        const tool = TOOLS[state.tool];
+        const tipR = Math.abs(state.tip.y - L.cy) / L.R;
+        if (tipR >= 1.02) { state.cutLevel = 0; return; }
+        const rate = BASE_CUT_RATE * (CasualProfile.chisels[selectedChisel()]?.speed || 1) * dt;
+        const pxPerSample = L.len / (N - 1);
+        const center = sampleAtX(state.tip.x);
+        const reach = Math.ceil(tool.half / pxPerSample);
+        let removed = 0;
+        for (let s = Math.floor(center - reach); s <= Math.ceil(center + reach); s += 1) {
+            if (s < 0 || s >= N) continue;
+            const d = (s - center) * pxPerSample;
+            if (Math.abs(d) > tool.half) continue;
+            const desired = Math.max(MIN_R, tipR + tool.lift(d) / L.R);
+            const now = state.current[s];
+            if (now <= desired) continue;
+            const next = Math.max(desired, now - rate);
+            state.current[s] = next;
+            state.rough[s] = 1;
+            state.sand[s] = 0;
+            state.paintCov[s] = 0;
+            removed += now - next;
+        }
+        // A real gouge leaves a continuous surface: knock down single-sample peaks it skipped over.
+        if (removed > 0) {
+            for (let s = Math.max(1, Math.floor(center - reach)); s <= Math.min(N - 2, Math.ceil(center + reach)); s += 1) {
+                const avg = (state.current[s - 1] + state.current[s + 1]) * .5;
+                if (state.current[s] > avg + .004) {
+                    const next = Math.max(avg, MIN_R);
+                    removed += state.current[s] - next;
+                    state.current[s] = next;
+                }
+            }
+        }
+        const px = removed * L.R;
+        state.cutLevel = Math.min(1, px / (dt * 260));
+        if (px > .05) {
             markGestureUsed();
             updateMetrics();
+            const contactY = L.cy + state.tip.side * radiusAtX(state.tip.x) * L.R;
+            emitChips(state.tip.x, contactY, px);
         }
     }
 
-    function sandAt(index, radial, point) {
-        if (Math.abs(radial - state.current[index]) > 38) return;
-        const size = Number(elements.sanderSize.value);
-        const radius = Math.max(4, Math.round(size * .55));
-        const snapshot = state.current.slice();
-
-        for (let offset = -radius; offset <= radius; offset += 1) {
-            const sample = index + offset;
-            if (sample < 2 || sample >= SAMPLE_COUNT - 2) continue;
-            const normalized = Math.abs(offset) / radius;
-            const falloff = Math.cos(normalized * Math.PI * .5);
-            const smoothed = (snapshot[sample - 1] + snapshot[sample] * 2 + snapshot[sample + 1]) / 4;
-            state.current[sample] = mix(state.current[sample], smoothed, .42 * falloff);
-            state.sandCoverage[sample] = clamp(state.sandCoverage[sample] + .07 * falloff, 0, 1);
-            state.roughness[sample] = clamp(state.roughness[sample] - .1 * falloff, 0, 1);
+    function sandStep(dt) {
+        const half = 22;
+        const pxPerSample = L.len / (N - 1);
+        const center = sampleAtX(state.pointer.x);
+        const reach = Math.ceil(half / pxPerSample);
+        const copy = state.current.slice();
+        let touched = 0;
+        for (let s = Math.floor(center - reach); s <= Math.ceil(center + reach); s += 1) {
+            if (s < 1 || s >= N - 1) continue;
+            const d = Math.abs(s - center) * pxPerSample / half;
+            if (d > 1) continue;
+            const w = Math.cos(d * Math.PI * .5);
+            const avg = (copy[s - 1] + copy[s] * 2 + copy[s + 1]) / 4;
+            state.current[s] += (avg - state.current[s]) * Math.min(1, dt * 3 * w);
+            state.sand[s] = Math.min(1, state.sand[s] + dt * 3.6 * w);
+            touched += w;
         }
-        addParticles(point, '#f0d29a', 3, 1.8, true);
-        markGestureUsed();
-        updateMetrics();
+        if (touched) {
+            markGestureUsed();
+            updateMetrics();
+            state.cutLevel = .5;
+            const y = L.cy + radiusAtX(state.pointer.x) * L.R;
+            if (Math.random() < dt * 40) emitDust(state.pointer.x, y, '#f0d9ae');
+        }
     }
 
-    function paintAt(index, radial, point) {
-        if (Math.abs(radial - state.current[index]) > 46) return;
-        const paint = selectedPaint();
-        const radius = 12;
-
-        for (let offset = -radius; offset <= radius; offset += 1) {
-            const sample = index + offset;
-            if (sample < 1 || sample >= SAMPLE_COUNT - 1) continue;
-            const normalized = Math.abs(offset) / radius;
-            const falloff = Math.cos(normalized * Math.PI * .5);
-            state.paintCoverage[sample] = clamp(state.paintCoverage[sample] + .12 * falloff, 0, 1);
-            state.paintColors[sample] = paint.color;
+    function paintStep(dt) {
+        if (state.brush < 0) return;
+        const half = 16;
+        const pxPerSample = L.len / (N - 1);
+        const center = sampleAtX(state.pointer.x);
+        const reach = Math.ceil((half + 3) / pxPerSample);
+        for (let s = Math.floor(center - reach); s <= Math.ceil(center + reach); s += 1) {
+            if (s < 0 || s >= N) continue;
+            const d = Math.abs(s - center) * pxPerSample;
+            const w = d <= half ? 1 : d <= half + 3 ? 1 - (d - half) / 3 : 0;
+            if (!w) continue;
+            if (state.paintIdx[s] !== state.brush) {
+                state.paintIdx[s] = state.brush;
+                state.paintCov[s] = Math.min(state.paintCov[s] * .25, .2);
+            }
+            state.paintCov[s] = Math.min(1, state.paintCov[s] + dt * 7 * w);
         }
-        addParticles(point, paint.color, 3, 2.2, true);
         markGestureUsed();
         updateMetrics();
+        state.cutLevel = .4;
+        const y = L.cy + radiusAtX(state.pointer.x) * L.R;
+        if (Math.random() < dt * 50) emitDust(state.pointer.x, y + 4, CasualProfile.paints[paintIds[state.brush]].color, true);
     }
 
     function markGestureUsed() {
         if (state.gestureUsed) return;
         state.gestureUsed = true;
-        elements.gestureHint.classList.add('hidden');
+        el.hint.classList.add('hidden');
     }
 
-    function addParticles(point, color, count, speed, dust = false) {
-        if (typeof cpSettings !== 'undefined' && !cpSettings.effects) return;
-        for (let index = 0; index < count; index += 1) {
+    // ---------- Particles ----------
+
+    function woodChipColor() {
+        const look = WOOD_LOOK[selectedLog()] || WOOD_LOOK.beech;
+        return `rgb(${look.light.map((c) => Math.min(255, c + 12)).join(',')})`;
+    }
+
+    function emitChips(x, y, amount) {
+        if (!effectsOn()) return;
+        const color = woodChipColor();
+        const side = state.tip.side;
+        const count = Math.min(4, Math.round(amount * .5 + Math.random()));
+        for (let i = 0; i < count; i += 1) {
             state.particles.push({
-                x: point.x + (Math.random() - .5) * 12,
-                y: point.y + (Math.random() - .5) * 12,
-                vx: (Math.random() - .5) * speed,
-                vy: dust ? (Math.random() - .6) * speed : Math.random() * speed + 1,
-                life: 1,
-                size: dust ? 2 + Math.random() * 3 : 3 + Math.random() * 6,
-                color,
-                spin: Math.random() * Math.PI
+                kind: 'chip', x: x + (Math.random() - .5) * 10, y,
+                vx: (Math.random() - .5) * 160 - 60, vy: side * (40 + Math.random() * 120) - 140,
+                rot: Math.random() * TAU, vr: (Math.random() - .5) * 20, size: 2 + Math.random() * 4, life: 1.6, color
             });
         }
-        if (state.particles.length > 180) state.particles.splice(0, state.particles.length - 180);
+        state.curlMeter += amount * (state.tool === 'detail' ? .3 : 1);
+        if (state.curlMeter > 26) {
+            state.curlMeter = 0;
+            state.particles.push({
+                kind: 'curl', x, y, vx: -80 - Math.random() * 120, vy: side * 30 - 170 - Math.random() * 80,
+                rot: Math.random() * TAU, vr: (Math.random() - .5) * 9, size: 5 + Math.random() * 6, grow: 0, life: 2.2, color
+            });
+        }
+        if (state.particles.length > 260) state.particles.splice(0, state.particles.length - 260);
     }
 
-    function renderBackground(time) {
-        const isPaper = document.body.classList.contains('theme-paper');
-        const background = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-        background.addColorStop(0, isPaper ? '#dfe4df' : '#171b16');
-        background.addColorStop(1, isPaper ? '#bcc4be' : '#0b0e0b');
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-        ctx.save();
-        ctx.globalAlpha = isPaper ? .15 : .18;
-        ctx.strokeStyle = isPaper ? '#526057' : '#778075';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < WIDTH; x += 42) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, HEIGHT);
-            ctx.stroke();
-        }
-        for (let y = 0; y < HEIGHT; y += 42) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(WIDTH, y);
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        const glow = ctx.createRadialGradient(520, CENTER_Y, 40, 520, CENTER_Y, 390);
-        glow.addColorStop(0, 'rgba(185,255,102,.105)');
-        glow.addColorStop(1, 'rgba(185,255,102,0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-        drawLatheHardware(time);
-    }
-
-    function drawLatheHardware(time) {
-        ctx.fillStyle = '#2d332d';
-        ctx.fillRect(60, CENTER_Y + 158, WIDTH - 120, 38);
-        ctx.fillStyle = '#171a17';
-        ctx.fillRect(98, CENTER_Y + 196, 48, 58);
-        ctx.fillRect(WIDTH - 146, CENTER_Y + 196, 48, 58);
-
-        const metal = ctx.createLinearGradient(0, 0, 150, 0);
-        metal.addColorStop(0, '#303630');
-        metal.addColorStop(.5, '#c9d0c7');
-        metal.addColorStop(1, '#3b423b');
-        ctx.fillStyle = metal;
-        ctx.beginPath();
-        ctx.moveTo(62, CENTER_Y - 66);
-        ctx.lineTo(PIECE_START - 2, CENTER_Y - 32);
-        ctx.lineTo(PIECE_START - 2, CENTER_Y + 32);
-        ctx.lineTo(62, CENTER_Y + 66);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillRect(34, CENTER_Y - 84, 42, 168);
-
-        ctx.beginPath();
-        ctx.moveTo(WIDTH - 58, CENTER_Y);
-        ctx.lineTo(PIECE_END + 2, CENTER_Y - 28);
-        ctx.lineTo(PIECE_END + 2, CENTER_Y + 28);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillRect(WIDTH - 57, CENTER_Y - 61, 30, 122);
-
-        ctx.save();
-        ctx.translate(55, CENTER_Y);
-        ctx.rotate(time * .004);
-        ctx.strokeStyle = '#e5ebe3';
-        ctx.lineWidth = 4;
-        for (let i = 0; i < 3; i += 1) {
-            ctx.rotate((Math.PI * 2) / 3);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(32, 0);
-            ctx.stroke();
-        }
-        ctx.restore();
-    }
-
-    function renderWood(time) {
-        ctx.save();
-        profilePath(ctx, state.current);
-        const woodGradient = ctx.createLinearGradient(0, CENTER_Y - MAX_RADIUS, 0, CENTER_Y + MAX_RADIUS);
-        woodGradient.addColorStop(0, '#f2c77d');
-        woodGradient.addColorStop(.28, '#cf8c47');
-        woodGradient.addColorStop(.52, '#a8602e');
-        woodGradient.addColorStop(.76, '#d89449');
-        woodGradient.addColorStop(1, '#6f3d20');
-        ctx.fillStyle = woodGradient;
-        ctx.fill();
-        ctx.clip();
-
-        ctx.globalAlpha = .34;
-        ctx.strokeStyle = '#f6d89f';
-        ctx.lineWidth = 2;
-        const spinOffset = Math.sin(time * .006) * 4;
-        for (let index = 4; index < SAMPLE_COUNT; index += 8) {
-            const x = sampleX(index) + spinOffset;
-            ctx.beginPath();
-            ctx.moveTo(x, CENTER_Y - state.current[index]);
-            ctx.bezierCurveTo(x + 5, CENTER_Y - state.current[index] * .45, x - 5, CENTER_Y + state.current[index] * .45, x, CENTER_Y + state.current[index]);
-            ctx.stroke();
-        }
-
-        ctx.globalAlpha = .16;
-        ctx.strokeStyle = '#512d18';
-        for (let yOffset = -90; yOffset <= 90; yOffset += 18) {
-            ctx.beginPath();
-            ctx.moveTo(PIECE_START, CENTER_Y + yOffset + Math.sin(time * .008 + yOffset) * 2);
-            ctx.lineTo(PIECE_END, CENTER_Y + yOffset);
-            ctx.stroke();
-        }
-
-        for (let index = 0; index < SAMPLE_COUNT - 1; index += 1) {
-            const coverage = state.paintCoverage[index];
-            if (coverage <= .01) continue;
-            const x1 = sampleX(index);
-            const x2 = sampleX(index + 1) + 1;
-            ctx.globalAlpha = .18 + coverage * .76;
-            ctx.fillStyle = state.paintColors[index];
-            ctx.beginPath();
-            ctx.moveTo(x1, CENTER_Y - state.current[index]);
-            ctx.lineTo(x2, CENTER_Y - state.current[index + 1]);
-            ctx.lineTo(x2, CENTER_Y + state.current[index + 1]);
-            ctx.lineTo(x1, CENTER_Y + state.current[index]);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        const highlight = ctx.createLinearGradient(0, CENTER_Y - MAX_RADIUS, 0, CENTER_Y);
-        highlight.addColorStop(0, 'rgba(255,255,255,.24)');
-        highlight.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.globalAlpha = .7;
-        ctx.fillStyle = highlight;
-        ctx.fillRect(PIECE_START, CENTER_Y - MAX_RADIUS, PIECE_END - PIECE_START, MAX_RADIUS);
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalAlpha = .9;
-        ctx.strokeStyle = '#5a311b';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(PIECE_START + 3, CENTER_Y - state.current[1] + 4);
-        ctx.lineTo(PIECE_START + 3, CENTER_Y + state.current[1] - 4);
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.save();
-        profilePath(ctx, state.current);
-        ctx.strokeStyle = 'rgba(255,255,255,.3)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    function renderTargetOutline() {
-        if (state.stage === 'paint') return;
-        ctx.save();
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        state.target.forEach((radius, index) => {
-            const x = sampleX(index);
-            const y = CENTER_Y - radius;
-            if (index === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+    function emitDust(x, y, color, mist) {
+        if (!effectsOn()) return;
+        state.particles.push({
+            kind: 'dust', x: x + (Math.random() - .5) * 26, y, vx: (Math.random() - .5) * 60, vy: mist ? -20 - Math.random() * 40 : 10 + Math.random() * 30,
+            size: 1.5 + Math.random() * 2.5, life: .9, color
         });
-        for (let index = SAMPLE_COUNT - 1; index >= 0; index -= 1) ctx.lineTo(sampleX(index), CENTER_Y + state.target[index]);
-
-        // A dark halo separates the requested form from both pale wood and the tool.
-        ctx.strokeStyle = 'rgba(7, 9, 6, .94)';
-        ctx.lineWidth = 7;
-        ctx.setLineDash([]);
-        ctx.stroke();
-
-        ctx.strokeStyle = '#c8ff71';
-        ctx.lineWidth = 3.2;
-        ctx.shadowBlur = 11;
-        ctx.shadowColor = 'rgba(185, 255, 102, .9)';
-        ctx.stroke();
-        ctx.restore();
     }
 
-    function renderToolCursor() {
-        if (!state.pointer.inside) return;
-        const { x, y } = state.pointer;
-        ctx.save();
-        if (state.stage === 'carve') {
-            ctx.translate(x, y);
-            // Keep the handle outside the workpiece so the guide remains visible.
-            ctx.rotate(y < CENTER_Y ? Math.PI - .22 : .22);
-            ctx.fillStyle = '#dce3dc';
-            ctx.strokeStyle = '#11140f';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-7, 0);
-            ctx.lineTo(7, 0);
-            ctx.lineTo(11, 76);
-            ctx.lineTo(-11, 76);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = '#ff795f';
-            ctx.fillRect(-16, 70, 32, 72);
-            ctx.strokeRect(-16, 70, 32, 72);
-        } else {
-            const radius = state.stage === 'sand' ? Number(elements.sanderSize.value) : 28;
-            ctx.strokeStyle = state.stage === 'paint' ? selectedPaint().color : '#f0d29a';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        ctx.restore();
-    }
-
-    function renderParticles(delta) {
-        for (let index = state.particles.length - 1; index >= 0; index -= 1) {
-            const particle = state.particles[index];
-            particle.x += particle.vx * delta * .06;
-            particle.y += particle.vy * delta * .06;
-            particle.vy += .05 * delta * .06;
-            particle.life -= .018 * delta * .06;
-            particle.spin += .08;
-            if (particle.life <= 0) {
-                state.particles.splice(index, 1);
+    function stepParticles(dt) {
+        const list = state.particles;
+        for (let i = list.length - 1; i >= 0; i -= 1) {
+            const p = list[i];
+            p.life -= dt;
+            const gravity = p.kind === 'dust' ? 40 : 620;
+            if (L.rot) p.vx -= gravity * dt; else p.vy += gravity * dt;
+            p.vx *= 1 - dt * (p.kind === 'curl' ? 1.2 : .4);
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            if (p.vr) p.rot += p.vr * dt;
+            if (p.kind === 'curl') p.grow = Math.min(1, p.grow + dt * 3);
+            if (!L.rot && p.kind !== 'dust' && p.y > L.bedY - 1 && p.vy > 0) {
+                landParticle(p);
+                list.splice(i, 1);
                 continue;
             }
+            if (p.life <= 0 || p.y > L.LH + 20 || p.x < -20) list.splice(i, 1);
+        }
+    }
+
+    function landParticle(p) {
+        if (floorMarks > 1400) return;
+        floorMarks += 1;
+        const g = floorCtx;
+        baseTransform(g);
+        g.save();
+        g.translate(p.x, L.bedY - 1 + Math.random() * 2);
+        g.rotate(p.rot);
+        g.fillStyle = p.color;
+        g.globalAlpha = .9;
+        if (p.kind === 'curl') {
+            drawCurl(g, p.size * .8, 1);
+        } else {
+            g.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        }
+        g.restore();
+    }
+
+    function drawCurl(g, size, grow) {
+        g.strokeStyle = g.fillStyle;
+        g.lineWidth = Math.max(1.4, size * .28);
+        g.lineCap = 'round';
+        g.beginPath();
+        const turns = 2.6 * grow + .4;
+        const steps = Math.ceil(turns * 10);
+        for (let k = 0; k <= steps; k += 1) {
+            const a = k / 10 * TAU * .5;
+            const rr = size * (.25 + k / steps * .75);
+            const px = Math.cos(a) * rr, py = Math.sin(a) * rr * .7;
+            if (k === 0) g.moveTo(px, py); else g.lineTo(px, py);
+        }
+        g.stroke();
+    }
+
+    function drawParticles() {
+        for (const p of state.particles) {
             ctx.save();
-            ctx.translate(particle.x, particle.y);
-            ctx.rotate(particle.spin);
-            ctx.globalAlpha = particle.life;
-            ctx.fillStyle = particle.color;
-            ctx.fillRect(-particle.size / 2, -particle.size / 4, particle.size, particle.size / 2);
+            ctx.globalAlpha = Math.min(1, p.life * 1.5);
+            ctx.fillStyle = p.color;
+            ctx.translate(p.x, p.y);
+            if (p.kind === 'curl') {
+                ctx.rotate(p.rot);
+                drawCurl(ctx, p.size, p.grow);
+            } else if (p.kind === 'chip') {
+                ctx.rotate(p.rot);
+                ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.size, 0, TAU);
+                ctx.fill();
+            }
             ctx.restore();
         }
     }
 
-    function render(time) {
-        const delta = Math.min(34, time - state.lastTime);
-        state.lastTime = time;
-        renderBackground(time);
-        renderWood(time);
-        renderParticles(delta);
-        renderToolCursor();
-        // The requested profile is the player's primary guide, so it stays on top.
-        renderTargetOutline();
-        requestAnimationFrame(render);
+    // ---------- Scene drawing ----------
+
+    function drawSpinners() {
+        const { cy, ps, pe } = L;
+        // Spur drive
+        ctx.save();
+        ctx.translate(ps - 4, cy);
+        const hub = ctx.createLinearGradient(0, -14, 0, 14);
+        hub.addColorStop(0, '#e2e7ea'); hub.addColorStop(1, '#4e585e');
+        ctx.fillStyle = hub;
+        ctx.fillRect(-L.hs + 12, -12, L.hs - 8, 24);
+        for (let k = 0; k < 4; k += 1) {
+            const a = state.spin + k * Math.PI / 2;
+            const yy = Math.sin(a) * 10;
+            ctx.fillStyle = Math.cos(a) > 0 ? '#c3cbd0' : '#6d777d';
+            ctx.fillRect(-2, yy - 2, 8, 4);
+        }
+        ctx.restore();
+        // Live centre cone
+        ctx.save();
+        ctx.translate(pe + 4, cy);
+        ctx.fillStyle = '#b9c2c7';
+        ctx.beginPath();
+        ctx.moveTo(-6, 0); ctx.lineTo(6, -8); ctx.lineTo(6, 8); ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
 
-    function renderPaintPalette() {
-        const profile = CasualProfile.current();
-        const allOpen = Boolean(window.CasualCheats?.features());
-        const owned = allOpen ? Object.keys(CasualProfile.paints) : profile?.ownedPaints || ['natural', 'honey'];
-        const active = allOpen && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
-        elements.paintPalette.replaceChildren();
-        owned.forEach((paintId) => {
-            const paint = CasualProfile.paints[paintId];
-            if (!paint) return;
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = `paint-swatch${paintId === active ? ' active' : ''}`;
-            button.style.setProperty('--swatch', paint.color);
-            button.title = paint.name;
-            button.setAttribute('aria-label', paint.name);
-            button.addEventListener('click', () => choosePaint(paintId));
-            elements.paintPalette.appendChild(button);
-        });
+    function drawShadow() {
+        let sum = 0;
+        for (let i = 0; i < N; i += 4) sum += state.current[i];
+        const avg = sum / (N / 4);
+        ctx.save();
+        ctx.translate(L.ps + L.len / 2, L.bedY + 2);
+        ctx.scale(L.len * .55, 6 + avg * 8);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+        g.addColorStop(0, 'rgba(0,0,0,.42)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0, 0, 1, 0, TAU);
+        ctx.fill();
+        ctx.restore();
     }
 
-    function choosePaint(paintId) {
-        const profile = CasualProfile.current();
+    function drawGuide() {
+        if (state.stage === 'paint') { drawBandGuide(); return; }
+        const target = state.spec.profile;
+        const pts = (sign) => {
+            ctx.beginPath();
+            for (let i = 0; i < N; i += 1) {
+                const x = xAtSample(i), y = L.cy + sign * target[i] * L.R;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+        };
+        ctx.save();
+        ctx.lineJoin = 'round';
+        for (const sign of [-1, 1]) {
+            pts(sign);
+            ctx.strokeStyle = 'rgba(10,8,6,.55)';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            pts(sign);
+            ctx.strokeStyle = '#fffbe8';
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([7, 6]);
+            ctx.lineDashOffset = -state.spin * 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        // Overcut warnings
+        ctx.strokeStyle = '#ff4d3d';
+        ctx.lineWidth = 3;
+        for (const sign of [-1, 1]) {
+            let open = false;
+            ctx.beginPath();
+            for (let i = 0; i < N; i += 1) {
+                const bad = state.current[i] < target[i] - .025;
+                const x = xAtSample(i), y = L.cy + sign * state.current[i] * L.R;
+                if (bad && !open) { ctx.moveTo(x, y); open = true; } else if (bad) ctx.lineTo(x, y); else open = false;
+            }
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function drawBandGuide() {
+        if (state.spec.free) return;
+        // Thin colour ticks above the piece show where each requested band goes.
+        const bands = state.spec.bands;
+        const y = L.cy - L.R - 12;
+        ctx.save();
+        let start = 0;
+        for (let i = 1; i <= N; i += 1) {
+            if (i === N || bands[i] !== bands[start]) {
+                ctx.fillStyle = CasualProfile.paints[paintIds[bands[start]]].color;
+                const x0 = xAtSample(start), x1 = xAtSample(i - 1);
+                roundRect(ctx, x0 + 1, y - 4, Math.max(2, x1 - x0 - 2), 8, 4);
+                ctx.fill();
+                if (i < N) {
+                    ctx.strokeStyle = 'rgba(255,255,255,.55)';
+                    ctx.setLineDash([3, 4]);
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    const bx = (x1 + xAtSample(i)) / 2;
+                    ctx.moveTo(bx, y + 6);
+                    ctx.lineTo(bx, L.cy + L.R + 6);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                start = i;
+            }
+        }
+        ctx.restore();
+    }
+
+    function drawChisel() {
+        const look = CHISEL_LOOK[selectedChisel()] || CHISEL_LOOK.steel;
+        const { x, y, side } = state.tip;
+        const jitter = state.cutLevel > .1 ? (Math.random() - .5) * 1.2 : 0;
+        ctx.save();
+        ctx.translate(x + jitter, y);
+        if (side < 0) ctx.scale(1, -1);
+        ctx.rotate(-.18);
+        const scale = clamp(L.R / 120, .62, 1.15);
+        ctx.scale(scale, scale);
+        const bladeLen = 92, w = state.tool === 'detail' ? 9 : state.tool === 'round' ? 12 : 14;
+        const blade = ctx.createLinearGradient(-w, 0, w, 0);
+        blade.addColorStop(0, look.blade[1]); blade.addColorStop(.45, look.blade[0]); blade.addColorStop(1, look.blade[1]);
+        ctx.fillStyle = blade;
+        ctx.strokeStyle = 'rgba(0,0,0,.5)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        if (state.tool === 'detail') {
+            ctx.moveTo(0, 0); ctx.lineTo(w, 18);
+        } else if (state.tool === 'round') {
+            ctx.moveTo(-w, 10); ctx.quadraticCurveTo(0, -8, w, 10);
+        } else {
+            ctx.moveTo(-w, 2); ctx.lineTo(w, 0); ctx.lineTo(w, 6);
+        }
+        ctx.lineTo(w * .7, bladeLen); ctx.lineTo(-w * .7, bladeLen);
+        if (state.tool === 'detail') ctx.lineTo(-w, 18);
+        else if (state.tool === 'rough') ctx.lineTo(-w, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        if (look.wave) {
+            ctx.strokeStyle = 'rgba(40,44,50,.45)';
+            ctx.lineWidth = 1;
+            for (let k = 14; k < bladeLen; k += 7) {
+                ctx.beginPath();
+                ctx.moveTo(-w * .7, k);
+                ctx.quadraticCurveTo(0, k - 5, w * .7, k + 2);
+                ctx.stroke();
+            }
+        }
+        if (look.sparkle) {
+            ctx.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.sin(performance.now() / 120)})`;
+            ctx.fillRect(-2, 20, 4, 4);
+            ctx.fillRect(3, 46, 3, 3);
+        }
+        ctx.fillStyle = look.ferrule;
+        ctx.fillRect(-w * .85, bladeLen - 2, w * 1.7, 12);
+        const handle = ctx.createLinearGradient(-12, 0, 12, 0);
+        handle.addColorStop(0, look.handle[1]); handle.addColorStop(.4, look.handle[0]); handle.addColorStop(1, look.handle[1]);
+        ctx.fillStyle = handle;
+        roundRect(ctx, -11, bladeLen + 10, 22, 120, 10);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawSander() {
+        const x = state.pointer.inside || state.pointer.down ? clamp(state.pointer.x, L.ps, L.pe) : L.ps + L.len / 2;
+        const r = radiusAtX(x);
+        const y = L.cy + r * L.R + (state.pointer.down ? 1 : 10);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = '#d8b878';
+        roundRect(ctx, -26, 0, 52, 14, 4);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(80,50,20,.35)';
+        for (let k = 0; k < 18; k += 1) ctx.fillRect(-24 + (k * 37 % 48), 2 + (k * 13 % 10), 1.5, 1.5);
+        ctx.fillStyle = '#3c6fb4';
+        roundRect(ctx, -22, 14, 44, 20, 6);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawSprayer() {
+        const x = state.pointer.inside || state.pointer.down ? clamp(state.pointer.x, L.ps, L.pe) : L.ps + L.len / 2;
+        const r = radiusAtX(x);
+        const y = L.cy + r * L.R + 26;
+        const color = state.brush >= 0 ? CasualProfile.paints[paintIds[state.brush]].color : '#ccc';
+        ctx.save();
+        if (state.pointer.down) {
+            const cone = ctx.createLinearGradient(0, y, 0, y - 26);
+            cone.addColorStop(0, `${color}cc`);
+            cone.addColorStop(1, `${color}22`);
+            ctx.fillStyle = cone;
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y); ctx.lineTo(x - 15, y - 26); ctx.lineTo(x + 15, y - 26); ctx.lineTo(x + 3, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.translate(x, y);
+        ctx.fillStyle = '#d7dde0';
+        ctx.fillRect(-4, 0, 8, 10);
+        ctx.fillStyle = color;
+        roundRect(ctx, -13, 10, 26, 54, 8);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.35)';
+        ctx.fillRect(-9, 16, 4, 40);
+        ctx.restore();
+    }
+
+    // ---------- Audio ----------
+
+    let audio = null;
+    function ensureAudio() {
+        if (audio || typeof cpSettings === 'undefined' || !cpSettings.sound) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
         try {
-            if (window.CasualCheats?.features()) state.cheatPaint = paintId;
-            else if (profile) CasualProfile.selectPaint(paintId);
-            else state.guestPaint = paintId;
-            renderPaintPalette();
-            renderProfile();
-            showToast(`${CasualProfile.paints[paintId].name} seçildi.`);
-            playSound('click');
-        } catch (error) {
-            showToast(error.message);
+            const ac = new AC();
+            const master = ac.createGain();
+            master.gain.value = .5;
+            master.connect(ac.destination);
+            const hum = ac.createOscillator();
+            hum.type = 'sawtooth';
+            hum.frequency.value = 52;
+            const humFilter = ac.createBiquadFilter();
+            humFilter.type = 'lowpass';
+            humFilter.frequency.value = 240;
+            const humGain = ac.createGain();
+            humGain.gain.value = .025;
+            hum.connect(humFilter).connect(humGain).connect(master);
+            hum.start();
+            const buffer = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+            const ch = buffer.getChannelData(0);
+            for (let i = 0; i < ch.length; i += 1) ch[i] = Math.random() * 2 - 1;
+            const noise = ac.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = true;
+            const band = ac.createBiquadFilter();
+            band.type = 'bandpass';
+            band.frequency.value = 1800;
+            band.Q.value = .8;
+            const cutGain = ac.createGain();
+            cutGain.gain.value = 0;
+            noise.connect(band).connect(cutGain).connect(master);
+            noise.start();
+            audio = { ac, band, cutGain, humGain };
+        } catch {
+            audio = null;
         }
     }
 
-    function renderPaintStore(profile) {
-        const allOpen = Boolean(window.CasualCheats?.features());
-        const owned = allOpen ? Object.keys(CasualProfile.paints) : profile?.ownedPaints || ['natural', 'honey'];
-        const active = allOpen && state.cheatPaint || profile?.selectedPaint || state.guestPaint;
-        elements.paintCount.textContent = `${owned.length}/${Object.keys(CasualProfile.paints).length}`;
-        elements.paintStoreList.replaceChildren();
+    function updateAudio() {
+        if (!audio) return;
+        const muted = typeof cpSettings !== 'undefined' && !cpSettings.sound;
+        const t = audio.ac.currentTime;
+        const freq = state.stage === 'carve' ? 1700 : state.stage === 'sand' ? 3600 : 6500;
+        audio.band.frequency.setTargetAtTime(freq, t, .05);
+        const level = muted || document.hidden ? 0 : state.cutLevel * (state.stage === 'carve' ? .32 : .12);
+        audio.cutGain.gain.setTargetAtTime(level, t, .03);
+        audio.humGain.gain.setTargetAtTime(muted || document.hidden ? 0 : .025 * (state.spinSpeed / SPIN_SPEED), t, .1);
+    }
 
-        Object.values(CasualProfile.paints).forEach((paint) => {
-            const isOwned = owned.includes(paint.id);
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = `store-paint${isOwned ? ' owned' : ''}${paint.id === active ? ' active' : ''}`;
-            button.style.setProperty('--swatch', paint.color);
+    // ---------- Frame ----------
 
-            const swatch = document.createElement('i');
-            const copy = document.createElement('span');
-            const name = document.createElement('strong');
-            name.textContent = paint.name;
-            const status = document.createElement('small');
-            status.textContent = isOwned ? (paint.id === active ? 'Seçili' : 'Koleksiyonda') : 'Kilidi aç';
-            copy.append(name, status);
-            const price = document.createElement('b');
-            price.textContent = isOwned ? '✓' : `${paint.price} CM`;
-            button.append(swatch, copy, price);
+    function frame(now) {
+        const dt = Math.min(.05, (now - state.last) / 1000);
+        state.last = now;
+        layout();
+        const spinTarget = state.completed ? 0 : SPIN_SPEED;
+        state.spinSpeed += (spinTarget - state.spinSpeed) * Math.min(1, dt * 2);
+        state.spin = (state.spin + state.spinSpeed * dt) % TAU;
+        state.cutLevel *= Math.max(0, 1 - dt * 10);
+        updateTip(dt);
+        if (state.pointer.down && !state.completed) {
+            if (state.stage === 'carve') carve(dt);
+            else if (state.stage === 'sand') sandStep(dt);
+            else paintStep(dt);
+        }
+        stepParticles(dt);
+        updateAudio();
 
-            button.addEventListener('click', () => {
-                if (allOpen) { choosePaint(paint.id); return; }
-                if (!CasualProfile.current()) {
-                    if (isOwned) choosePaint(paint.id);
-                    else openLogin();
-                    return;
-                }
-                const alreadyOwned = CasualProfile.current().ownedPaints.includes(paint.id);
-                try {
-                    if (alreadyOwned) CasualProfile.selectPaint(paint.id);
-                    else CasualProfile.buyPaint(paint.id);
-                    renderProfile();
-                    showToast(alreadyOwned ? `${paint.name} seçildi.` : `${paint.name} satın alındı.`);
-                    playSound('pop');
-                } catch (error) {
-                    showToast(error.message);
-                }
-            });
-            elements.paintStoreList.appendChild(button);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(bgCanvas, 0, 0);
+        ctx.drawImage(floorCanvas, 0, 0);
+        baseTransform(ctx);
+        drawShadow();
+        drawSpinners();
+        renderPiece(ctx, {
+            profile: state.current, rough: state.rough, sand: state.sand, paintIdx: state.paintIdx, paintCov: state.paintCov,
+            log: selectedLog(), spin: state.spin, x: L.ps, len: L.len, cy: L.cy, R: L.R, q: pieceQuality(L.len, L.R), rot: L.rot
+        });
+        drawGuide();
+        drawParticles();
+        if (state.stage === 'carve') drawChisel();
+        else if (state.stage === 'sand') drawSander();
+        else drawSprayer();
+        requestAnimationFrame(frame);
+    }
+
+    // ---------- Static previews ----------
+
+    function drawTargetCard() {
+        const c = targetCanvas.getContext('2d');
+        const w = targetCanvas.width, h = targetCanvas.height;
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.clearRect(0, 0, w, h);
+        const spec = state.spec;
+        const R = h * .4;
+        renderPiece(c, {
+            profile: spec.profile, paintIdx: spec.free ? null : spec.bands, sand: null, log: selectedLog(),
+            spin: .6, x: 12, len: w - 24, cy: h / 2, R, q: 1
+        });
+        if (spec.free) {
+            c.font = '800 13px Outfit, sans-serif';
+            c.fillStyle = 'rgba(255,255,255,.9)';
+            c.textAlign = 'right';
+            c.fillText('★ SERBEST', w - 8, 16);
+        }
+    }
+
+    function drawCompare() {
+        const c = compareCanvas.getContext('2d');
+        const w = compareCanvas.width, h = compareCanvas.height;
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.clearRect(0, 0, w, h);
+        const spec = state.spec;
+        const R = 46;
+        const rows = [
+            { label: 'SENİN PARÇAN', cy: 74, opts: { profile: state.current, rough: state.rough, sand: state.sand, paintIdx: state.paintIdx, paintCov: state.paintCov } },
+            { label: 'İSTENEN', cy: 192, opts: { profile: spec.profile, paintIdx: spec.free ? null : spec.bands } }
+        ];
+        c.font = '800 12px Outfit, sans-serif';
+        for (const row of rows) {
+            c.fillStyle = 'rgba(255,255,255,.55)';
+            c.fillText(row.label, 24, row.cy - R - 8);
+            renderPiece(c, { ...row.opts, log: selectedLog(), spin: .9, x: 24, len: w - 48, cy: row.cy, R, q: 1 });
+        }
+        c.save();
+        c.strokeStyle = 'rgba(255,251,232,.8)';
+        c.setLineDash([5, 5]);
+        c.lineWidth = 1.5;
+        for (const sign of [-1, 1]) {
+            c.beginPath();
+            for (let i = 0; i < N; i += 1) {
+                const x = 24 + i / (N - 1) * (w - 48), y = 74 + sign * spec.profile[i] * R;
+                if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+            }
+            c.stroke();
+        }
+        c.restore();
+    }
+
+    function drawShelf() {
+        const c = shelfCanvas.getContext('2d');
+        const w = shelfCanvas.width, h = shelfCanvas.height;
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.clearRect(0, 0, w, h);
+        const p = profile();
+        const items = p?.woodTurning.shelf || [];
+        el.shelfCount.textContent = `${items.length}/${CasualProfile.TURN_SHELF_SIZE}`;
+        const rows = [h * .47, h * .95];
+        for (const y of rows) {
+            const plank = c.createLinearGradient(0, y - 10, 0, y + 6);
+            plank.addColorStop(0, '#a8703f'); plank.addColorStop(1, '#5e3a1d');
+            c.fillStyle = plank;
+            c.fillRect(6, y - 12, w - 12, 12);
+            c.fillStyle = 'rgba(0,0,0,.25)';
+            c.fillRect(6, y, w - 12, 5);
+        }
+        if (!items.length) {
+            c.fillStyle = isPaper() ? 'rgba(58,39,23,.6)' : 'rgba(255,255,255,.55)';
+            c.font = '700 20px Outfit, sans-serif';
+            c.textAlign = 'center';
+            c.fillText(p ? 'İlk yıldızlı parçan buraya gelir' : 'Raf için profil aç', w / 2, rows[0] - 50);
+            c.textAlign = 'left';
+            return;
+        }
+        const perRow = 6;
+        const slot = (w - 24) / perRow;
+        items.forEach(([level, score], index) => {
+            const spec = levelSpec(level);
+            const row = Math.floor(index / perRow);
+            const x = 12 + (index % perRow) * slot + slot / 2;
+            const base = rows[row] - 12;
+            const len = Math.min(h * .4, 116);
+            const R = Math.min(slot * .42, len * .2);
+            c.save();
+            c.translate(x, base);
+            c.rotate(-Math.PI / 2);
+            renderPiece(c, { profile: spec.profile, paintIdx: spec.free ? null : spec.bands, log: 'beech', spin: .7 + index, x: 0, len, cy: 0, R, q: 1 });
+            c.restore();
+            c.fillStyle = '#ffd36a';
+            c.font = '800 13px Outfit, sans-serif';
+            c.textAlign = 'center';
+            c.fillText('★'.repeat(CasualProfile.turnStars(score)), x, base - len - 6);
+            c.textAlign = 'left';
         });
     }
 
-    function renderProfile() {
-        const profile = CasualProfile.current();
-        const office = CasualProfile.offices[(profile?.officeLevel || 1) - 1];
-        elements.topBalance.textContent = `${CasualProfile.formatMoney(profile?.balance || 0)} CM`;
-        elements.compactAvatar.textContent = profile ? initials(profile.displayName) : '?';
-        elements.compactName.textContent = profile ? `@${profile.displayName}` : 'Profil gerekli';
-        elements.compactStatus.textContent = profile ? `${office.name} · sadece bu tarayıcı` : 'Kazanç için giriş yap';
-        elements.profileAction.textContent = profile ? 'Çık' : 'Aç';
-        elements.officeName.textContent = office.name;
-        elements.officeMultiplier.textContent = formatMultiplier(office.multiplier);
-        elements.upgradeCost.textContent = office.upgradeCost === null ? 'MAKS.' : `${CasualProfile.formatMoney(office.upgradeCost)} CM`;
-        elements.upgradeOffice.disabled = office.upgradeCost === null;
-        elements.jobsCount.textContent = profile?.woodTurning.jobs || 0;
-        elements.bestScore.textContent = `${profile?.woodTurning.bestScore || 0}%`;
-        elements.totalEarned.textContent = `${CasualProfile.formatMoney(profile?.woodTurning.totalEarned || 0)} CM`;
-        renderPaintStore(profile);
-        renderPaintPalette();
+    // ---------- Palette and shop ----------
+
+    function renderPalette() {
+        el.palette.replaceChildren();
+        const spec = state.spec;
+        if (!spec) return;
+        const ids = new Set(spec.free ? [] : spec.colors);
+        ownedPaints().forEach((id) => ids.add(id));
+        ids.forEach((id) => {
+            const paint = CasualProfile.paints[id];
+            const index = paintIds.indexOf(id);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `swatch${index === state.brush ? ' active' : ''}${!spec.free && spec.colors.includes(id) ? ' ordered' : ''}`;
+            button.style.setProperty('--swatch', paint.color);
+            button.title = paint.name;
+            button.setAttribute('aria-label', `${paint.name}${!spec.free && spec.colors.includes(id) ? ' (siparişte)' : ''}`);
+            button.setAttribute('aria-pressed', String(index === state.brush));
+            button.addEventListener('click', () => {
+                state.brush = index;
+                renderPalette();
+                playSound('click');
+            });
+            el.palette.appendChild(button);
+        });
     }
 
-    function openLogin() {
-        elements.loginError.textContent = '';
-        openModal(elements.loginModal);
+    const SHOP = {
+        chisels: { catalog: () => CasualProfile.chisels, owned: (p) => p?.ownedChisels || ['steel'], selected: selectedChisel, buy: 'buyChisel', select: 'selectChisel', cheat: 'cheatChisel' },
+        logs: { catalog: () => CasualProfile.logs, owned: (p) => p?.ownedLogs || ['beech'], selected: selectedLog, buy: 'buyLog', select: 'selectLog', cheat: 'cheatLog' },
+        paints: { catalog: () => CasualProfile.paints, owned: (p) => p?.ownedPaints || ['natural', 'honey'], selected: () => (cheatsOpen() && state.cheatPaint) || profile()?.selectedPaint || 'honey', buy: 'buyPaint', select: 'selectPaint', cheat: 'cheatPaint' }
+    };
+
+    function shopIcon(kind, item) {
+        const icon = document.createElement('i');
+        icon.className = `shop-icon shop-icon--${kind}`;
+        if (kind === 'paints') icon.style.setProperty('--swatch', item.color);
+        if (kind === 'logs') {
+            const look = WOOD_LOOK[item.id];
+            icon.style.setProperty('--light', `rgb(${look.light.join(',')})`);
+            icon.style.setProperty('--dark', `rgb(${look.dark.join(',')})`);
+        }
+        if (kind === 'chisels') {
+            const look = CHISEL_LOOK[item.id];
+            icon.style.setProperty('--blade', look.blade[0]);
+            icon.style.setProperty('--handle', look.handle[0]);
+        }
+        return icon;
     }
+
+    function renderShop() {
+        const list = el.shopList;
+        list.replaceChildren();
+        document.querySelectorAll('[data-shop]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.shop === state.shop)));
+        const p = profile();
+        if (state.shop === 'office') {
+            const office = CasualProfile.offices[(p?.officeLevel || 1) - 1];
+            const card = document.createElement('div');
+            card.className = 'office-card';
+            const name = document.createElement('strong');
+            name.textContent = office.name;
+            const mult = document.createElement('span');
+            mult.textContent = `Kazanç çarpanı ${formatMultiplier(office.multiplier)}`;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'next-button';
+            button.id = 'upgrade-office';
+            button.disabled = office.upgradeCost === null;
+            button.textContent = office.upgradeCost === null ? 'En üst seviye' : `Geliştir · ${CasualProfile.formatMoney(office.upgradeCost)} CM`;
+            button.addEventListener('click', () => {
+                if (!profile()) { openLogin(); return; }
+                try {
+                    CasualProfile.upgradeOffice();
+                    showToast('Atölye geliştirildi; kazanç çarpanın yükseldi.');
+                    playSound('pop');
+                } catch (error) { showToast(error.message); }
+            });
+            card.append(name, mult, button);
+            list.appendChild(card);
+            return;
+        }
+        const def = SHOP[state.shop];
+        const allOpen = cheatsOpen();
+        const owned = allOpen ? Object.keys(def.catalog()) : def.owned(p);
+        const active = def.selected();
+        Object.values(def.catalog()).forEach((item) => {
+            const isOwned = owned.includes(item.id);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `shop-item${isOwned ? ' owned' : ''}${item.id === active ? ' active' : ''}`;
+            const copy = document.createElement('span');
+            const name = document.createElement('strong');
+            name.textContent = item.name;
+            const desc = document.createElement('small');
+            desc.textContent = item.description || (isOwned ? 'Koleksiyonda' : 'Kilitli');
+            copy.append(name, desc);
+            const price = document.createElement('b');
+            price.textContent = item.id === active ? 'Seçili' : isOwned ? 'Seç' : `${CasualProfile.formatMoney(item.price)} CM`;
+            button.append(shopIcon(state.shop, item), copy, price);
+            button.addEventListener('click', () => {
+                if (allOpen) {
+                    state[def.cheat] = item.id;
+                    afterSelection(item.name, false);
+                    return;
+                }
+                if (!profile()) {
+                    if (isOwned && state.shop !== 'paints') afterSelection(item.name, false);
+                    else openLogin();
+                    return;
+                }
+                try {
+                    if (isOwned) CasualProfile[def.select](item.id);
+                    else CasualProfile[def.buy](item.id);
+                    afterSelection(item.name, !isOwned);
+                } catch (error) { showToast(error.message); }
+            });
+            list.appendChild(button);
+        });
+    }
+
+    function afterSelection(name, bought) {
+        showToast(bought ? `${name} satın alındı.` : `${name} seçildi.`);
+        playSound(bought ? 'pop' : 'click');
+        renderAll();
+    }
+
+    function renderProfile() {
+        const p = profile();
+        const office = CasualProfile.offices[(p?.officeLevel || 1) - 1];
+        el.topBalance.textContent = `${CasualProfile.formatMoney(p?.balance || 0)} CM`;
+        el.compactAvatar.textContent = p ? initials(p.displayName) : '?';
+        el.compactName.textContent = p ? `@${p.displayName}` : 'Misafir';
+        el.compactStatus.textContent = p ? `${office.name} · ${formatMultiplier(office.multiplier)}` : 'Kazanç için profil aç';
+        el.profileAction.textContent = p ? 'Çık' : 'Aç';
+        el.jobs.textContent = p?.woodTurning.jobs || 0;
+        el.stars.textContent = p?.woodTurning.stars || 0;
+        el.best.textContent = `${p?.woodTurning.bestScore || 0}%`;
+        el.earned.textContent = `${CasualProfile.formatMoney(p?.woodTurning.totalEarned || 0)} CM`;
+    }
+
+    function renderAll() {
+        renderProfile();
+        renderShop();
+        renderPalette();
+        drawShelf();
+        if (state.spec) drawTargetCard();
+    }
+
+    // ---------- Finishing ----------
 
     function finishOrder() {
         if (state.completed) return;
         state.completed = true;
-        const profile = CasualProfile.current();
-        const scores = {
-            shape: shapeScore(),
-            sand: sandScore(),
-            paint: paintScore(),
-            overall: overallScore()
-        };
-        const office = CasualProfile.offices[(profile?.officeLevel || 1) - 1];
-        let reward = CasualProfile.rewardForScore(scores.overall, office.level);
+        state.pointer.down = false;
+        const shape = shapeScore(), sand = sandScore(), paint = paintScore();
+        const overall = overallScore(shape, sand, paint);
+        const stars = CasualProfile.turnStars(overall);
+        const p = profile();
+        const office = CasualProfile.offices[(p?.officeLevel || 1) - 1];
+        let reward = Math.round(CasualProfile.rewardForScore(overall, office.level) * (state.spec.free ? 1.5 : 1));
         let awarded = false;
-
-        if (profile) {
-            const award = CasualProfile.awardWoodTurning({ score: scores.overall });
+        if (p && !cheatsOn()) {
+            const award = CasualProfile.awardWoodTurning({ score: overall, level: state.level, freeDesign: state.spec.free });
             reward = award.reward;
             awarded = true;
-            if (typeof recordGameResult === 'function') recordGameResult('Wood Turning', { won: scores.overall >= 70, score: scores.overall });
+            if (typeof recordGameResult === 'function') recordGameResult('Wood Turning', { won: stars > 0, score: overall });
+        } else if (stars > 0 && state.level === state.guestLevel) {
+            state.guestLevel += 1;
         }
-
-        state.pendingResult = { ...scores, reward, awarded };
+        // Nothing is paid out while cheats are on.
+        if (cheatsOn()) reward = 0;
+        state.pending = { shape, sand, paint, overall, stars, reward, awarded, level: state.level };
         populateResult();
-        openModal(elements.resultModal);
-        createConfetti(scores.overall);
+        openModal(el.resultModal);
+        animateScore(overall);
+        createConfetti(stars);
         playSound('pop');
-        renderProfile();
+        if (navigator.vibrate && stars) navigator.vibrate([20, 40, 20]);
+        renderAll();
     }
 
     function populateResult() {
-        const result = state.pendingResult;
-        if (!result) return;
-        const profile = CasualProfile.current();
-        const office = CasualProfile.offices[(profile?.officeLevel || 1) - 1];
-        elements.resultScore.textContent = result.overall;
-        elements.resultShape.textContent = `${result.shape}%`;
-        elements.resultSand.textContent = `${result.sand}%`;
-        elements.resultPaint.textContent = `${result.paint}%`;
-        elements.rewardValue.textContent = CasualProfile.formatMoney(result.reward);
-        const rebirth = CasualProfile.earnMultiplier(profile);
-        elements.rewardMultiplier.textContent = rebirth > 1 ? `${formatMultiplier(office.multiplier)} ofis · x${rebirth} yeniden doğuş` : `${formatMultiplier(office.multiplier)} ofis çarpanı`;
-        elements.guestWarning.hidden = result.awarded;
+        const r = state.pending;
+        if (!r) return;
+        const p = profile();
+        const office = CasualProfile.offices[(p?.officeLevel || 1) - 1];
+        el.resultKicker.textContent = `SEVİYE ${r.level}${state.spec.free ? ' · SERBEST' : ''}`;
+        el.resultTitle.textContent = r.stars === 3 ? 'Mükemmel!' : r.stars === 2 ? 'Harika!' : r.stars === 1 ? 'İyi' : 'Biraz daha!';
+        el.resultStars.setAttribute('aria-label', `${r.stars} yıldız`);
+        el.resultStars.querySelectorAll('i').forEach((star, index) => star.classList.toggle('on', index < r.stars));
+        el.resultShape.textContent = `${r.shape}%`;
+        el.resultSand.textContent = `${r.sand}%`;
+        el.resultPaint.textContent = `${r.paint}%`;
+        el.rewardValue.textContent = CasualProfile.formatMoney(r.reward);
+        const rebirth = CasualProfile.earnMultiplier(p);
+        const parts = [`${formatMultiplier(office.multiplier)} atölye`];
+        if (state.spec.free) parts.push('x1,5 serbest');
+        if (rebirth > 1) parts.push(`x${rebirth} yeniden doğuş`);
+        el.rewardMultiplier.textContent = parts.join(' · ');
+        el.guestWarning.hidden = r.awarded || cheatsOn();
+        el.newOrder.querySelector('span').textContent = r.stars ? 'Sonraki seviye' : 'Tekrar dene';
+        el.retry.hidden = !r.stars;
+        drawCompare();
+    }
+
+    let scoreAnim = 0;
+    function animateScore(target) {
+        cancelAnimationFrame(scoreAnim);
+        const start = performance.now();
+        const step = (now) => {
+            const k = Math.min(1, (now - start) / 900);
+            el.resultScore.textContent = Math.round(target * (1 - Math.pow(1 - k, 3)));
+            if (k < 1) scoreAnim = requestAnimationFrame(step);
+        };
+        scoreAnim = requestAnimationFrame(step);
     }
 
     function claimPendingReward() {
-        if (!state.pendingResult || state.pendingResult.awarded || !CasualProfile.current()) return;
-        const award = CasualProfile.awardWoodTurning({ score: state.pendingResult.overall });
-        state.pendingResult.reward = award.reward;
-        state.pendingResult.awarded = true;
-        if (typeof recordGameResult === 'function') recordGameResult('Wood Turning', { won: state.pendingResult.overall >= 70, score: state.pendingResult.overall });
+        const r = state.pending;
+        if (!r || r.awarded || !profile() || cheatsOn()) return;
+        const award = CasualProfile.awardWoodTurning({ score: r.overall, level: r.level, freeDesign: state.spec.free });
+        r.reward = award.reward;
+        r.awarded = true;
+        if (typeof recordGameResult === 'function') recordGameResult('Wood Turning', { won: r.stars > 0, score: r.overall });
         populateResult();
-        renderProfile();
+        renderAll();
     }
 
-    function createConfetti(score) {
-        elements.confetti.replaceChildren();
-        if (score < 70 || (typeof cpSettings !== 'undefined' && !cpSettings.effects)) return;
-        const colors = ['#b9ff66', '#ff795f', '#7aa7ff', '#f58bd4', '#ffae58'];
-        for (let index = 0; index < 34; index += 1) {
+    function createConfetti(stars) {
+        el.confetti.replaceChildren();
+        if (stars < 2 || !effectsOn()) return;
+        const colors = ['#ffd36a', '#ff795f', '#7aa7ff', '#9be37a', '#f58bd4'];
+        for (let i = 0; i < 34; i += 1) {
             const piece = document.createElement('span');
             piece.style.left = `${Math.random() * 100}%`;
-            piece.style.setProperty('--color', colors[index % colors.length]);
+            piece.style.setProperty('--color', colors[i % colors.length]);
             piece.style.setProperty('--delay', `${Math.random() * .45}s`);
             piece.style.setProperty('--drift', `${(Math.random() - .5) * 220}px`);
-            elements.confetti.appendChild(piece);
+            el.confetti.appendChild(piece);
         }
     }
 
+    // ---------- Modals ----------
+
+    const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    let lastFocused = null;
+    function openModal(modal) {
+        lastFocused = document.activeElement;
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        const target = modal.querySelector('[data-initial-focus]')
+            || Array.from(modal.querySelectorAll(FOCUSABLE)).find((node) => !node.hidden && !node.disabled && !node.closest('[hidden]'));
+        if (target) setTimeout(() => target.focus(), 40);
+    }
+    function closeModal(modal) {
+        if (!modal.classList.contains('active')) return;
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        if (!document.querySelector('.modal-overlay.active')) document.body.style.overflow = '';
+        const restore = lastFocused;
+        lastFocused = null;
+        if (restore && restore !== document.body && document.contains(restore) && !restore.closest('[aria-hidden="true"]')) restore.focus();
+        if (modal === el.resultModal && state.completed) beginLevel(activeLevel());
+        if (modal === el.loginModal && state.returnToResult && state.pending) {
+            state.returnToResult = false;
+            populateResult();
+            openModal(el.resultModal);
+        }
+    }
+    function openLogin() {
+        el.loginError.textContent = '';
+        openModal(el.loginModal);
+    }
+
+    // ---------- Input ----------
+
+    function canvasPoint(event) {
+        const rect = canvas.getBoundingClientRect();
+        const sx = event.clientX - rect.left, sy = event.clientY - rect.top;
+        return L.rot ? { x: L.H - sy, y: sx } : { x: sx, y: sy };
+    }
+
     canvas.addEventListener('pointerdown', (event) => {
+        if (state.pointer.down && state.pointer.id !== event.pointerId) return;
         event.preventDefault();
-        state.pointer.down = true;
-        state.pointer.inside = true;
-        Object.assign(state.pointer, canvasPoint(event));
+        ensureAudio();
+        if (audio?.ac.state === 'suspended') audio.ac.resume();
+        Object.assign(state.pointer, canvasPoint(event), { down: true, inside: true, touch: event.pointerType !== 'mouse', id: event.pointerId });
         canvas.setPointerCapture(event.pointerId);
-        useTool(state.pointer);
     });
-
     canvas.addEventListener('pointermove', (event) => {
+        if (state.pointer.down && state.pointer.id !== event.pointerId) return;
         Object.assign(state.pointer, canvasPoint(event), { inside: true });
-        if (state.pointer.down) useTool(state.pointer);
+        if (!state.pointer.down) state.pointer.touch = event.pointerType !== 'mouse';
     });
-
-    canvas.addEventListener('pointerup', (event) => {
+    const release = (event) => {
+        if (state.pointer.id !== event.pointerId) return;
         state.pointer.down = false;
+        state.pointer.id = null;
         if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-    });
-
-    canvas.addEventListener('pointercancel', () => { state.pointer.down = false; });
+    };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
     canvas.addEventListener('pointerleave', () => { if (!state.pointer.down) state.pointer.inside = false; });
-    canvas.addEventListener('pointerenter', () => { state.pointer.inside = true; });
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
     document.querySelectorAll('[data-tool]').forEach((button) => {
         button.addEventListener('click', () => {
-            state.activeTool = button.dataset.tool;
-            document.querySelectorAll('[data-tool]').forEach((item) => item.classList.toggle('active', item === button));
+            state.tool = button.dataset.tool;
+            document.querySelectorAll('[data-tool]').forEach((item) => {
+                item.classList.toggle('active', item === button);
+                item.setAttribute('aria-pressed', String(item === button));
+            });
             playSound('click');
         });
     });
 
-    elements.nextStage.addEventListener('click', () => {
-        if (state.stage === 'carve') {
-            state.stageSnapshot = state.current.slice();
-            setStage('sand');
-        } else if (state.stage === 'sand') {
-            state.stageSnapshot = state.current.slice();
-            setStage('paint');
-        } else {
-            finishOrder();
-        }
+    el.next.addEventListener('click', () => {
+        if (state.completed) return;
+        if (state.stage === 'carve') { state.snapshot = state.current.slice(); setStage('sand'); }
+        else if (state.stage === 'sand') { state.snapshot = state.current.slice(); setStage('paint'); }
+        else finishOrder();
     });
 
-    let resetConfirmTimer;
+    let resetTimer;
     function clearResetConfirm() {
-        clearTimeout(resetConfirmTimer);
-        elements.resetStage.classList.remove('confirming');
-        elements.resetStage.textContent = 'Sıfırla';
+        clearTimeout(resetTimer);
+        el.reset.classList.remove('confirming');
     }
-
-    elements.resetStage.addEventListener('click', () => {
-        // A stray tap should not wipe a stage's work, so the first tap only arms the reset.
-        if (!elements.resetStage.classList.contains('confirming')) {
-            elements.resetStage.classList.add('confirming');
-            elements.resetStage.textContent = 'Emin misin?';
-            resetConfirmTimer = setTimeout(clearResetConfirm, 2600);
+    el.reset.addEventListener('click', () => {
+        // A stray tap must not wipe a stage, so the first tap only arms the reset.
+        if (!el.reset.classList.contains('confirming')) {
+            el.reset.classList.add('confirming');
+            showToast('Bu aşamayı sıfırlamak için tekrar dokun.');
+            resetTimer = setTimeout(clearResetConfirm, 2600);
             return;
         }
         clearResetConfirm();
-        if (state.stage === 'carve') {
-            state.current = Array.from({ length: SAMPLE_COUNT }, (_, index) => {
-                const edge = Math.min(index, SAMPLE_COUNT - 1 - index);
-                return edge < 3 ? mix(42, MAX_RADIUS, edge / 3) : MAX_RADIUS;
-            });
-            state.sandCoverage.fill(0);
-            state.paintCoverage.fill(0);
-        } else if (state.stage === 'sand') {
-            if (state.stageSnapshot) state.current = state.stageSnapshot.slice();
-            state.sandCoverage.fill(0);
-        } else {
-            state.paintCoverage.fill(0);
-            state.paintColors.fill(WOOD_BASE);
-        }
+        if (state.stage === 'carve') freshBlank();
+        else if (state.stage === 'sand') { if (state.snapshot) state.current.set(state.snapshot); state.sand.fill(0); }
+        else { state.paintIdx.fill(-1); state.paintCov.fill(0); }
         updateMetrics();
-        showToast('Bu aşama sıfırlandı.');
+        showToast('Aşama sıfırlandı.');
         playSound('click');
     });
 
-    elements.profileAction.addEventListener('click', () => {
-        if (CasualProfile.current()) {
+    document.querySelectorAll('[data-shop]').forEach((tab) => {
+        tab.addEventListener('click', () => { state.shop = tab.dataset.shop; renderShop(); playSound('click'); });
+    });
+
+    el.profileAction.addEventListener('click', () => {
+        if (profile()) {
             CasualProfile.logout();
-            renderProfile();
+            renderAll();
+            beginLevel(activeLevel());
             showToast('Oturum kapatıldı.');
-        } else {
-            openLogin();
-        }
+        } else openLogin();
     });
 
-    elements.walletButton.addEventListener('click', () => {
-        if (!CasualProfile.current()) openLogin();
-        else document.querySelector('.studio-panel').scrollIntoView({ behavior: cpSettings.effects ? 'smooth' : 'auto', block: 'start' });
+    el.wallet.addEventListener('click', () => {
+        if (!profile()) openLogin();
+        else document.querySelector('.shop').scrollIntoView({ behavior: effectsOn() ? 'smooth' : 'auto', block: 'start' });
     });
 
-    elements.upgradeOffice.addEventListener('click', () => {
-        if (!CasualProfile.current()) {
-            openLogin();
-            return;
-        }
-        try {
-            CasualProfile.upgradeOffice();
-            renderProfile();
-            showToast('Ofis geliştirildi; kazanç çarpanın yükseldi.');
-            playSound('pop');
-        } catch (error) {
-            showToast(error.message);
-        }
-    });
-
-    elements.loginForm.addEventListener('submit', (event) => {
+    el.loginForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        elements.loginError.textContent = '';
+        el.loginError.textContent = '';
         try {
-            const profile = CasualProfile.login(elements.username.value);
-            elements.username.value = '';
+            const p = CasualProfile.login(el.username.value);
+            el.username.value = '';
             claimPendingReward();
-            renderProfile();
-            closeModal(elements.loginModal);
-            showToast(`Hoş geldin, @${profile.displayName}.`);
-            if (state.returnToResult && state.pendingResult) {
-                state.returnToResult = false;
-                populateResult();
-                openModal(elements.resultModal);
-            }
+            renderAll();
+            const resuming = state.returnToResult && state.pending;
+            closeModal(el.loginModal);
+            showToast(`Hoş geldin, @${p.displayName}.`);
+            if (!resuming && !state.completed && !state.gestureUsed && state.stage === 'carve') beginLevel(activeLevel());
             playSound('pop');
         } catch (error) {
-            elements.loginError.textContent = error.message;
+            el.loginError.textContent = error.message;
         }
     });
 
-    elements.guestWarning.addEventListener('click', () => {
+    el.guestWarning.addEventListener('click', () => {
         state.returnToResult = true;
-        closeModal(elements.resultModal);
+        el.resultModal.classList.remove('active');
+        el.resultModal.setAttribute('aria-hidden', 'true');
         openLogin();
     });
 
     document.querySelectorAll('[data-close]').forEach((button) => {
         button.addEventListener('click', () => closeModal(document.getElementById(button.dataset.close)));
     });
-
     document.querySelectorAll('.modal-overlay').forEach((overlay) => {
-        overlay.addEventListener('click', (event) => {
-            if (event.target === overlay) closeModal(overlay);
-        });
+        overlay.addEventListener('click', (event) => { if (event.target === overlay && overlay !== el.resultModal) closeModal(overlay); });
     });
-
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(closeModal);
     });
 
-    document.getElementById('new-order').addEventListener('click', () => {
-        closeModal(elements.resultModal);
-        beginOrder(true);
+    el.newOrder.addEventListener('click', () => { closeModal(el.resultModal); playSound('click'); });
+    el.retry.addEventListener('click', () => {
+        const level = state.pending?.level || state.level;
+        el.resultModal.classList.remove('active');
+        el.resultModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        beginLevel(level);
         playSound('click');
     });
 
-    window.addEventListener('casualprofilechange', renderProfile);
+    window.addEventListener('casualprofilechange', renderAll);
     window.addEventListener('casual-cheat', () => {
-        if (!window.CasualCheats?.features()) state.cheatPaint = null;
-        renderPaintPalette();
-        renderProfile();
+        if (!cheatsOpen()) { state.cheatLog = null; state.cheatChisel = null; state.cheatPaint = null; }
+        if (cheatsOn()) state.guestLevel = Math.max(state.guestLevel, profile()?.woodTurning.level || 1);
+        renderAll();
     });
+    const themeObserver = new MutationObserver(() => { L.W = 0; drawShelf(); });
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', updateAudio);
 
-    renderProfile();
-    beginOrder();
-    requestAnimationFrame(render);
-
-    if (!CasualProfile.current()) {
-        setTimeout(() => showToast('İstersen misafir oynayabilir, kazanç için profil açabilirsin.'), 700);
+    // Debug hooks for automated tests only.
+    if (/[?&]debug\b/.test(location.search)) {
+        window.WoodTurningDebug = Object.freeze({
+            state: () => ({ stage: state.stage, level: state.level, shape: shapeScore(), sand: sandScore(), paint: paintScore(), completed: state.completed, brush: state.brush }),
+            layout: () => ({ ...L }),
+            target: () => Array.from(state.spec.profile),
+            current: () => Array.from(state.current),
+            bands: () => Array.from(state.spec.bands),
+            spec: () => ({ name: state.spec.shape.name, free: state.spec.free, colors: state.spec.colors.slice() })
+        });
     }
+
+    state.guestLevel = profile()?.woodTurning.level || 1;
+    layout();
+    renderAll();
+    beginLevel(activeLevel());
+    requestAnimationFrame((now) => { state.last = now; frame(now); });
+
+    if (!profile()) setTimeout(() => showToast('Misafir oynayabilirsin; kazanç ve seviye için profil aç.'), 700);
 });

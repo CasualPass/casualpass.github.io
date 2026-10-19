@@ -75,7 +75,8 @@
         { id: 'kartal', name: 'Kartal', type: 'Tüfek', slot: 1, price: 2900, dmg: 40, head: 4, delay: 103, mag: 25, reserve: 50, auto: true, spread: 0.0025, move: 0.08, reload: 2500, kick: 0.009, range: [999, 999, 1], speed: 0.95, pattern: 'rifle', note: 'Mesafeden bağımsız tek kafa' },
         { id: 'sahin', name: 'Şahin', type: 'Tüfek', slot: 1, price: 2900, dmg: 39, head: 4, delay: 91, mag: 30, reserve: 60, auto: true, spread: 0.0018, move: 0.075, reload: 2500, kick: 0.007, range: [15, 30, 0.88], speed: 0.95, pattern: 'rifle', silent: true, note: 'Susturuculu, iz bırakmaz' },
         { id: 'yayla', name: 'Yayla', type: 'Keskin', slot: 1, price: 4700, dmg: 150, head: 1.7, delay: 1500, mag: 5, reserve: 10, auto: false, spread: 0.06, scoped: 0.0004, move: 0.1, reload: 3700, kick: 0.08, zoom: 4.5, range: [999, 999, 1], speed: 0.9, pattern: 'pistol', note: 'Gövdeye tek atış' },
-        { id: 'spike', name: 'Çekirdek', slot: 4, price: 0, speed: 1 }
+        { id: 'spike', name: 'Çekirdek', slot: 4, price: 0, speed: 1 },
+        { id: 'blades', name: 'Fırtına Bıçakları', type: 'Nihai', slot: 5, price: 0, dmg: 50, head: 3, delay: 330, mag: 5, reserve: 0, auto: false, spread: 0.0015, move: 0.004, reload: 1, kick: 0.012, range: [999, 999, 1], speed: 1.05, pattern: 'pistol', note: 'Öldürünce dolar' }
     ];
     const W = Object.fromEntries(WEAPONS.map((w, i) => [w.id, i]));
     const SHIELDS = [
@@ -120,6 +121,42 @@
                 e: { kind: 'heal', name: 'Onarım', free: 1, max: 1, desc: '3 sn içinde 60 can.' },
                 x: { kind: 'lock', name: 'Kilit', desc: 'Çevrendeki düşmanları 8 sn yavaşlatır ve gösterir.' }
             }
+        },
+        ruzgar: {
+            name: 'Rüzgâr', role: 'Düellocu', color: '#c6f36b', hex: 0xc6f36b, desc: 'Havalanır, süzülür; nihaisinde isabetli fırlatma bıçaklarıyla avlanır.',
+            abilities: {
+                c: { kind: 'updraft', name: 'Yükseliş', price: 150, max: 2, desc: 'Seni havaya fırlatır.' },
+                q: { kind: 'cloud', name: 'Bulut', price: 200, max: 2, desc: 'Nişan aldığın yere 7 sn küçük duman.' },
+                e: { kind: 'dash', name: 'Süzülüş', free: 1, max: 1, desc: 'Baktığın yöne hızla atıl.' },
+                x: { kind: 'blades', name: 'Fırtına Bıçakları', desc: '15 sn boyunca 5 isabetli bıçak; öldürünce dolar.' }
+            }
+        },
+        ayaz: {
+            name: 'Ayaz', role: 'Kontrolcü', color: '#8de8ff', hex: 0x8de8ff, desc: 'Buzla yolu keser, kırağıyla yavaşlatır, tipiyle bölgeyi boğar.',
+            abilities: {
+                c: { kind: 'icewall', name: 'Buz Duvarı', price: 300, max: 1, desc: '15 sn mermi geçirmeyen geniş buz duvarı.' },
+                q: { kind: 'frost', name: 'Kırağı', price: 150, max: 2, desc: 'Düştüğü yerde düşmanlar yavaşlar.' },
+                e: { kind: 'icesmoke', name: 'Kar Küresi', free: 2, max: 3, desc: 'Nişan aldığın yere 15 sn duman.' },
+                x: { kind: 'blizzard', name: 'Tipi', desc: 'Nişan aldığın alanda 8 sn yavaşlatan, yakan kar fırtınası.' }
+            }
+        },
+        fay: {
+            name: 'Fay', role: 'Öncü', color: '#e0a35c', hex: 0xe0a35c, desc: 'Yeri sarsar: sarsılan düşman yavaşlar ve iyi nişan alamaz.',
+            abilities: {
+                c: { kind: 'stun', name: 'Sarsıntı Bombası', price: 200, max: 1, desc: 'Patladığı yerde düşmanları 3 sn sarsar.' },
+                q: { kind: 'quake', name: 'Fay Hattı', price: 250, max: 2, desc: 'Önünde uzanan bir şeridi duvarların ardına kadar sarsar.' },
+                e: { kind: 'pulse', name: 'Yer Dinleme', free: 1, max: 1, desc: '18 m içindeki düşmanları duvar ardından gösterir.' },
+                x: { kind: 'rupture', name: 'Büyük Kırılma', desc: 'Geniş ve uzun bir şeridi 4 sn sarsar ve gösterir.' }
+            }
+        },
+        nobet: {
+            name: 'Nöbet', role: 'Gözcü', color: '#e4e9f2', hex: 0xe4e9f2, desc: 'Taret ve alarmla bölgeyi tek başına tutar, takımına kalkan dağıtır.',
+            abilities: {
+                c: { kind: 'alarm', name: 'Alarm', price: 200, max: 1, desc: 'Yaklaşan düşmanı yavaşlatır ve gösterir.' },
+                q: { kind: 'shieldup', name: 'Kalkan Takviyesi', price: 300, max: 1, desc: 'Yakındaki takımına +25 kalkan (en çok 50).' },
+                e: { kind: 'turret', name: 'Taret', free: 1, max: 1, desc: 'Gördüğü düşmana ateş eden taret; vurulunca bozulur.' },
+                x: { kind: 'beacon', name: 'Fener', desc: '12 sn boyunca çevrendeki düşmanları sürekli gösterir.' }
+            }
         }
     };
     const AGENT_IDS = Object.keys(AGENTS);
@@ -161,11 +198,12 @@
     const touchDevice = window.matchMedia('(pointer: coarse)').matches;
     const ROUND_CHOICES = [5, 7, 13];
     const SIZE_CHOICES = [3, 5];
+    const MAP_NAMES = ['liman', 'kumsaray', 'ucyol', 'buzul']; // MAPS anahtarları; tercihler haritalardan önce okunur
     const CROSS_COLORS = { cyan: '#5ff5e1', green: '#7dff6b', yellow: '#ffe14d', white: '#ffffff', pink: '#ff6bd6' };
     const prefs = loadPrefs();
 
     function loadPrefs() {
-        const base = { sens: 1, fov: 71, vol: 80, q: touchDevice ? 'low' : 'mid', cross: 'cyan', agent: 'kor', rounds: 7, size: 5, diff: 'normal', fill: true };
+        const base = { sens: 1, fov: 71, vol: 80, q: touchDevice ? 'low' : 'mid', cross: 'cyan', agent: 'kor', rounds: 7, size: 5, diff: 'normal', fill: true, map: 'random' };
         let saved = {};
         try { saved = JSON.parse(getCookieValue(PREFS_COOKIE) || '{}') || {}; } catch { saved = {}; }
         const num = (v, d) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : d);
@@ -179,7 +217,8 @@
             rounds: ROUND_CHOICES.includes(saved.rounds) ? saved.rounds : base.rounds,
             size: SIZE_CHOICES.includes(saved.size) ? saved.size : base.size,
             diff: DIFFICULTY[saved.diff] ? saved.diff : base.diff,
-            fill: saved.fill === undefined ? base.fill : Boolean(saved.fill)
+            fill: saved.fill === undefined ? base.fill : Boolean(saved.fill),
+            map: saved.map === 'random' || MAP_NAMES.includes(saved.map) ? saved.map : base.map
         };
     }
     function savePrefs() { setCookieValue(PREFS_COOKIE, JSON.stringify(prefs)); }
@@ -202,7 +241,8 @@
     const camera = new THREE.PerspectiveCamera(prefs.fov, innerWidth / innerHeight, 0.05, 420);
     camera.rotation.order = 'YXZ';
     scene.add(camera);
-    scene.add(new THREE.HemisphereLight(0xfff4e6, 0x6b5a48, 0.78));
+    const hemi = new THREE.HemisphereLight(0xfff4e6, 0x6b5a48, 0.78);
+    scene.add(hemi);
     const sun = new THREE.DirectionalLight(0xffe2b8, 0.95);
     sun.position.set(-45, 85, 30);
     sun.shadow.mapSize.set(2048, 2048);
@@ -215,7 +255,7 @@
     const boomLight = new THREE.PointLight(0xff9a3c, 0, 30, 2);
     scene.add(muzzleLight, boomLight);
 
-    (function buildSky() {
+    const skyDome = (function buildSky() {
         const geo = new THREE.SphereGeometry(300, 24, 12);
         const pos = geo.attributes.position;
         const top = new THREE.Color(SKY_TOP);
@@ -230,6 +270,7 @@
         const sky = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
         sky.renderOrder = -1;
         camera.add(sky);
+        return sky;
     })();
 
     // The first-person weapon is drawn in its own scene so it never clips into walls.
@@ -482,8 +523,105 @@
                 wrapped(S, x, y, w, (px, py) => { g.beginPath(); g.ellipse(px, py, w, w * 0.45, a, 0, TAU); g.fill(); });
             }
             overlay(g, S, NOISE_LO, 1, 0.35);
+        } },
+        sandstone: { scale: 4, paint(g, S, k) {
+            // coursed sandstone blocks with soft, sand-worn joints
+            g.fillStyle = '#ece4d6';
+            g.fillRect(0, 0, S, S);
+            const rows = 6;
+            const h = S / rows;
+            for (let r = 0; r < rows; r++) {
+                const n = 3;
+                const off = (r % 2) * (S / n / 2);
+                for (let c = -1; c <= n; c++) {
+                    g.fillStyle = gray(Math.round(rand(214, 246)));
+                    g.fillRect(c * (S / n) + off + 2 * k, r * h + 2 * k, S / n - 4 * k, h - 4 * k);
+                }
+                g.fillStyle = 'rgba(120,95,60,.35)';
+                g.fillRect(0, r * h, S, 2.5 * k);
+                for (let c = 0; c <= n; c++) g.fillRect(c * (S / n) + off - 1.2 * k, r * h, 2.5 * k, h);
+            }
+            overlay(g, S, NOISE_LO, 1, 0.2);
+            overlay(g, S, NOISE_HI, 3, 0.2);
+            dots(g, S, 2400 * k * k, 1.4 * k, ['rgba(110,80,40,.22)', 'rgba(255,255,255,.4)']);
+        } },
+        flagstone: { big: true, paint(g, S, k) {
+            // irregular stone slabs set in sand
+            g.fillStyle = '#c9b89a';
+            g.fillRect(0, 0, S, S);
+            const n = 6;
+            const t = S / n;
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; c++) {
+                    const w = t * rand(0.78, 0.92);
+                    const hh = t * rand(0.78, 0.92);
+                    g.fillStyle = gray(Math.round(rand(212, 244)));
+                    g.beginPath();
+                    const x = c * t + (t - w) / 2;
+                    const y = r * t + (t - hh) / 2;
+                    const j = () => rand(-3, 3) * k;
+                    g.moveTo(x + j(), y + j()); g.lineTo(x + w + j(), y + j()); g.lineTo(x + w + j(), y + hh + j()); g.lineTo(x + j(), y + hh + j());
+                    g.closePath();
+                    g.fill();
+                }
+            }
+            overlay(g, S, NOISE_LO, 1, 0.25);
+            overlay(g, S, NOISE_HI, 3, 0.2);
+            dots(g, S, 2600 * k * k, 1.4 * k, ['rgba(100,80,50,.25)', 'rgba(255,255,255,.35)']);
+        } },
+        snow: { big: true, scale: 6, paint(g, S, k) {
+            // packed snow with footprints and wind ripples
+            g.fillStyle = '#f4f6f8';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.18);
+            g.strokeStyle = 'rgba(150,170,190,.18)';
+            g.lineWidth = 3 * k;
+            for (let i = 0; i < 18; i++) {
+                const y0 = rand(0, S);
+                const ph = rand(0, TAU);
+                g.beginPath();
+                for (let x = 0; x <= S; x += 6 * k) g.lineTo(x, y0 + Math.sin(x / (60 * k) + ph) * 8 * k);
+                g.stroke();
+            }
+            for (let i = 0; i < 40 * k * k; i++) blob(g, S, rand(0, S), rand(0, S), rand(3, 6) * k, 'rgba(140,160,185,.16)');
+            dots(g, S, 2000 * k * k, 1.2 * k, ['rgba(255,255,255,.9)', 'rgba(150,170,190,.2)']);
+        } },
+        panel: { big: true, paint(g, S, k) {
+            // large floor plates with seams and a few inset light strips
+            g.fillStyle = '#e4e6e8';
+            g.fillRect(0, 0, S, S);
+            overlay(g, S, NOISE_LO, 1, 0.16);
+            overlay(g, S, NOISE_HI, 3, 0.12);
+            g.strokeStyle = 'rgba(60,70,80,.45)';
+            g.lineWidth = 2.5 * k;
+            const n = 4;
+            for (let i = 0; i <= n; i++) {
+                g.beginPath(); g.moveTo((i * S) / n, 0); g.lineTo((i * S) / n, S); g.stroke();
+                g.beginPath(); g.moveTo(0, (i * S) / n); g.lineTo(S, (i * S) / n); g.stroke();
+            }
+            g.fillStyle = 'rgba(255,255,255,.55)';
+            g.fillRect(S / 8, S / 2 - 3 * k, S / 4, 6 * k);
+            dots(g, S, 900 * k * k, 1.3 * k, ['rgba(60,60,60,.18)', 'rgba(255,255,255,.4)']);
+        } },
+        glass: { scale: 6, paint(g, S, k) {
+            // curtain-wall towers: window bands and mullions
+            g.fillStyle = '#d8dde2';
+            g.fillRect(0, 0, S, S);
+            const rows = 4;
+            for (let r = 0; r < rows; r++) {
+                const y = (r * S) / rows;
+                const grd = g.createLinearGradient(0, y, 0, y + S / rows);
+                grd.addColorStop(0, gray(150));
+                grd.addColorStop(1, gray(205));
+                g.fillStyle = grd;
+                g.fillRect(0, y + 8 * k, S, S / rows - 16 * k);
+                g.fillStyle = 'rgba(255,255,255,.75)';
+                for (let c = 0; c < 6; c++) g.fillRect((c * S) / 6, y, 3 * k, S / rows);
+            }
+            overlay(g, S, NOISE_LO, 1, 0.12);
         } }
     };
+    SURFACES.pavers.big = SURFACES.plaster.big = true;
 
     const allTextures = [];
     let textureAniso = 1;
@@ -501,8 +639,8 @@
     function paintSurfaces(size) {
         if (size === surfaceSize) return;
         surfaceSize = size;
-        for (const [name, spec] of Object.entries(SURFACES)) {
-            const S = name === 'pavers' || name === 'plaster' ? size : Math.min(size, 512);
+        for (const spec of Object.values(SURFACES)) {
+            const S = spec.big ? size : Math.min(size, 512);
             const c = document.createElement('canvas');
             c.width = c.height = S;
             spec.paint(c.getContext('2d'), S, S / 512);
@@ -512,7 +650,6 @@
     }
     const textureSize = () => ({ low: 256, mid: 512, high: 1024 }[prefs.q]);
     paintSurfaces(textureSize());
-    SURFACES.pavers.tex.repeat.set(16, 22);
 
     function applyQuality() {
         const ratio = { low: 0.75, mid: 1.15, high: 1.6 }[prefs.q];
@@ -543,40 +680,373 @@
         return matCache[key];
     }
 
-    /* ---------- Harita: "Liman" (2 m hücreli ızgaradan oyulur) ---------- */
+    /* ---------- Haritalar (2 m hücreli ızgara; her harita bir karakter planı) ---------- */
+
+    // # duvar · . zemin · k sandık · K üst üste sandık · M konteyner (2×2 hücre) · h alçak duvar · o sütun · p saksı/süs
+    // Koordinatlar hücre: [sütun, satır]; bölge ve doğuş alanları [s0, r0, s1, r1].
+    const MAPS = {
+        liman: {
+            name: 'Liman', tag: 'Akdeniz limanı · A/B', desc: 'Renkli sıva sokaklar, iki boğaz ve geniş bir orta alan.',
+            grid: [
+            '########################################',
+            '##############............##############',
+            '##############............##############',
+            '####................................####',
+            '####................................####',
+            '####................................####',
+            '####................................####',
+            '####.....#########....#########.....####',
+            '####.....#########....#########.....####',
+            '####.....#########....#########.....####',
+            '##............####k...####............##',
+            '##..........K.####....####.K..........##',
+            '##............####....####............##',
+            '##......M.....####....####....M.......##',
+            '##............##........##............##',
+            '##............##........##............##',
+            '##....................................##',
+            '##.........k................k.........##',
+            '##....................k...............##',
+            '##..k.........##........##.........k..##',
+            '##............##..####..##............##',
+            '##............##........##............##',
+            '###...########............########...###',
+            '###...########..........k.########...###',
+            '###.....######.....M......######.....###',
+            '###.....######............######.....###',
+            '###.....######.k..........######.....###',
+            '###.....######............######.....###',
+            '###K....######............######....K###',
+            '###.....########........########.....###',
+            '###..................................###',
+            '###..............k...................###',
+            '###.....########........########.....###',
+            '###...k.########........########.k...###',
+            '###.....########........########.....###',
+            '###.....##########....##########.....###',
+            '###.....##########....##########.....###',
+            '###.....##########....##########.....###',
+            '###.....##########....##########.....###',
+            '###.....##########....##########.....###',
+            '###..........#####....#####..........###',
+            '###..........#####....#####..........###',
+            '###......k...#####....#####...k......###',
+            '###..........#####....#####..........###',
+            '###..........#####....#####..........###',
+            '###..........#####....#####..........###',
+            '##########....................##########',
+            '##########.p................p.##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '########################################'
+            ],
+            sites: { A: [5, 12, 11, 18], B: [28, 12, 34, 18] },
+            spawns: [[10, 46, 29, 54], [14, 1, 25, 6]],
+            spawnPoints: [
+                [[14, 50], [17, 51], [20, 50], [23, 51], [26, 50], [12, 52], [27, 52], [19, 53], [15, 53], [24, 53]],
+                [[15, 3], [18, 4], [21, 3], [24, 4], [16, 5], [23, 5], [19, 2], [20, 5], [17, 2], [22, 2]]
+            ],
+            tactic: {
+                A: { hold: [[5, 13], [12, 14], [9, 19], [6, 11]], watch: [[4, 22], [14, 17]], stage: [[5, 38], [5, 32]], entry: [4, 22], plant: [[7, 16], [10, 15], [6, 17]] },
+                B: { hold: [[34, 13], [27, 14], [30, 19], [33, 11]], watch: [[35, 22], [25, 17]], stage: [[34, 38], [34, 32]], entry: [35, 22], plant: [[32, 16], [29, 15], [33, 17]] },
+                mid: { hold: [[19, 17], [20, 21]], watch: [[19, 30]], stage: [[19, 38], [19, 32]] }
+            },
+            look: {
+                sky: [0xf3dcc0, 0x5f9ad6], fog: [60, 170], sun: [0xffe2b8, 0.95], hemi: [0xfff4e6, 0x6b5a48, 0.78],
+                floor: ['pavers', 0xf2e8d8, 16, 22], wall: 'plaster', cap: 0xf4eee4, low: 0xd8c9b2, pillar: 0xe8dccb,
+                containers: [0xd9773f, 0x3f9aa0, 0x4a6fb5], mini: 'rgba(205,212,218,.8)',
+                wallColor(x, z, outer) {
+                    if (outer) return 0xb3a493;
+                    if (z < -40) return 0xd6d0c4;
+                    if (z > 34) return 0xe0c4a6;
+                    if (x < -13) return 0xeed2a4;
+                    if (x > 13) return 0xbcd3d6;
+                    return 0xe8a684;
+                }
+            }
+        },
+        kumsaray: {
+            name: 'Kumsaray', tag: 'Çöl kalesi · A/B', desc: 'Kumtaşı kale: uzun A koridoru, kapılı B ve ortada büyük bir avlu.',
+            grid: [
+            '########################################',
+            '###############..........###############',
+            '####...............................#####',
+            '####...............................#####',
+            '####...............................#####',
+            '####...............................#####',
+            '####.....#########....#########....#####',
+            '####.....#########....#########....#####',
+            '####.....#########....#####...........##',
+            '####.....#########....#####.........K.##',
+            '####.....#########....#####...........##',
+            '####.....#########....#####....M......##',
+            '##..........##............#...........##',
+            '##.K........##.....p....K.#...........##',
+            '##..........##........................##',
+            '##...M......##...................hhh..##',
+            '##..........##..hh..........k.........##',
+            '##........k.##....####....#.......k...##',
+            '##..........##....####....#...........##',
+            '##.............M..........#######....###',
+            '##.......k................#######....###',
+            '##....................hh..#######....###',
+            '##.....hhh..##.k..........#######....###',
+            '##..........##......p.....#######....###',
+            '##....########............#######....###',
+            '##....############....###########..k.###',
+            '##....############....###########....###',
+            '##....############....###########....###',
+            '##....############....###########....###',
+            '##....############....#####..........###',
+            '##........########..k.#####..........###',
+            '##........########....#####..........###',
+            '##........########....#####..........###',
+            '##..k.############....#####..........###',
+            '##....................######....########',
+            '##....................######....########',
+            '##....................######....########',
+            '##....############..............########',
+            '##.K..############...........k..########',
+            '##....############..............########',
+            '##....############....######....########',
+            '##...........#####....######....########',
+            '##...........#####....######....########',
+            '##.....k.....#####....######....########',
+            '##...........#####....######....########',
+            '##########....................##########',
+            '##########.p................p.##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '########################################'
+            ],
+            sites: { A: [3, 13, 10, 21], B: [28, 9, 36, 17] },
+            spawns: [[10, 45, 29, 54], [15, 1, 24, 5]],
+            spawnPoints: [
+                [[14, 49], [17, 50], [20, 49], [23, 50], [26, 49], [12, 51], [27, 51], [19, 52], [15, 52], [24, 52]],
+                [[16, 2], [18, 3], [21, 2], [23, 3], [17, 4], [22, 4], [19, 1], [20, 4], [16, 5], [23, 5]]
+            ],
+            tactic: {
+                A: { hold: [[4, 14], [10, 14], [8, 21], [3, 18]], watch: [[3, 24], [11, 20]], stage: [[3, 36], [3, 30]], entry: [3, 24], plant: [[6, 17], [8, 15], [5, 19]] },
+                B: { hold: [[29, 10], [36, 12], [30, 17], [35, 16]], watch: [[34, 19], [27, 15]], stage: [[34, 26], [30, 31]], entry: [34, 19], plant: [[32, 14], [29, 12], [34, 13]] },
+                mid: { hold: [[19, 14], [20, 20]], watch: [[19, 25]], stage: [[19, 40], [19, 32]] }
+            },
+            look: {
+                sky: [0xf6d9a8, 0x6aa6d8], fog: [70, 180], sun: [0xffd7a0, 1.05], hemi: [0xfff0d8, 0x8a6a44, 0.72],
+                floor: ['flagstone', 0xf0d9b0, 14, 20], wall: 'sandstone', cap: 0xf2dfbd, low: 0xc29a66, pillar: 0xe2c595,
+                containers: [0x2f8f9d, 0xc0583a, 0x8a5fb0], mini: 'rgba(226,210,180,.82)',
+                wallColor(x, z, outer) {
+                    if (outer) return 0xc49a68;
+                    if (z < -40) return 0xe9cfa3;
+                    if (z > 32) return 0xdcb582;
+                    if (x < -14) return 0xe8c48f;
+                    if (x > 12) return 0xf0d6ae;
+                    return 0xe3b57c;
+                }
+            }
+        },
+        ucyol: {
+            name: 'Üçyol', tag: 'Teknopark · A/B/C', desc: 'Üç kurma bölgesi: savunma her yeri tutamaz, rotasyon her şeydir.',
+            grid: [
+            '########################################',
+            '##############............##############',
+            '###..................................###',
+            '###..................................###',
+            '###..................................###',
+            '###..................................###',
+            '###....###########....###########....###',
+            '###....###########....###########....###',
+            '###....###########....###########....###',
+            '###....###########....###########....###',
+            '##..........######....######..........##',
+            '##.K........######....######........K.##',
+            '##........k.###..........###..........##',
+            '##...M......###........k.###....M.....##',
+            '##..........###.hh.......###..........##',
+            '##..........###...M......###..........##',
+            '##.....hh...###..........###...hh.....##',
+            '##..........###..........###..........##',
+            '##.......k..###..........###.k........##',
+            '##..........###.k.....K..###.......k..##',
+            '##..........###..........###..........##',
+            '##....##....###..........#########....##',
+            '##....##....######....############....##',
+            '##....##....######....############....##',
+            '##....##....................######....##',
+            '##....##.....hh.............######....##',
+            '##....##...........k..................##',
+            '##....##.......o........o.............##',
+            '##....######..........................##',
+            '##....######.............hh.######....##',
+            '##..k.######................######....##',
+            '##....########....################....##',
+            '##....########....################....##',
+            '##....########..k.################..K.##',
+            '##....########....################....##',
+            '##....########............########....##',
+            '##....########............########....##',
+            '##....########............########....##',
+            '##....################....########....##',
+            '##....################....########....##',
+            '##..........##########....##..........##',
+            '##..........##########.k..##..........##',
+            '##....k.....##########....##.....k....##',
+            '##..........##########....##..........##',
+            '##..........##########....##..........##',
+            '##########....................##########',
+            '##########.p................p.##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '########################################'
+            ],
+            sites: { A: [3, 11, 10, 19], B: [16, 13, 23, 20], C: [29, 11, 36, 19] },
+            spawns: [[10, 45, 29, 54], [14, 1, 25, 5]],
+            spawnPoints: [
+                [[14, 49], [17, 50], [20, 49], [23, 50], [26, 49], [12, 51], [27, 51], [19, 52], [15, 52], [24, 52]],
+                [[15, 2], [18, 3], [21, 2], [24, 3], [16, 4], [23, 4], [19, 1], [20, 4], [17, 5], [22, 5]]
+            ],
+            tactic: {
+                A: { hold: [[4, 12], [10, 13], [9, 19], [3, 16]], watch: [[3, 21], [9, 21]], stage: [[3, 36], [3, 30]], entry: [3, 21], plant: [[6, 15], [8, 13], [5, 17]] },
+                B: { hold: [[16, 13], [23, 14], [17, 20], [22, 17]], watch: [[19, 22], [19, 11]], stage: [[15, 32], [20, 28]], entry: [19, 22], plant: [[20, 17], [21, 15], [17, 18]] },
+                C: { hold: [[29, 12], [35, 13], [30, 19], [36, 16]], watch: [[36, 21], [30, 27]], stage: [[35, 36], [36, 28]], entry: [36, 21], plant: [[31, 15], [34, 14], [33, 18]] },
+                mid: { hold: [[19, 25], [20, 29]], watch: [[15, 33]], stage: [[24, 42], [15, 32]] }
+            },
+            look: {
+                sky: [0xdfe8f0, 0x4f86c6], fog: [70, 190], sun: [0xfff4e4, 0.9], hemi: [0xeef4ff, 0x56606a, 0.8],
+                floor: ['panel', 0xdde2e6, 14, 20], wall: 'concrete', cap: 0xf5f7f8, low: 0xb9c2c9, pillar: 0xd9dee2,
+                containers: [0xf08a3c, 0x3cb7a8, 0x6a5acd], mini: 'rgba(214,222,230,.82)',
+                wallColor(x, z, outer) {
+                    if (outer) return 0x8f99a3;
+                    if (z < -40) return 0xd5dbe0;
+                    if (z > 30) return 0xc4ccd3;
+                    if (x < -16) return 0xf2c49b;
+                    if (x > 14) return 0xa8d8d2;
+                    return 0xeef0f2;
+                }
+            }
+        },
+        buzul: {
+            name: 'Buzul', tag: 'Kutup üssü · A/B', desc: 'A savunmaya, B saldırıya yakın; ortada sütunlu bir kubbe salonu.',
+            grid: [
+            '########################################',
+            '###############..........###############',
+            '#########............................###',
+            '#########............................###',
+            '#########............................###',
+            '#########...###..........########....###',
+            '#########...######....###########....###',
+            '##............####....###########....###',
+            '##.K..........####....###########....###',
+            '##..........k.####....###########....###',
+            '##...M........##.........########....###',
+            '##............##..........#######....###',
+            '##............##..........#######....###',
+            '##....................................##',
+            '##....hhh.........o...o..#..........K.##',
+            '##........k..............#............##',
+            '##............##..####...#....M.......##',
+            '##............##.........#............##',
+            '##....##########.........#............##',
+            '##....##########..o...o..#............##',
+            '##....##########.........#.......hhh..##',
+            '##....##########.........#............##',
+            '##....##########.........#.k..........##',
+            '##....##########........##........k...##',
+            '##.......#######.hh.....##............##',
+            '##.......#######........########.....###',
+            '##.......#######........########.....###',
+            '##....############....##########.....###',
+            '##....############....##########.....###',
+            '##..k.############....##########..k..###',
+            '##....############....##########.....###',
+            '##....############.k..##########.....###',
+            '##....############....####...........###',
+            '##....###.............####...........###',
+            '##....###.............####...........###',
+            '##....###.............####...........###',
+            '##.K..############....####....##########',
+            '##....############....####....##########',
+            '##....############....####....##########',
+            '##....############....####....##########',
+            '##..........######....####....##########',
+            '##..........######....####.k..##########',
+            '##..........######....####....##########',
+            '##..........######....####....##########',
+            '##..........######....####....##########',
+            '##########....................##########',
+            '##########.p................p.##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '##########....................##########',
+            '########################################'
+            ],
+            sites: { A: [3, 8, 12, 16], B: [27, 14, 36, 23] },
+            spawns: [[10, 45, 29, 54], [15, 1, 24, 5]],
+            spawnPoints: [
+                [[14, 49], [17, 50], [20, 49], [23, 50], [26, 49], [12, 51], [27, 51], [19, 52], [15, 52], [24, 52]],
+                [[16, 2], [18, 3], [21, 2], [23, 3], [17, 4], [22, 4], [19, 1], [20, 4], [16, 5], [23, 5]]
+            ],
+            tactic: {
+                A: { hold: [[4, 9], [12, 10], [10, 16], [3, 13]], watch: [[3, 18], [14, 14]], stage: [[3, 34], [3, 28]], entry: [3, 18], plant: [[7, 11], [9, 12], [5, 13]] },
+                B: { hold: [[28, 14], [36, 16], [29, 23], [35, 22]], watch: [[34, 25], [25, 12]], stage: [[34, 30], [28, 34]], entry: [34, 25], plant: [[32, 18], [29, 19], [33, 17]] },
+                mid: { hold: [[20, 12], [20, 21]], watch: [[20, 26]], stage: [[20, 40], [20, 33]] }
+            },
+            look: {
+                sky: [0xe6eef5, 0x8fb3d9], fog: [45, 150], sun: [0xf2f6ff, 0.85], hemi: [0xf4f8ff, 0x6a7a8c, 0.9],
+                floor: ['snow', 0xf6f9fc, 12, 18], wall: 'concrete', cap: 0xffffff, low: 0xc6d2dc, pillar: 0xd0dae3,
+                containers: [0xe0703a, 0x3a7bd5, 0xd8b23a], mini: 'rgba(225,234,242,.85)', snow: true,
+                wallColor(x, z, outer) {
+                    if (outer) return 0x9aa9b6;
+                    if (z < -40) return 0xd8e2ea;
+                    if (z > 30) return 0xc2ced8;
+                    if (x < -14) return 0xbfd0de;
+                    if (x > 12) return 0xd6dde4;
+                    return 0xe7c9b0;
+                }
+            }
+        }
+    };
+    const MAP_IDS = Object.keys(MAPS);
 
     const solids = []; // çarpışma kutuları; off = kapalı, barrier = yalnızca yürümeyi keser
     const occluders = []; // oyuncu mermisinin durduğu meshler
     const cellGrid = Array.from({ length: ROWS }, () => new Array(COLS).fill(1));
-    function carve(c0, r0, c1, r1) {
-        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) cellGrid[r][c] = 0;
-    }
-    carve(14, 1, 25, 6); // savunma doğuşu
-    carve(4, 3, 13, 6); carve(4, 3, 8, 10); // savunma → A
-    carve(26, 3, 35, 6); carve(31, 3, 35, 10); // savunma → B
-    carve(18, 7, 21, 14); // savunma → orta
-    carve(2, 10, 13, 21); // A bölgesi
-    carve(26, 10, 37, 21); // B bölgesi
-    carve(16, 14, 23, 34); carve(14, 22, 25, 28); // orta
-    carve(13, 16, 16, 18); // A bağlantısı
-    carve(23, 16, 26, 18); // B bağlantısı
-    carve(3, 21, 5, 23); carve(3, 24, 7, 41); // A ana yol + boğaz
-    carve(34, 21, 36, 23); carve(32, 24, 36, 41); // B ana yol + boğaz
-    carve(3, 40, 12, 45); carve(27, 40, 36, 45); // lobiler
-    carve(10, 46, 29, 54); // saldırı doğuşu
-    carve(18, 35, 21, 45); // orta alt
-    carve(8, 30, 15, 31); carve(24, 30, 31, 31); // ara geçitler
-
-    const SITES = {
-        A: { name: 'A', x0: cellX(5) - 1, x1: cellX(11) + 1, z0: cellZ(12) - 1, z1: cellZ(18) + 1 },
-        B: { name: 'B', x0: cellX(28) - 1, x1: cellX(34) + 1, z0: cellZ(12) - 1, z1: cellZ(18) + 1 }
-    };
+    const SITES = {};
+    const SPAWN_AREAS = [null, null];
+    const barriers = [];
+    const SPAWN_POINTS = [[], []];
+    const TACTIC = {};
+    let mapId = '';
+    let mapLook = MAPS.liman.look;
+    let mapGroup = null;
+    const mapStatics = []; // birleştirilmeden önceki meshler (ışın testleri için sahne dışında tutulur)
+    const mapOwned = []; // haritaya özel malzeme ve dokular
+    const siteNames = () => Object.keys(SITES);
     const inSite = (x, z) => Object.values(SITES).find((s) => x > s.x0 && x < s.x1 && z > s.z0 && z < s.z1) || null;
-    const SPAWN_AREAS = [
-        { x0: cellX(10) - 1, x1: cellX(29) + 1, z0: cellZ(46) - 1, z1: cellZ(54) + 1 }, // saldırı
-        { x0: cellX(14) - 1, x1: cellX(25) + 1, z0: cellZ(1) - 1, z1: cellZ(6) + 1 } // savunma
-    ];
-    const inSpawn = (side, x, z) => { const a = SPAWN_AREAS[side]; return x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1; };
+    const inSpawn = (side, x, z) => { const a = SPAWN_AREAS[side]; return Boolean(a) && x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1; };
+    const cellRect = ([c0, r0, c1, r1]) => ({ x0: cellX(c0) - CELL / 2, x1: cellX(c1) + CELL / 2, z0: cellZ(r0) - CELL / 2, z1: cellZ(r1) + CELL / 2 });
+    const P = (c, r) => ({ x: cellX(c), z: cellZ(r) });
 
     function addSolid(x0, x1, z0, z1, y0, y1, extra) {
         const s = { x0, x1, z0, z1, y0, y1, ...extra };
@@ -588,64 +1058,23 @@
         m.position.set(cx, y0 + h / 2, cz);
         if (opts.ry) m.rotation.y = opts.ry;
         m.userData.static = true;
-        scene.add(m);
+        mapGroup.add(m);
         if (!opts.deco) {
             occluders.push(m);
             addSolid(cx - w / 2, cx + w / 2, cz - d / 2, cz + d / 2, y0, y0 + h);
         }
         return m;
     }
-
-    // Walls: greedy rectangles over wall cells, coloured by area so every lane reads differently.
-    function wallColor(x, z, outer) {
-        if (outer) return 0xb3a493;
-        if (z < -40) return 0xd6d0c4;
-        if (z > 34) return 0xe0c4a6;
-        if (x < -13) return 0xeed2a4;
-        if (x > 13) return 0xbcd3d6;
-        return 0xe8a684;
-    }
-    (function buildWalls() {
-        const used = cellGrid.map((row) => row.map(() => false));
-        const wallAt = (c, r) => r >= 0 && r < ROWS && c >= 0 && c < COLS && cellGrid[r][c] === 1 && !used[r][c];
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if (!wallAt(c, r)) continue;
-                let w = 1;
-                while (wallAt(c + w, r)) w++;
-                let h = 1;
-                while (r + h < ROWS && Array.from({ length: w }, (_, i) => wallAt(c + i, r + h)).every(Boolean)) h++;
-                for (let rr = r; rr < r + h; rr++) for (let cc = c; cc < c + w; cc++) used[rr][cc] = true;
-                const x = (c - COLS / 2) * CELL + (w * CELL) / 2;
-                const z = (r - ROWS / 2) * CELL + (h * CELL) / 2;
-                const outer = c === 0 || r === 0 || c + w === COLS || r + h === ROWS;
-                const color = wallColor(x, z, outer);
-                const height = outer ? WALL_H + 2 : WALL_H;
-                box(x, 0, z, w * CELL, height, h * CELL, lam(color, 'plaster'));
-                box(x, 0, z, w * CELL + 0.12, 0.55, h * CELL + 0.12, lam(new THREE.Color(color).multiplyScalar(0.62).getHex(), 'trim'), { deco: true });
-                box(x, height, z, w * CELL + 0.3, 0.3, h * CELL + 0.3, lam(0xf4eee4, 'trim'), { deco: true });
-            }
-        }
-    })();
-
-    // Cover: crates (jumpable), stacked crates and painted cargo containers.
-    const crateMat = lam(0xc49a62, 'crate');
-    const COVERS = [
-        ['big', 8, 13, 0xd9773f], ['small', 11, 17], ['small', 4, 19], ['tall', 12, 11],
-        ['big', 30, 13, 0x3f9aa0], ['small', 28, 17], ['small', 35, 19], ['tall', 27, 11],
-        ['big', 19, 24, 0x4a6fb5], ['small', 15, 26], ['small', 24, 23], ['small', 22, 18], ['small', 17, 31],
-        ['small', 6, 33], ['tall', 3, 28], ['small', 33, 33], ['tall', 36, 28],
-        ['small', 9, 42], ['small', 30, 42], ['small', 18, 10]
-    ];
-    for (const [kind, c, r, color] of COVERS) {
-        const x = cellX(c);
-        const z = cellZ(r);
-        if (kind === 'big') box(x + 1, 0, z + 1, 3.6, 2.6, 3.6, lam(color, 'metal'));
-        else if (kind === 'tall') { box(x, 0, z, 1.7, 1.25, 1.7, crateMat); box(x + 0.05, 1.25, z - 0.05, 1.5, 1.2, 1.5, crateMat); }
-        else box(x, 0, z, 1.6, 1.2, 1.6, crateMat);
+    // Any other static shape (domes, trunks, mountains); decorative unless given a collision box.
+    function deco(geo, material, x, y, z, rot) {
+        const m = new THREE.Mesh(geo, material);
+        m.position.set(x, y, z);
+        if (rot) m.rotation.set(rot[0] || 0, rot[1] || 0, rot[2] || 0);
+        m.userData.static = true;
+        mapGroup.add(m);
+        return m;
     }
 
-    // Floor, painted plant zones and site letters.
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(COLS * CELL, ROWS * CELL), new THREE.MeshLambertMaterial({ map: SURFACES.pavers.tex, color: 0xf2e8d8 }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
@@ -661,45 +1090,14 @@
         return tex;
     }
     function plane(w, h, tex, x, y, z, rx, ry) {
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+        const mat = new THREE.MeshLambertMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+        mapOwned.push(mat, tex);
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
         m.position.set(x, y, z);
         m.rotation.set(rx || 0, ry || 0, 0);
         m.receiveShadow = true;
-        scene.add(m);
+        mapGroup.add(m);
         return m;
-    }
-    for (const site of Object.values(SITES)) {
-        const w = site.x1 - site.x0;
-        const d = site.z1 - site.z0;
-        const tex = decalTexture((g, W2, H2) => {
-            g.fillStyle = 'rgba(255,90,70,.07)';
-            g.fillRect(0, 0, W2, H2);
-            g.strokeStyle = 'rgba(255,92,72,.85)';
-            g.lineWidth = 10;
-            g.setLineDash([34, 18]);
-            g.strokeRect(8, 8, W2 - 16, H2 - 16);
-            g.setLineDash([]);
-            g.save();
-            g.translate(W2 / 2, H2 / 2);
-            g.font = '900 230px Teko, Impact, sans-serif';
-            g.textAlign = 'center';
-            g.textBaseline = 'middle';
-            g.fillStyle = 'rgba(255,92,72,.16)';
-            g.fillText(site.name, 0, 10);
-            g.restore();
-        });
-        plane(w, d, tex, (site.x0 + site.x1) / 2, 0.025, (site.z0 + site.z1) / 2, -Math.PI / 2);
-        const letter = decalTexture((g, W2, H2) => {
-            g.font = '900 420px Teko, Impact, sans-serif';
-            g.textAlign = 'center';
-            g.textBaseline = 'middle';
-            g.fillStyle = 'rgba(30,30,40,.18)';
-            g.fillText(site.name, W2 / 2 + 10, H2 / 2 + 30);
-            g.fillStyle = '#ff5a48';
-            g.fillText(site.name, W2 / 2, H2 / 2 + 20);
-            overlay(g, W2, NOISE_HI, 3, 0.35, 'destination-out');
-        });
-        plane(4, 4, letter, (site.x0 + site.x1) / 2, 3.4, cellZ(10) - CELL / 2 + 0.02);
     }
 
     // Spawn barriers stand during the buy phase; they stop movement, not sight.
@@ -722,75 +1120,391 @@
         color: 0xffa36b, transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false
     });
     barrierMat.map.wrapS = barrierMat.map.wrapT = THREE.RepeatWrapping;
-    const barriers = [[ATK, -20, 20, 36, 36], [DEF, -12, -12, -54, -42], [DEF, 12, 12, -54, -42], [DEF, -4, 4, -42, -42]].map(([side, x0, x1, z0, z1]) => {
-        const len = Math.max(x1 - x0, z1 - z0);
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(len, WALL_H), barrierMat);
-        mesh.position.set((x0 + x1) / 2, WALL_H / 2, (z0 + z1) / 2);
-        if (x0 === x1) mesh.rotation.y = Math.PI / 2;
-        scene.add(mesh);
-        const solid = addSolid(x0 - 0.15, x1 + 0.15, z0 - 0.15, z1 + 0.15, 0, WALL_H, { barrier: true });
-        return { side, mesh, solid };
-    });
+    let barriersUp = false;
     function setBarriers(up) {
+        barriersUp = up;
         for (const b of barriers) { b.mesh.visible = up; b.solid.off = !up; }
     }
 
-    // Scenery past the outer wall: rooftops and a bell tower make the skyline of a harbour town.
-    (function skyline() {
-        const r = mulberry32(77);
-        const roof = lam(0xc8643c, 'tile');
-        for (let i = 0; i < 46; i++) {
+    // The sky dome's vertex colours, fog, sun and fill light follow the map.
+    function applyLook(look) {
+        mapLook = look;
+        const [horizon, top] = look.sky;
+        scene.background.setHex(horizon);
+        scene.fog.color.setHex(horizon);
+        [scene.fog.near, scene.fog.far] = look.fog;
+        sun.color.setHex(look.sun[0]);
+        sun.intensity = look.sun[1];
+        hemi.color.setHex(look.hemi[0]);
+        hemi.groundColor.setHex(look.hemi[1]);
+        hemi.intensity = look.hemi[2];
+        const pos = skyDome.geometry.attributes.position;
+        const col = skyDome.geometry.attributes.color;
+        const t = new THREE.Color(top);
+        const h = new THREE.Color(horizon);
+        const c = new THREE.Color();
+        for (let i = 0; i < pos.count; i++) {
+            c.copy(h).lerp(t, Math.pow(Math.max(0, pos.getY(i) / 300), 0.5));
+            col.setXYZ(i, c.r, c.g, c.b);
+        }
+        col.needsUpdate = true;
+        const [surface, color, rx, rz] = look.floor;
+        floor.material.map = SURFACES[surface].tex;
+        floor.material.color.setHex(color);
+        floor.material.needsUpdate = true;
+        SURFACES[surface].tex.repeat.set(rx, rz);
+    }
+
+    function clearMap() {
+        if (mapGroup) {
+            scene.remove(mapGroup);
+            mapGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+        }
+        for (const m of mapStatics) m.geometry.dispose();
+        for (const o of mapOwned) o.dispose();
+        mapStatics.length = 0;
+        mapOwned.length = 0;
+        solids.length = 0;
+        occluders.length = 0;
+        barriers.length = 0;
+        for (const k of Object.keys(SITES)) delete SITES[k];
+        for (const k of Object.keys(TACTIC)) delete TACTIC[k];
+        snowField = null;
+        mapGroup = new THREE.Group();
+        scene.add(mapGroup);
+    }
+
+    const charAt = (def, c, r) => (r >= 0 && r < ROWS && c >= 0 && c < COLS ? def.grid[r][c] : '#');
+    const isOpen = (ch) => ch !== '#' && ch !== 'o';
+
+    function buildMap(id) {
+        const def = MAPS[id] || MAPS.liman;
+        if (mapId === id) return;
+        mapId = MAPS[id] ? id : 'liman';
+        clearMap();
+        const look = def.look;
+        applyLook(look);
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) cellGrid[r][c] = def.grid[r][c] === '#' ? 1 : 0;
+
+        for (const [k, rect] of Object.entries(def.sites)) SITES[k] = { name: k, ...cellRect(rect), cells: rect };
+        def.spawns.forEach((rect, side) => { SPAWN_AREAS[side] = cellRect(rect); });
+        def.spawnPoints.forEach((list, side) => { SPAWN_POINTS[side] = list.map(([c, r]) => P(c, r)); });
+        const pts = (list) => list.map(([c, r]) => P(c, r));
+        for (const [k, t] of Object.entries(def.tactic)) {
+            TACTIC[k] = { hold: pts(t.hold), watch: pts(t.watch), stage: pts(t.stage) };
+            if (t.entry) TACTIC[k].entry = P(t.entry[0], t.entry[1]);
+            if (t.plant) TACTIC[k].plant = pts(t.plant);
+        }
+
+        // Walls: greedy rectangles over wall cells, coloured by area so every lane reads differently.
+        const used = cellGrid.map((row) => row.map(() => false));
+        const wallAt = (c, r) => r >= 0 && r < ROWS && c >= 0 && c < COLS && cellGrid[r][c] === 1 && !used[r][c];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (!wallAt(c, r)) continue;
+                let w = 1;
+                while (wallAt(c + w, r)) w++;
+                let h = 1;
+                while (r + h < ROWS && Array.from({ length: w }, (_, i) => wallAt(c + i, r + h)).every(Boolean)) h++;
+                for (let rr = r; rr < r + h; rr++) for (let cc = c; cc < c + w; cc++) used[rr][cc] = true;
+                const x = (c - COLS / 2) * CELL + (w * CELL) / 2;
+                const z = (r - ROWS / 2) * CELL + (h * CELL) / 2;
+                const outer = c === 0 || r === 0 || c + w === COLS || r + h === ROWS;
+                const color = look.wallColor(x, z, outer);
+                const height = outer ? WALL_H + 2 : WALL_H;
+                box(x, 0, z, w * CELL, height, h * CELL, lam(color, look.wall));
+                box(x, 0, z, w * CELL + 0.12, 0.55, h * CELL + 0.12, lam(new THREE.Color(color).multiplyScalar(0.62).getHex(), 'trim'), { deco: true });
+                box(x, height, z, w * CELL + 0.3, 0.3, h * CELL + 0.3, lam(look.cap, 'trim'), { deco: true });
+            }
+        }
+
+        // Cover and props from the plan's letters.
+        const crateMat = lam(0xc49a62, 'crate');
+        let container = 0;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const ch = def.grid[r][c];
+                const x = cellX(c);
+                const z = cellZ(r);
+                if (ch === 'k') box(x, 0, z, 1.6, 1.2, 1.6, crateMat);
+                else if (ch === 'K') { box(x, 0, z, 1.7, 1.25, 1.7, crateMat); box(x + 0.05, 1.25, z - 0.05, 1.5, 1.2, 1.5, crateMat); }
+                else if (ch === 'M') box(x + 1, 0, z + 1, 3.6, 2.6, 3.6, lam(look.containers[container++ % look.containers.length], 'metal'));
+                else if (ch === 'h') { box(x, 0, z, CELL, 1.05, CELL, lam(look.low, look.wall)); box(x, 1.05, z, CELL + 0.16, 0.12, CELL + 0.16, lam(look.cap, 'trim'), { deco: true }); }
+                else if (ch === 'o') { box(x, 0, z, 0.9, WALL_H, 0.9, lam(look.pillar, 'concrete')); box(x, 0, z, 1.2, 0.4, 1.2, lam(look.cap, 'trim'), { deco: true }); }
+                else if (ch === 'p') SCENERY[mapId].prop(x, z);
+            }
+        }
+
+        // Painted plant zones and a big letter on the nearest wall above each site.
+        for (const site of Object.values(SITES)) {
+            const w = site.x1 - site.x0;
+            const d = site.z1 - site.z0;
+            const tex = decalTexture((g, W2, H2) => {
+                g.fillStyle = 'rgba(255,90,70,.07)';
+                g.fillRect(0, 0, W2, H2);
+                g.strokeStyle = 'rgba(255,92,72,.85)';
+                g.lineWidth = 10;
+                g.setLineDash([34, 18]);
+                g.strokeRect(8, 8, W2 - 16, H2 - 16);
+                g.setLineDash([]);
+                g.font = '900 230px Teko, Impact, sans-serif';
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                g.fillStyle = 'rgba(255,92,72,.16)';
+                g.fillText(site.name, W2 / 2, H2 / 2 + 10);
+            });
+            plane(w, d, tex, (site.x0 + site.x1) / 2, 0.025, (site.z0 + site.z1) / 2, -Math.PI / 2);
+            const spot = letterSpot(def, site.cells);
+            if (spot) {
+                const letter = decalTexture((g, W2, H2) => {
+                    g.font = '900 420px Teko, Impact, sans-serif';
+                    g.textAlign = 'center';
+                    g.textBaseline = 'middle';
+                    g.fillStyle = 'rgba(30,30,40,.18)';
+                    g.fillText(site.name, W2 / 2 + 10, H2 / 2 + 30);
+                    g.fillStyle = '#ff5a48';
+                    g.fillText(site.name, W2 / 2, H2 / 2 + 20);
+                    overlay(g, W2, NOISE_HI, 3, 0.35, 'destination-out');
+                });
+                plane(3.6, 3.6, letter, spot.x, 3.4, spot.z, 0, spot.ry);
+            }
+        }
+
+        // Barriers close every opening on the edge of each spawn rectangle.
+        def.spawns.forEach(([c0, r0, c1, r1], side) => {
+            const runs = [];
+            const scan = (cells, outside, make) => {
+                let start = null;
+                cells.forEach((cell, i) => {
+                    const open = isOpen(charAt(def, cell[0], cell[1])) && isOpen(charAt(def, outside(cell)[0], outside(cell)[1]));
+                    if (open && start === null) start = i;
+                    if ((!open || i === cells.length - 1) && start !== null) { runs.push(make(cells[start], cells[open ? i : i - 1])); start = null; }
+                });
+            };
+            const span = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+            scan(span(c0, c1).map((c) => [c, r0]), ([c, r]) => [c, r - 1], (a, b) => [cellX(a[0]) - 1, cellX(b[0]) + 1, cellZ(r0) - 1, cellZ(r0) - 1]);
+            scan(span(c0, c1).map((c) => [c, r1]), ([c, r]) => [c, r + 1], (a, b) => [cellX(a[0]) - 1, cellX(b[0]) + 1, cellZ(r1) + 1, cellZ(r1) + 1]);
+            scan(span(r0, r1).map((r) => [c0, r]), ([c, r]) => [c - 1, r], (a, b) => [cellX(c0) - 1, cellX(c0) - 1, cellZ(a[1]) - 1, cellZ(b[1]) + 1]);
+            scan(span(r0, r1).map((r) => [c1, r]), ([c, r]) => [c + 1, r], (a, b) => [cellX(c1) + 1, cellX(c1) + 1, cellZ(a[1]) - 1, cellZ(b[1]) + 1]);
+            for (const [x0, x1, z0, z1] of runs) {
+                const len = Math.max(x1 - x0, z1 - z0);
+                const mesh = new THREE.Mesh(new THREE.PlaneGeometry(len, WALL_H), barrierMat);
+                mesh.position.set((x0 + x1) / 2, WALL_H / 2, (z0 + z1) / 2);
+                if (x0 === x1) mesh.rotation.y = Math.PI / 2;
+                mapGroup.add(mesh);
+                const solid = addSolid(x0 - 0.15, x1 + 0.15, z0 - 0.15, z1 + 0.15, 0, WALL_H, { barrier: true });
+                barriers.push({ side, mesh, solid });
+            }
+        });
+        setBarriers(barriersUp);
+
+        SCENERY[mapId].skyline(mulberry32(77 + mapId.length));
+        mergeStatic();
+        buildNav();
+        drawMiniBase();
+    }
+
+    // The closest wall face above (or below) the site, wide enough for a 3.6 m letter.
+    function letterSpot(def, [c0, r0, c1, r1]) {
+        const mid = Math.round((c0 + c1) / 2);
+        const wall = (c, r) => charAt(def, c, r) === '#';
+        let best = null;
+        for (const dc of [0, 1, -1, 2, -2, 3, -3]) {
+            const c = mid + dc;
+            for (let r = r0 - 1; r >= Math.max(0, r0 - 7); r--) {
+                if (!wall(c, r)) continue;
+                const dist = r0 - r + Math.abs(dc) * 0.5;
+                if (wall(c - 1, r) && wall(c + 1, r) && isOpen(charAt(def, c, r + 1)) && (!best || dist < best.dist)) best = { dist, x: cellX(c), z: cellZ(r) + CELL / 2 + 0.03, ry: 0 };
+                break;
+            }
+            for (let r = r1 + 1; r <= Math.min(ROWS - 1, r1 + 7); r++) {
+                if (!wall(c, r)) continue;
+                const dist = r - r1 + Math.abs(dc) * 0.5 + 0.25;
+                if (wall(c - 1, r) && wall(c + 1, r) && isOpen(charAt(def, c, r - 1)) && (!best || dist < best.dist)) best = { dist, x: cellX(c), z: cellZ(r) - CELL / 2 - 0.03, ry: Math.PI };
+                break;
+            }
+        }
+        return best;
+    }
+
+    /* ---------- Harita görünümleri: dış manzara ve süs eşyaları ---------- */
+
+    const bushGeo = new THREE.SphereGeometry(0.75, 8, 6);
+    let snowField = null;
+    const SCENERY = {
+        liman: {
+            // Rooftops and a bell tower make the skyline of a harbour town.
+            skyline(r) {
+                const roof = lam(0xc8643c, 'tile');
+                ring(r, 46, (x, z) => {
+                    const w = 6 + r() * 8;
+                    const d = 6 + r() * 8;
+                    const h = 8 + r() * 12;
+                    const color = [0xf0dcc0, 0xe8c9a4, 0xdfe6e4, 0xf2e2cf, 0xe6b894][Math.floor(r() * 5)];
+                    box(x, 0, z, w, h, d, lam(color, 'plaster'), { deco: true });
+                    box(x, h, z, w + 0.8, 0.5, d + 0.8, roof, { deco: true });
+                });
+                box(-HALF_X - 14, 0, -10, 6, 30, 6, lam(0xead5b4, 'plaster'), { deco: true });
+                box(-HALF_X - 14, 30, -10, 7, 1, 7, lam(0xf4eee4, 'trim'), { deco: true });
+                box(-HALF_X - 14, 31, -10, 4, 5, 4, roof, { deco: true });
+                const awning = lam(0xd6603c, 'tile');
+                const awning2 = lam(0x3f9aa0, 'tile');
+                [[cellX(5), cellZ(30), 0], [cellX(34), cellZ(30), 1], [cellX(19.5), cellZ(46) - 1, 0], [cellX(19.5), cellZ(2), 1]].forEach(([x, z, alt]) => {
+                    box(x, 3.4, z, 6, 0.25, 2.2, alt ? awning2 : awning, { deco: true });
+                });
+            },
+            prop(x, z) {
+                box(x, 0, z, 1.1, 0.7, 1.1, lam(0xb5643e, 'trim'));
+                deco(bushGeo, lam(0x4f8a3c, 'leaves'), x, 1.15, z);
+            }
+        },
+        kumsaray: {
+            // Sandstone houses, white domes and two watchtowers behind the citadel walls.
+            skyline(r) {
+                const dome = new THREE.SphereGeometry(1, 16, 8, 0, TAU, 0, Math.PI / 2);
+                ring(r, 40, (x, z) => {
+                    const w = 7 + r() * 9;
+                    const d = 7 + r() * 9;
+                    const h = 6 + r() * 10;
+                    const color = [0xe9cfa3, 0xdcb582, 0xf0dcc0, 0xd8a96e][Math.floor(r() * 4)];
+                    box(x, 0, z, w, h, d, lam(color, 'sandstone'), { deco: true });
+                    box(x, h, z, w + 0.4, 0.4, d + 0.4, lam(0xf2dfbd, 'trim'), { deco: true });
+                    if (r() < 0.35) {
+                        const s = Math.min(w, d) * 0.38;
+                        const m = deco(dome, lam(r() < 0.5 ? 0xf6f1e6 : 0x3aa6a0, 'plaster'), x, h + 0.4, z);
+                        m.scale.set(s, s * 0.9, s);
+                    }
+                });
+                for (const [x, z] of [[-HALF_X - 12, 18], [HALF_X + 12, -24]]) {
+                    box(x, 0, z, 5, 26, 5, lam(0xe3c08a, 'sandstone'), { deco: true });
+                    box(x, 26, z, 6.4, 1, 6.4, lam(0xf2dfbd, 'trim'), { deco: true });
+                    for (const [dx, dz] of [[-2.6, -2.6], [2.6, -2.6], [-2.6, 2.6], [2.6, 2.6]]) box(x + dx, 27, z + dz, 1.2, 1.4, 1.2, lam(0xe3c08a, 'sandstone'), { deco: true });
+                }
+                // Striped cloth shades over the courtyard.
+                const cloth = [lam(0xc0583a, 'tile'), lam(0x2f8f9d, 'tile')];
+                [[cellX(16), cellZ(18)], [cellX(23), cellZ(14)], [cellX(3), cellZ(31)], [cellX(34), cellZ(31)]].forEach(([x, z], i) => box(x, 3.6, z, 5, 0.18, 2.6, cloth[i % 2], { deco: true }));
+            },
+            // Palm in a stone pot.
+            prop(x, z) {
+                box(x, 0, z, 1.2, 0.8, 1.2, lam(0xd9b27c, 'sandstone'));
+                deco(new THREE.CylinderGeometry(0.14, 0.2, 4.2, 6), lam(0x8a6a44, 'crate'), x, 2.9, z);
+                const frond = new THREE.BoxGeometry(2.4, 0.06, 0.55);
+                frond.translate(1.2, 0, 0);
+                for (let i = 0; i < 7; i++) deco(frond, lam(0x5c8f3a, 'leaves'), x, 5, z, [0, (i / 7) * TAU, -0.35]);
+            }
+        },
+        ucyol: {
+            // Glass towers and a skybridge: a modern technology campus.
+            skyline(r) {
+                ring(r, 30, (x, z) => {
+                    const w = 8 + r() * 8;
+                    const d = 8 + r() * 8;
+                    const h = 18 + r() * 30;
+                    box(x, 0, z, w, h, d, lam([0x9fb4c8, 0xb8c7d4, 0x7f97ad, 0xc9d3dc][Math.floor(r() * 4)], 'glass'), { deco: true });
+                    box(x, h, z, w + 0.5, 0.6, d + 0.5, lam(0xe9edf0, 'trim'), { deco: true });
+                });
+                box(0, 14, -HALF_Z - 9, 30, 3, 4, lam(0xe9edf0, 'concrete'), { deco: true });
+                // Coloured stripes mark which site a lane leads to.
+                const stripe = (x, z, w, d, color) => box(x, 2.6, z, w, 0.4, d, lam(color, 'trim'), { deco: true });
+                stripe(cellX(1) + 1.05, cellZ(30), 0.1, 24, 0xf08a3c);
+                stripe(cellX(38) - 1.05, cellZ(30), 0.1, 24, 0x3cb7a8);
+            },
+            // Concrete planter with a round tree.
+            prop(x, z) {
+                box(x, 0, z, 1.4, 0.6, 1.4, lam(0xc4ccd3, 'concrete'));
+                deco(new THREE.CylinderGeometry(0.08, 0.1, 1.6, 6), lam(0x6b5a48, 'crate'), x, 1.4, z);
+                deco(bushGeo, lam(0x5aa04a, 'leaves'), x, 2.4, z);
+            }
+        },
+        buzul: {
+            // Snowy peaks, radio masts and a dish around the research base.
+            skyline(r) {
+                const peak = new THREE.ConeGeometry(1, 1, 7);
+                ring(r, 22, (x, z) => {
+                    const s = 14 + r() * 18;
+                    const m = deco(peak, lam(r() < 0.5 ? 0xf2f6fa : 0xdde6ee, 'snow'), x * 1.25, s * 0.5, z * 1.15, [0, r() * TAU, 0]);
+                    m.scale.set(s, s * (0.9 + r() * 0.8), s);
+                });
+                const mast = lam(0xe0703a, 'metal');
+                for (const [x, z] of [[-HALF_X - 8, -30], [HALF_X + 8, 10], [-HALF_X - 8, 40]]) {
+                    deco(new THREE.CylinderGeometry(0.25, 0.4, 22, 6), mast, x, 11, z);
+                    box(x, 22, z, 2, 0.3, 2, lam(0xffffff, 'trim'), { deco: true });
+                }
+                const dish = deco(new THREE.SphereGeometry(5, 16, 8, 0, TAU, 0, Math.PI / 3), lam(0xf4f6f8, 'metal'), HALF_X + 14, 9, -HALF_Z + 10, [-0.9, -0.6, 0]);
+                dish.scale.set(1, 0.5, 1);
+                box(HALF_X + 14, 0, -HALF_Z + 10, 1.5, 8, 1.5, lam(0xb0bcc8, 'metal'), { deco: true });
+                // Orange hazard bands on the base walls.
+                for (const [x, z, w, d] of [[cellX(19.5), cellZ(44) + 1.06, 8, 0.1], [cellX(19.5), cellZ(6) - 1.06, 8, 0.1]]) box(x, 1.4, z, w, 0.5, d, lam(0xe0703a, 'trim'), { deco: true });
+                snowField = makeSnow();
+                mapGroup.add(snowField);
+            },
+            // Two fuel barrels.
+            prop(x, z) {
+                const barrel = new THREE.CylinderGeometry(0.42, 0.42, 1.2, 10);
+                deco(barrel, lam(0xe0703a, 'metal'), x - 0.35, 0.6, z);
+                deco(barrel, lam(0x3a7bd5, 'metal'), x + 0.4, 0.6, z + 0.2);
+                addSolid(x - 0.8, x + 0.85, z - 0.45, z + 0.65, 0, 1.2);
+            }
+        }
+    };
+
+    // Places `count` scenery pieces in a ring just outside the outer wall.
+    function ring(r, count, place) {
+        for (let i = 0; i < count; i++) {
             const side = i % 4;
             const t = r() * 2 - 1;
-            const w = 6 + r() * 8;
-            const d = 6 + r() * 8;
-            const h = 8 + r() * 12;
             let x = 0;
             let z = 0;
             if (side === 0) { x = t * (HALF_X + 10); z = -HALF_Z - 6 - r() * 10; }
             if (side === 1) { x = t * (HALF_X + 10); z = HALF_Z + 6 + r() * 10; }
             if (side === 2) { z = t * (HALF_Z + 10); x = -HALF_X - 6 - r() * 10; }
             if (side === 3) { z = t * (HALF_Z + 10); x = HALF_X + 6 + r() * 10; }
-            const color = [0xf0dcc0, 0xe8c9a4, 0xdfe6e4, 0xf2e2cf, 0xe6b894][Math.floor(r() * 5)];
-            box(x, 0, z, w, h, d, lam(color, 'plaster'), { deco: true });
-            box(x, h, z, w + 0.8, 0.5, d + 0.8, roof, { deco: true });
+            place(x, z);
         }
-        box(-HALF_X - 14, 0, -10, 6, 30, 6, lam(0xead5b4, 'plaster'), { deco: true });
-        box(-HALF_X - 14, 30, -10, 7, 1, 7, lam(0xf4eee4, 'trim'), { deco: true });
-        box(-HALF_X - 14, 31, -10, 4, 5, 4, roof, { deco: true });
-    })();
+    }
 
-    // Awnings and planters for colour; planters are cover too.
-    (function props() {
-        const awning = lam(0xd6603c, 'tile');
-        const awning2 = lam(0x3f9aa0, 'tile');
-        [[cellX(5), cellZ(30), 0], [cellX(34), cellZ(30), 1], [cellX(19.5), cellZ(46) - 1, 0], [cellX(19.5), cellZ(2), 1]].forEach(([x, z, alt]) => {
-            box(x, 3.4, z, 6, 0.25, 2.2, alt ? awning2 : awning, { deco: true });
-        });
-        const pot = lam(0xb5643e, 'trim');
-        const leaf = lam(0x4f8a3c, 'leaves');
-        const bushGeo = new THREE.SphereGeometry(0.75, 8, 6);
-        [[15, 15], [24, 15], [14, 33], [25, 33], [11, 47], [28, 47]].forEach(([c, r]) => {
-            const x = cellX(c);
-            const z = cellZ(r);
-            box(x, 0, z, 1.1, 0.7, 1.1, pot);
-            const b = new THREE.Mesh(bushGeo, leaf);
-            b.position.set(x, 1.15, z);
-            b.userData.static = true;
-            scene.add(b);
-        });
-    })();
+    // Falling snow on Buzul: one draw call, wrapped around the camera each frame.
+    function makeSnow() {
+        const n = 1400;
+        const pos = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) { pos[i * 3] = rand(-30, 30); pos[i * 3 + 1] = rand(0, 18); pos[i * 3 + 2] = rand(-30, 30); }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.09, transparent: true, opacity: 0.85, depthWrite: false });
+        mapOwned.push(mat);
+        const pts = new THREE.Points(geo, mat);
+        pts.frustumCulled = false;
+        pts.raycast = () => {};
+        return pts;
+    }
+    function tickMap(dt, now) {
+        if (!snowField) return;
+        const pos = snowField.geometry.attributes.position;
+        const cx = camera.position.x;
+        const cz = camera.position.z;
+        for (let i = 0; i < pos.count; i++) {
+            let y = pos.getY(i) - dt * 1.6;
+            let x = pos.getX(i) + Math.sin(now / 1500 + i) * dt * 0.4;
+            let z = pos.getZ(i);
+            if (y < 0) y += 18;
+            if (x - cx > 30) x -= 60; else if (x - cx < -30) x += 60;
+            if (z - cz > 30) z -= 60; else if (z - cz < -30) z += 60;
+            pos.setXYZ(i, x, y, z);
+        }
+        pos.needsUpdate = true;
+    }
 
-    // ~1000 static meshes become one draw call per material; the originals stay out of the scene with
+    // ~1000 static meshes become one draw call per material; the originals leave the scene with
     // frozen matrices so the player's bullets can still raycast against them.
-    (function mergeStatic() {
+    function mergeStatic() {
         const byMaterial = new Map();
-        for (const m of [...scene.children]) {
+        for (const m of [...mapGroup.children]) {
             if (!m.isMesh || !m.userData.static) continue;
             m.updateMatrixWorld(true);
             if (!byMaterial.has(m.material)) byMaterial.set(m.material, []);
             byMaterial.get(m.material).push(m);
-            scene.remove(m);
+            mapGroup.remove(m);
+            mapStatics.push(m);
         }
         for (const [material, list] of byMaterial) {
             const parts = list.map((m) => {
@@ -832,9 +1546,9 @@
             const mesh = new THREE.Mesh(geo, material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
-            scene.add(mesh);
+            mapGroup.add(mesh);
         }
-    })();
+    }
 
     /* ---------- Çarpışma ve ışın testleri ---------- */
 
@@ -918,14 +1632,17 @@
     const GW = COLS * CELL;
     const GH = ROWS * CELL;
     const nav = new Uint8Array(GW * GH);
-    for (const s of solids) {
-        if (s.barrier || s.y0 > 1.5 || s.y1 < 0.45) continue;
-        const m = R + 0.12;
-        for (let cx = Math.max(0, Math.floor(s.x0 - m + HALF_X)); cx <= Math.min(GW - 1, Math.floor(s.x1 + m + HALF_X)); cx++) {
-            for (let cz = Math.max(0, Math.floor(s.z0 - m + HALF_Z)); cz <= Math.min(GH - 1, Math.floor(s.z1 + m + HALF_Z)); cz++) {
-                const x = cx - HALF_X + 0.5;
-                const z = cz - HALF_Z + 0.5;
-                if (x > s.x0 - m && x < s.x1 + m && z > s.z0 - m && z < s.z1 + m) nav[cz * GW + cx] = 1;
+    function buildNav() {
+        nav.fill(0);
+        for (const s of solids) {
+            if (s.barrier || s.y0 > 1.5 || s.y1 < 0.45) continue;
+            const m = R + 0.12;
+            for (let cx = Math.max(0, Math.floor(s.x0 - m + HALF_X)); cx <= Math.min(GW - 1, Math.floor(s.x1 + m + HALF_X)); cx++) {
+                for (let cz = Math.max(0, Math.floor(s.z0 - m + HALF_Z)); cz <= Math.min(GH - 1, Math.floor(s.z1 + m + HALF_Z)); cz++) {
+                    const x = cx - HALF_X + 0.5;
+                    const z = cz - HALF_Z + 0.5;
+                    if (x > s.x0 - m && x < s.x1 + m && z > s.z0 - m && z < s.z1 + m) nav[cz * GW + cx] = 1;
+                }
             }
         }
     }
@@ -1048,30 +1765,6 @@
         }
         return out;
     }
-
-    // Tactical points for bots, in world metres.
-    const P = (c, r) => ({ x: cellX(c), z: cellZ(r) });
-    const SPAWN_POINTS = [
-        [P(14, 50), P(17, 51), P(20, 50), P(23, 51), P(26, 50), P(12, 52), P(27, 52), P(19, 53), P(15, 53), P(24, 53)],
-        [P(15, 3), P(18, 4), P(21, 3), P(24, 4), P(16, 5), P(23, 5), P(19, 2), P(20, 5), P(17, 2), P(22, 2)]
-    ];
-    const TACTIC = {
-        A: {
-            hold: [P(5, 13), P(12, 14), P(9, 19), P(6, 11)],
-            watch: [P(4, 22), P(14, 17)],
-            stage: [P(5, 38), P(5, 32)],
-            entry: P(4, 22),
-            plant: [P(7, 16), P(10, 15), P(6, 17)]
-        },
-        B: {
-            hold: [P(34, 13), P(27, 14), P(30, 19), P(33, 11)],
-            watch: [P(35, 22), P(25, 17)],
-            stage: [P(34, 38), P(34, 32)],
-            entry: P(35, 22),
-            plant: [P(32, 16), P(29, 15), P(33, 17)]
-        },
-        mid: { hold: [P(19, 17), P(20, 21)], watch: [P(19, 30)], stage: [P(19, 38), P(19, 32)] }
-    };
 
     /* ---------- Silahlar ve modeller ---------- */
 
@@ -1207,6 +1900,16 @@
                 g.add(mk(CYL(0.04, 0.03), m.glass, 0, 0.09, -0.24));
                 g.add(mk(BOX(0.035, 0.12, 0.06), m.dark, 0, -0.1, 0.07, -0.3));
                 mz = -0.95;
+                break;
+            case 'blades':
+                // a fan of three throwing knives
+                for (const [x, ry] of [[-0.03, 0.18], [0, 0], [0.03, -0.18]]) {
+                    const k = mk(BOX(0.01, 0.035, 0.2), lam(0xd7f7a4), x, 0.01, -0.12);
+                    k.rotation.y = ry;
+                    g.add(k);
+                }
+                g.add(mk(BOX(0.05, 0.03, 0.06), m.dark, 0, -0.005, 0.0));
+                mz = -0.24;
                 break;
             case 'spike': {
                 g.add(mk(BOX(0.18, 0.12, 0.22), m.dark, 0, 0, -0.05));
@@ -1371,7 +2074,7 @@
     }
     const SHOT_SOUND = {
         pim: [0.1, 3200, 0.4, 130], olcu: [0.22, 1600, 0.75, 80], ari: [0.09, 3000, 0.4, 120], sacma: [0.3, 1400, 0.85, 70],
-        kartal: [0.14, 2100, 0.6, 85], sahin: [0.1, 1300, 0.28, 140], yayla: [0.45, 1000, 0.95, 55]
+        kartal: [0.14, 2100, 0.6, 85], sahin: [0.1, 1300, 0.28, 140], yayla: [0.45, 1000, 0.95, 55], blades: [0.12, 4200, 0.3, 300]
     };
     function shotSound(id, vol = 1, pan = 0) {
         const s = SHOT_SOUND[id];
@@ -1505,7 +2208,7 @@
         primary: -1, secondary: W.pim, slot: W.pim, ammo: {}, charges: { c: 0, q: 0, e: 0 }, ult: 0,
         reloading: false, reloadStart: 0, nextShot: 0, fireSeq: 0, spray: 0, lastShotAt: -1e9, ads: false,
         kickYaw: 0, kickPitch: 0, tagUntil: 0, blindUntil: 0, blindTotal: 1, darkUntil: 0,
-        dashUntil: 0, dashX: 0, dashZ: 0, buffUntil: 0, healLeft: 0,
+        dashUntil: 0, dashX: 0, dashZ: 0, buffUntil: 0, healLeft: 0, stunUntil: 0, bladesUntil: 0,
         action: null, actionStart: 0, hasSpike: false, killer: 0, spectate: 0, lastHurt: 0, stepT: 0, revealedUntil: 0, zoneSlow: 1, boughtThisRound: {}
     };
 
@@ -1622,6 +2325,10 @@
         if (a.agent === 'sis') { const hood = add(mk(new THREE.SphereGeometry(0.23, 12, 8, 0, TAU, 0, Math.PI * 0.6), accent, 0, 1.62, 0.03)); hood.userData.head = true; }
         if (a.agent === 'ok') { const band = add(mk(BOX(0.4, 0.06, 0.4), accent, 0, 1.67, 0)); band.userData.head = true; add(mk(BOX(0.06, 0.5, 0.06), lam(0x8a6a44), 0.12, 1.2, 0.22)).rotation.z = 0.3; }
         if (a.agent === 'kale') { const helm = add(mk(new THREE.SphereGeometry(0.215, 12, 8, 0, TAU, 0, Math.PI * 0.5), accent, 0, 1.63, 0)); helm.userData.head = true; }
+        if (a.agent === 'ruzgar') { add(mk(BOX(0.34, 0.08, 0.34), accent, 0, 1.43, 0)); add(mk(BOX(0.08, 0.04, 0.42), accent, 0.06, 1.42, 0.3)).rotation.x = -0.5; }
+        if (a.agent === 'ayaz') { const crown = add(mk(new THREE.ConeGeometry(0.2, 0.18, 6), accent, 0, 1.86, 0)); crown.userData.head = true; }
+        if (a.agent === 'fay') { const brim = add(mk(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 12), accent, 0, 1.76, 0)); brim.userData.head = true; }
+        if (a.agent === 'nobet') { const visor = add(mk(BOX(0.36, 0.1, 0.12), accent, 0, 1.65, -0.17)); visor.userData.head = true; }
         add(mk(BOX(0.24, 0.06, 0.04), lam(0x101418), 0, 1.62, -0.18)).userData.head = true;
         const hand = new THREE.Group();
         hand.position.set(0.28, 1.2, -0.12);
@@ -1780,8 +2487,13 @@
         slow: { speed: 16, up: 3, grav: 1, color: 0x9b7bff, onLand: true },
         dark: { speed: 26, up: 0.5, grav: 0.25, color: 0x3b2a6b, onHit: true },
         shock: { speed: 24, up: 1.5, grav: 0.45, color: 0x3fd17a, onHit: true },
-        recon: { speed: 28, up: 1, grav: 0.35, color: 0x7dffb0, onHit: true }
+        recon: { speed: 28, up: 1, grav: 0.35, color: 0x7dffb0, onHit: true },
+        frost: { speed: 16, up: 3, grav: 1, color: 0x8de8ff, onLand: true },
+        stun: { speed: 17, up: 3, grav: 1, color: 0xe0a35c, onLand: true }
     };
+    // Placed abilities: how far ahead they can go (aim point) for the local player.
+    const PLACED = { smoke: 38, icesmoke: 38, cloud: 22, wall: 10, icewall: 10, turret: 10, alarm: 12, blizzard: 40 };
+    const QUAKES = { quake: { len: 22, width: 4.5, delay: 900, stun: 2500, reveal: 0 }, rupture: { len: 42, width: 10, delay: 1200, stun: 4000, reveal: 3000 } };
 
     const smokeTex = (() => {
         const t = new THREE.CanvasTexture(NOISE_LO);
@@ -1849,13 +2561,97 @@
         const team = teamOf(d.f);
         const until = now + (d.ms || 0);
         switch (d.k) {
-            case 'molotov': case 'flash': case 'slow': case 'dark': case 'shock': case 'recon':
+            case 'molotov': case 'flash': case 'slow': case 'dark': case 'shock': case 'recon': case 'frost': case 'stun':
                 spawnProjectile(d, team, now);
                 break;
-            case 'smoke':
-                smokeZone(d.p[0], d.p[2], 4.2, now + 15000, team, d.f);
+            case 'smoke': case 'icesmoke': case 'cloud': {
+                const [r, ms, tint] = d.k === 'cloud' ? [3.2, 7000, 0xc9d9b8] : d.k === 'icesmoke' ? [4.2, 15000, 0xd4e9f4] : [4.2, 15000, 0x8f86b8];
+                smokeZone(d.p[0], d.p[2], r, now + ms, team, d.f, tint);
                 noise(0.8, 600, 0.12 * spatial(d.p[0], d.p[2]).vol, 0, 'highpass');
                 break;
+            }
+            case 'updraft':
+                if (d.f === player.nid) { player.velY = 11.5; player.onGround = false; }
+                noise(0.4, 900, 0.16 * spatial(d.p[0], d.p[2]).vol, 0, 'bandpass');
+                puff(d.p[0], d.p[1] + 0.2, d.p[2], 0xe8ffd0);
+                break;
+            case 'blades':
+                if (d.f === player.nid) {
+                    player.bladesUntil = now + 15000;
+                    player.ammo[W.blades] = [WEAPONS[W.blades].mag, 0];
+                    player.slot = W.blades;
+                    vmSwap = 1;
+                } else {
+                    const a = actors.get(d.f);
+                    if (a && a.sim) { a.sim.bladesUntil = now + 15000; a.sim.ammo[W.blades] = [WEAPONS[W.blades].mag, 0]; a.sim.slot = W.blades; setActorWeapon(a, W.blades); }
+                }
+                chord([880, 1320, 1760], 0.2, 'triangle', 0.06 * spatial(d.p[0], d.p[2]).vol, 0.05);
+                break;
+            case 'quake': case 'rupture':
+                quakeLine(d, team, now);
+                break;
+            case 'pulse': {
+                burstFx(d.p[0], 0.3, d.p[2], 0xe0a35c, 6, 0);
+                tone(140, 0.5, 'sine', 0.12 * spatial(d.p[0], d.p[2]).vol, -60);
+                if (!combatPhase()) break;
+                refreshFighters();
+                for (const f of fighters) if (f.alive && f.team !== team && Math.hypot(f.x - d.p[0], f.z - d.p[2]) < 18) revealTo(team, f.nid, f.x, f.z, 2500, now);
+                break;
+            }
+            case 'blizzard': {
+                const zn = discZone('blizzard', d.p[0], d.p[2], 8, now + 8000, team, d.f, 0xe8f6ff, 0.3);
+                zn.flames = true;
+                noise(1.5, 700, 0.2 * spatial(d.p[0], d.p[2]).vol, 0, 'lowpass');
+                break;
+            }
+            case 'shieldup': {
+                burstFx(d.p[0], 0.4, d.p[2], 0x9fd8ff, 7, 0);
+                chord([520, 780], 0.3, 'triangle', 0.06 * spatial(d.p[0], d.p[2]).vol);
+                if (player.alive && team === player.team && Math.hypot(player.x - d.p[0], player.z - d.p[2]) < 8) { player.armor = Math.min(50, player.armor + 25); updateHud(); }
+                if (isAuthority()) for (const a of actors.values()) if (a.sim && a.sim.alive && a.team === team && Math.hypot(a.x - d.p[0], a.z - d.p[2]) < 8) a.sim.armor = Math.min(50, a.sim.armor + 25);
+                break;
+            }
+            case 'turret': {
+                const [x, , z] = d.p;
+                const g = new THREE.Group();
+                const body = new THREE.MeshLambertMaterial({ color: team === player.team ? 0xd8e0ea : 0xd8b0b0 });
+                g.add(mk(new THREE.CylinderGeometry(0.05, 0.25, 0.9, 6), body, 0, 0.45, 0));
+                const head = new THREE.Group();
+                head.add(mk(BOX(0.36, 0.26, 0.42), body, 0, 0, 0));
+                head.add(mk(BOX(0.08, 0.08, 0.36), new THREE.MeshBasicMaterial({ color: team === player.team ? 0x5ff5e1 : 0xff4655 }), 0, 0.02, -0.3));
+                head.position.y = 1.0;
+                g.add(head);
+                g.position.set(x, groundAt(x, z, 5), z);
+                g.rotation.y = Math.atan2(-d.v[0], -d.v[2]);
+                g.traverse((o) => { o.userData.zoneId = d.id; });
+                scene.add(g);
+                g.updateMatrixWorld(true);
+                occluders.push(g);
+                const gy = g.position.y;
+                // The collision box stops below the head so the turret's own sight line starts outside it.
+                const solid = addSolid(x - 0.3, x + 0.3, z - 0.3, z + 0.3, gy, gy + 0.85);
+                addZone({ kind: 'turret', id: d.id, x, y: gy + 1, z, r: 26, until: now + 60000, team, owner: d.f, mesh: g, head, occluder: g, solid, hp: 70, shots: new Map() });
+                tone(320, 0.2, 'square', 0.05 * spatial(x, z).vol, 200);
+                break;
+            }
+            case 'alarm': {
+                const [x, , z] = d.p;
+                const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 0.12, 10), new THREE.MeshBasicMaterial({ color: team === player.team ? 0x5ff5e1 : 0xff4655, transparent: true, opacity: team === player.team ? 0.9 : 0.55 }));
+                mesh.position.set(x, groundAt(x, z, 5) + 0.06, z);
+                mesh.raycast = () => {};
+                scene.add(mesh);
+                addZone({ kind: 'alarm', x, y: mesh.position.y, z, r: 5.5, until: now + 600000, team, owner: d.f, mesh });
+                break;
+            }
+            case 'beacon': {
+                const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 14, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xe4e9f2, transparent: true, opacity: 0.35, depthWrite: false }));
+                mesh.position.set(d.p[0], 7, d.p[2]);
+                mesh.raycast = () => {};
+                scene.add(mesh);
+                addZone({ kind: 'beacon', x: d.p[0], y: 1, z: d.p[2], r: 30, until: now + 12000, team, owner: d.f, mesh, pulseAt: now });
+                chord([392, 523, 659], 0.4, 'sine', 0.07 * spatial(d.p[0], d.p[2]).vol);
+                break;
+            }
             case 'smokewall': {
                 const [x, , z] = d.p;
                 const [dx, , dz] = d.v;
@@ -1867,20 +2663,24 @@
                 }
                 break;
             }
-            case 'wall': {
+            case 'wall': case 'icewall': {
                 const [x, , z] = d.p;
+                const ice = d.k === 'icewall';
+                const len = ice ? 10 : 7;
+                const h = ice ? 3.6 : 3.2;
                 const alongX = Math.abs(d.v[2]) > Math.abs(d.v[0]);
-                const w = alongX ? 7 : 0.45;
-                const dpt = alongX ? 0.45 : 7;
-                const mat = new THREE.MeshLambertMaterial({ color: 0x8fd3ff, transparent: true, opacity: 0.82, emissive: 0x1b4f7a });
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 3.2, dpt), mat);
-                mesh.position.set(x, 1.6, z);
+                const w = alongX ? len : 0.5;
+                const dpt = alongX ? 0.5 : len;
+                const mat = new THREE.MeshLambertMaterial({ color: ice ? 0xdaf6ff : 0x8fd3ff, transparent: true, opacity: 0.82, emissive: ice ? 0x2a5f78 : 0x1b4f7a });
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, dpt), mat);
+                mesh.position.set(x, h / 2, z);
                 scene.add(mesh);
                 mesh.updateMatrixWorld(true);
                 occluders.push(mesh);
-                const solid = addSolid(x - w / 2, x + w / 2, z - dpt / 2, z + dpt / 2, 0, 3.2);
-                addZone({ kind: 'wall', x, y: 1.6, z, r: 3.5, until: now + 20000, team, owner: d.f, mesh, solid, occluder: mesh });
-                tone(220, 0.4, 'square', 0.05 * spatial(x, z).vol, 200);
+                const solid = addSolid(x - w / 2, x + w / 2, z - dpt / 2, z + dpt / 2, 0, h);
+                addZone({ kind: 'wall', x, y: h / 2, z, r: len / 2, until: now + (ice ? 15000 : 20000), team, owner: d.f, mesh, solid, occluder: mesh });
+                if (ice) noise(0.5, 3500, 0.15 * spatial(x, z).vol, 0, 'highpass');
+                else tone(220, 0.4, 'square', 0.05 * spatial(x, z).vol, 200);
                 break;
             }
             case 'trip': {
@@ -2001,6 +2801,19 @@
                 discZone('slow', x, z, 4, now + 7000, team, f, 0x9b7bff, 0.35);
                 noise(0.5, 500, 0.15 * sp.vol, sp.pan);
                 break;
+            case 'frost':
+                discZone('slow', x, z, 4.5, now + 6000, team, f, 0x8de8ff, 0.35);
+                noise(0.5, 2500, 0.15 * sp.vol, sp.pan, 'highpass');
+                break;
+            case 'stun': {
+                burstFx(x, y, z, 0xe0a35c, 5, 4);
+                noise(0.5, 300, 0.4 * sp.vol, sp.pan);
+                if (!combatPhase()) break;
+                const hits = (fx, fy, fz) => Math.hypot(fx - x, fz - z) < 6 && !segmentBlocked(x, y + 0.3, z, fx, fy + 1, fz);
+                if (player.alive && team !== player.team && hits(player.x, player.y, player.z)) stunPlayer(now + 3000);
+                if (isAuthority()) for (const a of actors.values()) if (a.sim && a.sim.alive && a.team !== team && hits(a.x, a.y, a.z)) a.sim.stunUntil = now + 3000;
+                break;
+            }
             case 'flash':
                 flashBurst(x, y, z, team, now, false);
                 break;
@@ -2072,6 +2885,47 @@
         }
     }
 
+    function stunPlayer(until) {
+        if (until > player.stunUntil + 500) banner('Sarsıldın', 'Yavaşladın, nişanın titriyor', 'enemy');
+        player.stunUntil = Math.max(player.stunUntil, until);
+    }
+
+    // A fault line: dust runs along a strip, then everyone on it (walls do not stop it) is stunned.
+    function quakeLine(d, team, now) {
+        const q = QUAKES[d.k];
+        const [x, , z] = d.p;
+        const len = Math.hypot(d.v[0], d.v[2]) || 1;
+        const ux = d.v[0] / len;
+        const uz = d.v[2] / len;
+        const steps = Math.round(q.len / 2);
+        for (let i = 1; i <= steps; i++) {
+            window.setTimeout(() => {
+                const t = (i / steps) * q.len;
+                for (const side of [-0.5, 0, 0.5]) puff(x + ux * t - uz * side * q.width, 0.2, z + uz * t + ux * side * q.width, 0xc8a070);
+            }, (i / steps) * q.delay);
+        }
+        noise(q.delay / 1000 + 0.3, 180, 0.3 * spatial(x, z).vol, 0, 'lowpass');
+        window.setTimeout(() => {
+            if (!combatPhase()) return;
+            const at = performance.now();
+            const onStrip = (fx, fz) => {
+                const t = (fx - x) * ux + (fz - z) * uz;
+                const side = Math.abs(-(fx - x) * uz + (fz - z) * ux);
+                return t > 0 && t < q.len && side < q.width / 2;
+            };
+            shake = Math.max(shake, Math.hypot(player.x - x, player.z - z) < q.len + 10 ? 0.6 : 0);
+            if (player.alive && team !== player.team && onStrip(player.x, player.z)) {
+                stunPlayer(at + q.stun);
+                if (q.reveal) revealTo(team, player.nid, player.x, player.z, q.reveal, at);
+            }
+            if (isAuthority()) for (const a of actors.values()) if (a.sim && a.sim.alive && a.team !== team && onStrip(a.x, a.z)) a.sim.stunUntil = at + q.stun;
+            if (q.reveal) {
+                refreshFighters();
+                for (const f of fighters) if (f.alive && f.team !== team && onStrip(f.x, f.z)) revealTo(team, f.nid, f.x, f.z, q.reveal, at);
+            }
+        }, q.delay);
+    }
+
     function revealTo(team, nid, x, z, ms, now) {
         if (team === player.team && nid !== player.nid) reveals.set(nid, now + ms);
         teamIntel[team].set(nid, { x, z, at: now });
@@ -2095,9 +2949,23 @@
                 const s = z.r * Math.min(1, age * 3) * Math.min(1, left * 2 + 0.2);
                 z.mesh.scale.set(s, s * 0.85, s);
                 z.mesh.rotation.y += dt * 0.05;
-            } else if (z.kind === 'fire' || z.kind === 'slow' || z.kind === 'lock') {
-                z.mesh.material.opacity = (z.kind === 'fire' ? 0.45 + Math.sin(now / 60) * 0.12 : z.kind === 'slow' ? 0.32 : 0.2) * Math.min(1, left);
+            } else if (z.kind === 'fire' || z.kind === 'slow' || z.kind === 'lock' || z.kind === 'blizzard') {
+                z.mesh.material.opacity = (z.kind === 'fire' ? 0.45 + Math.sin(now / 60) * 0.12 : z.kind === 'slow' ? 0.32 : z.kind === 'blizzard' ? 0.3 + Math.sin(now / 200) * 0.05 : 0.2) * Math.min(1, left);
                 if (z.kind === 'fire' && Math.random() < dt * 30) puff(z.x + rand(-z.r, z.r) * 0.7, z.y + rand(0.1, 1.2), z.z + rand(-z.r, z.r) * 0.7, Math.random() < 0.5 ? 0xff8a30 : 0xffd060);
+                if (z.kind === 'blizzard' && Math.random() < dt * 45) puff(z.x + rand(-z.r, z.r) * 0.8, z.y + rand(0.3, 3.5), z.z + rand(-z.r, z.r) * 0.8, 0xf4fbff);
+            } else if (z.kind === 'beacon') {
+                z.mesh.material.opacity = 0.35 * Math.min(1, left) * (0.7 + 0.3 * Math.sin(now / 150));
+                if (now >= z.pulseAt) {
+                    z.pulseAt = now + 1500;
+                    burstFx(z.x, 0.3, z.z, 0xe4e9f2, 3, 0);
+                    refreshFighters();
+                    if (combatPhase()) for (const f of fighters) if (f.alive && f.team !== z.team && Math.hypot(f.x - z.x, f.z - z.z) < z.r) revealTo(z.team, f.nid, f.x, f.z, 1700, now);
+                }
+            } else if (z.kind === 'turret') {
+                updateTurret(z, now);
+            } else if (z.kind === 'alarm') {
+                z.mesh.material.opacity = (z.team === player.team ? 0.9 : 0.55) * (Math.sin(now / 250) > 0 ? 1 : 0.4);
+                if (combatPhase()) checkAlarm(z, now);
             } else if (z.kind === 'wall') {
                 z.mesh.material.opacity = 0.82 * Math.min(1, left);
             } else if (z.kind === 'recon') {
@@ -2117,6 +2985,7 @@
             const hits = (x, y, zz) => Math.hypot(x - z.x, zz - z.z) < z.r && Math.abs(y - z.y) < 2;
             if (player.alive && z.team !== player.team && hits(player.x, player.y, player.z)) {
                 if (z.kind === 'fire') takeDamage(40 * dt, z.owner, ABILITY_W, false, now, z.x, z.z, true);
+                if (z.kind === 'blizzard') { takeDamage(12 * dt, z.owner, ABILITY_W, false, now, z.x, z.z, true); slow = Math.min(slow, 0.6); }
                 if (z.kind === 'slow' || z.kind === 'lock') slow = Math.min(slow, 0.5);
                 if (z.kind === 'lock' && (!z.seen || now > z.seen)) { z.seen = now + 1000; revealTo(z.team, player.nid, player.x, player.z, 1200, now); }
             }
@@ -2124,6 +2993,7 @@
                 for (const a of actors.values()) {
                     if (!a.sim || !a.sim.alive || a.team === z.team || !hits(a.x, a.y, a.z)) continue;
                     if (z.kind === 'fire') botDamage(a, 40 * dt, z.owner, ABILITY_W, false, now);
+                    if (z.kind === 'blizzard') { botDamage(a, 12 * dt, z.owner, ABILITY_W, false, now); a.sim.slowUntil = now + 150; }
                     if (z.kind === 'slow' || z.kind === 'lock') a.sim.slowUntil = now + 150;
                     if (z.kind === 'lock') revealTo(z.team, a.nid, a.x, a.z, 1200, now);
                 }
@@ -2134,6 +3004,61 @@
             if (z.kind === 'trip') checkTrip(z, now);
         }
         player.zoneSlow = slow;
+    }
+
+    // A turret shoots the nearest enemy it can see: the victim's side applies its own damage,
+    // the host does it for bots. Everyone turns the head for the look.
+    function updateTurret(z, now) {
+        if (!combatPhase()) return;
+        let best = null;
+        for (const f of fighters) {
+            if (!f.alive || f.team === z.team) continue;
+            const dist = Math.hypot(f.x - z.x, f.z - z.z);
+            if (dist > z.r || (best && dist > best.dist)) continue;
+            if (!canSee(z.x, z.y, z.z, f.x, f.y + 1.2 * (STANCE_SCALE[f.stance] || 1), f.z)) continue;
+            best = { f, dist };
+        }
+        if (!best) return;
+        const { f } = best;
+        z.head.parent.rotation.y += angleDiff(z.head.parent.rotation.y, Math.atan2(-(f.x - z.x), -(f.z - z.z))) * 0.25;
+        const last = z.shots.get(f.nid) || 0;
+        if (now - last < 320) return;
+        z.shots.set(f.nid, now);
+        const sp = spatial(z.x, z.z);
+        tone(1400, 0.04, 'square', 0.05 * sp.vol, -400, sp.pan);
+        if (sp.dist < 60) tracer(z.x, z.y + 0.05, z.z, f.x, f.y + 1.1, f.z);
+        if (now - last > 3000) revealTo(z.team, f.nid, f.x, f.z, 1500, now);
+        if (f.nid === player.nid) takeDamage(8, z.owner, ABILITY_W, false, now, z.x, z.z);
+        else if (isAuthority()) { const a = actors.get(f.nid); if (a && a.sim) botDamage(a, 8, z.owner, ABILITY_W, false, now); }
+    }
+    function damageTurret(id, dmg) {
+        const z = zones.find((q) => q.kind === 'turret' && q.id === id);
+        if (!z || z.team === player.team) return;
+        z.hp -= dmg;
+        if (z.hp > 0) return;
+        destroyTurret(id);
+        sendEvent({ t: 'zd', id });
+    }
+    function destroyTurret(id) {
+        const z = zones.find((q) => q.kind === 'turret' && q.id === id);
+        if (!z) return;
+        burstFx(z.x, z.y, z.z, 0xffffff, 2, 3);
+        noise(0.3, 1500, 0.2 * spatial(z.x, z.z).vol);
+        removeZone(z);
+    }
+
+    // An alarm trips once: the first enemy close enough and in sight is slowed and shown.
+    function checkAlarm(z, now) {
+        for (const f of fighters) {
+            if (!f.alive || f.team === z.team || Math.hypot(f.x - z.x, f.z - z.z) > z.r || !canSee(z.x, z.y + 0.3, z.z, f.x, f.y + 1, f.z)) continue;
+            revealTo(z.team, f.nid, f.x, f.z, 4000, now);
+            if (f.nid === player.nid) { player.tagUntil = now + 2000; banner('Alarm', 'Yavaşladın ve yerin görünüyor', 'enemy'); }
+            const a = actors.get(f.nid);
+            if (a && a.sim) a.sim.slowUntil = now + 2000;
+            tone(1000, 0.4, 'square', 0.08 * spatial(z.x, z.z).vol, 300);
+            removeZone(z);
+            return;
+        }
     }
 
     // Crossing a tripwire flips which side of the line you are on.
@@ -2156,9 +3081,11 @@
         }
     }
 
+    const BUY_PHASE_KINDS = ['smoke', 'icesmoke', 'cloud', 'wall', 'icewall', 'trip', 'heal', 'turret', 'alarm', 'updraft', 'shieldup'];
     // Local player uses an ability slot (c, q, e, x).
     function useAbility(slot, now) {
-        if (!canAct() || match.phase === 'buy' && !['smoke', 'wall', 'trip', 'heal'].includes(AGENTS[player.agent].abilities[slot].kind)) {
+        if (slot === 'x' && player.alive && now < player.bladesUntil) { equip(W.blades); return; }
+        if (!canAct() || match.phase === 'buy' && !BUY_PHASE_KINDS.includes(AGENTS[player.agent].abilities[slot].kind)) {
             if (match.phase === 'buy') toast('Satın alma evresinde bu yetenek kullanılamaz.');
             return;
         }
@@ -2184,15 +3111,22 @@
         if (THROWN[kind]) {
             const spec = THROWN[kind];
             d = { k: kind, p, v: [round2(dx * spec.speed), round2(dy * spec.speed + spec.up), round2(dz * spec.speed)], id: (f * 64) + (abilitySeq++ & 63) };
-        } else if (kind === 'smoke') {
-            const a = c === player ? aimPoint(38) : c.aim;
+        } else if (kind === 'smoke' || kind === 'icesmoke' || kind === 'cloud' || kind === 'blizzard' || kind === 'alarm') {
+            const a = c === player ? aimPoint(PLACED[kind]) : c.aim;
             if (!a) return null;
             d = { k: kind, p: [round2(a.x), 1.8, round2(a.z)] };
+        } else if (kind === 'turret') {
+            const a = c === player ? aimPoint(PLACED[kind]) : c.aim;
+            if (!a) return null;
+            d = { k: kind, p: [round2(a.x), 0, round2(a.z)], v: [round2(dx), 0, round2(dz)], id: (f * 64) + (abilitySeq++ & 63) };
+        } else if (kind === 'quake' || kind === 'rupture') {
+            const len = Math.hypot(dx, dz) || 1;
+            d = { k: kind, p: [round2(c.x), 0, round2(c.z)], v: [round2(dx / len), 0, round2(dz / len)] };
         } else if (kind === 'smokewall') {
             const len = Math.hypot(dx, dz) || 1;
             d = { k: kind, p: [round2(c.x), 0, round2(c.z)], v: [round2(dx / len), 0, round2(dz / len)] };
-        } else if (kind === 'wall') {
-            const a = c === player ? aimPoint(10) : c.aim;
+        } else if (kind === 'wall' || kind === 'icewall') {
+            const a = c === player ? aimPoint(PLACED[kind]) : c.aim;
             if (!a) return null;
             d = { k: kind, p: [round2(a.x), 0, round2(a.z)], v: [round2(dx), 0, round2(dz)] };
         } else if (kind === 'trip') {
@@ -2258,6 +3192,7 @@
         else if (player.ads) sp *= 0.8;
         if (performance.now() < player.buffUntil) sp *= 1.15;
         if (performance.now() < player.tagUntil) sp *= 0.72;
+        if (performance.now() < player.stunUntil) sp *= 0.65;
         return sp * (player.zoneSlow || 1);
     }
 
@@ -2329,6 +3264,10 @@
             player.healLeft -= h;
             player.hp = Math.min(100, player.hp + h);
         }
+        if (player.slot === W.blades && (now > player.bladesUntil || ammoOf(W.blades)[0] <= 0) && now >= player.nextShot) {
+            player.bladesUntil = 0;
+            equip(player.primary >= 0 ? player.primary : player.secondary);
+        }
         updateAction(input, now);
     }
 
@@ -2340,7 +3279,7 @@
     }
     function equip(idx) {
         if (idx === player.slot || !player.alive || player.action) return;
-        if (idx === player.primary || idx === player.secondary || idx === W.knife || (idx === W.spike && player.hasSpike)) {
+        if (idx === player.primary || idx === player.secondary || idx === W.knife || (idx === W.spike && player.hasSpike) || (idx === W.blades && performance.now() < player.bladesUntil)) {
             player.slot = idx;
             player.reloading = false;
             player.ads = false;
@@ -2384,6 +3323,7 @@
         const moveFrac = clamp((player.speedNow - 0.6) / (SPEED.run - 0.6), 0, 1);
         let s = (w.id === 'yayla' && player.ads ? w.scoped : w.spread) + w.move * Math.pow(moveFrac, 1.15);
         if (!player.onGround) s += 0.14;
+        if (performance.now() < player.stunUntil) s += 0.05;
         if (player.stance === 1) s *= 0.85;
         if (player.ads && w.id !== 'yayla') s *= 0.8;
         if (w.pattern === 'rifle') s += Math.max(0, player.spray - 3) * 0.0032;
@@ -2411,7 +3351,7 @@
         if (!canAct() || match.phase === 'buy' || player.reloading || player.action || now < player.nextShot || w.id === 'spike') return;
         if (w.melee) { knifeAttack(now, heavy); return; }
         const am = ammoOf(player.slot);
-        if (am[0] <= 0) { startReload(); tone(180, 0.05, 'square', 0.03); return; }
+        if (am[0] <= 0) { if (w.reserve) startReload(); tone(180, 0.05, 'square', 0.03); return; }
         am[0]--;
         if (now - player.lastShotAt > w.delay + 260) player.spray = 0;
         const [ry, rp] = recoilOffset(w, player.spray);
@@ -2451,6 +3391,7 @@
             let o = h.object;
             let nid = null;
             while (o) { if (o.userData && o.userData.nid) { nid = o.userData.nid; break; } o = o.parent; }
+            if (h.object.userData.zoneId !== undefined) damageTurret(h.object.userData.zoneId, weaponDamage(w, 'body', h.distance));
             if (nid) {
                 const a = actors.get(nid);
                 const part = h.object.userData.head ? 'head' : h.point.y < a.y + 0.8 * (STANCE_SCALE[a.stance] || 1) ? 'leg' : 'body';
@@ -2466,7 +3407,7 @@
             deliverHit(player.nid, target, Math.round(dmgBy[nid]), player.slot, Boolean(headBy[nid]), now);
             if (headBy[nid]) tone(2600, 0.06, 'sine', 0.07);
         }
-        if (am[0] === 0) window.setTimeout(startReload, 220);
+        if (am[0] === 0 && w.reserve) window.setTimeout(startReload, 220);
         updateHud();
     }
 
@@ -2549,6 +3490,8 @@
         touch.fire = false;
         cancelAction();
         player.killer = from;
+        player.bladesUntil = 0;
+        player.stunUntil = 0;
         player.spectate = 0;
         player.spectateAt = now + 2500; // death cam on the killer first, then follow a teammate
         player.primary = -1;
@@ -2595,6 +3538,7 @@
         const killerTeam = teamOf(k);
         feed(k, v, w, hs, killerTeam === player.team);
         if (k === player.nid && v !== player.nid) {
+            if (w === W.blades && now < player.bladesUntil) player.ammo[W.blades] = [WEAPONS[W.blades].mag, 0];
             player.credits = Math.min(ECON.max, player.credits + ECON.kill);
             player.ult = Math.min(ULT_COST, player.ult + 1);
             const n = match.roundStats ? match.roundStats.kills[player.nid] : 1;
@@ -2605,7 +3549,11 @@
         if (isAuthority()) {
             for (const b of actors.values()) {
                 if (!b.sim) continue;
-                if (b.nid === k && k !== v) { b.sim.credits = Math.min(ECON.max, b.sim.credits + ECON.kill); b.sim.ult = Math.min(ULT_COST, b.sim.ult + 1); }
+                if (b.nid === k && k !== v) {
+                    b.sim.credits = Math.min(ECON.max, b.sim.credits + ECON.kill);
+                    b.sim.ult = Math.min(ULT_COST, b.sim.ult + 1);
+                    if (w === W.blades && now < b.sim.bladesUntil) b.sim.ammo[W.blades] = [WEAPONS[W.blades].mag, 0];
+                }
                 if (b.nid === v) b.sim.ult = Math.min(ULT_COST, b.sim.ult + 1);
             }
             if (spike.state === 'carried' && spike.carrier === v && pos) dropSpike(pos, now);
@@ -2715,7 +3663,7 @@
         $('revealed').classList.add('hidden');
         $('death').classList.add('hidden');
         $('over').classList.add('hidden');
-        showRoundBanner(`RAUNT ${d.rn}`, `${SIDE_NAMES[mySide()]} · Satın alma evresi`, 'neutral');
+        showRoundBanner(`RAUNT ${d.rn}`, `${d.rn === 1 ? `${MAPS[mapId].name} · ` : ''}${SIDE_NAMES[mySide()]} · Satın alma evresi`, 'neutral');
         if (player.hasSpike) toast('Çekirdek sende. Bir bölgeye götürüp F tuşunu basılı tutarak kur.');
         updateHud();
         updateAbilityHud();
@@ -2729,7 +3677,7 @@
         Object.assign(player, {
             x: sp.x + rand(-0.4, 0.4), z: sp.z + rand(-0.4, 0.4), y: 0, velY: 0, pitch: 0, stance: 0, eye: EYE_STAND,
             yaw: mySide() === ATK ? 0 : Math.PI, hp: 100, alive: true, reloading: false, action: null, kickPitch: 0,
-            blindUntil: 0, darkUntil: 0, tagUntil: 0, buffUntil: 0, healLeft: 0, dashUntil: 0, spray: 0
+            blindUntil: 0, darkUntil: 0, tagUntil: 0, buffUntil: 0, healLeft: 0, dashUntil: 0, spray: 0, stunUntil: 0, bladesUntil: 0
         });
         vel.x = 0;
         vel.z = 0;
@@ -2750,7 +3698,7 @@
         const slot = {};
         const counters = [0, 0];
         for (const [nid, r] of roster) { const side = (r.team + half) % 2; slot[nid] = counters[side]++; }
-        for (const team of [0, 1]) teamPlan[team] = { site: Math.random() < 0.5 ? 'A' : 'B', lurker: match.size >= 5 ? 4 : -1, go: false };
+        for (const team of [0, 1]) teamPlan[team] = { site: pick(siteNames()), lurker: match.size >= 5 ? 4 : -1, go: false };
         const d = { t: 'rs', rn: nextRound, half, sc: match.score, tm: TIMES.buy, carrier, slot };
         if (match.mode === 'host') broadcast(d);
         beginRoundLocal(d, now);
@@ -2995,7 +3943,7 @@
             alive: true, hp: 100, reloadEnd: 0, nextShot: 0, burst: 0, pauseUntil: 0, target: 0, targetSince: 0, reactAt: 0,
             lastSeen: null, lastSeenAt: -1e9, perceiveAt: 0, path: null, pathI: 0, goal: null, goalKey: '', strafe: 1, strafeAt: 0,
             stopUntil: 0, stuckAt: now + 1500, stuckX: sp.x, stuckZ: sp.z, hurtBy: 0, hurtAt: -1e9, velY: 0, crouchUntil: 0,
-            blindUntil: 0, slowUntil: 0, tagUntil: 0, buffUntil: 0, healLeft: 0, dashUntil: 0, action: null, actionStart: 0,
+            blindUntil: 0, slowUntil: 0, tagUntil: 0, buffUntil: 0, healLeft: 0, dashUntil: 0, stunUntil: 0, bladesUntil: 0, action: null, actionStart: 0,
             buyAt: now + rand(1500, 6000), bought: false, usedRoundStart: false, execUtil: false, castAt: 0, waitUntil: 0, role: slotIndex
         });
         s.charges.e = Math.max(s.charges.e, AGENTS[s.agent].abilities.e.free || 0);
@@ -3022,7 +3970,7 @@
         } else if (s.primary >= 0) {
             buyS(50, 1000);
         } else if (s.credits >= 3900) {
-            if (s.credits >= 5700 && (s.agent === 'kale' || s.agent === 'ok') && Math.random() < 0.3) buyW('yayla');
+            if (s.credits >= 5700 && ['kale', 'ok', 'nobet'].includes(s.agent) && Math.random() < 0.3) buyW('yayla');
             else buyW(Math.random() < 0.5 ? 'kartal' : 'sahin');
             buyS(50, 1000);
         } else if (s.credits >= 3300) {
@@ -3093,7 +4041,7 @@
                 return { key: `post${s.role}`, ...t.hold[s.role % t.hold.length], wait: true };
             }
             if (spike.state === 'dropped' && Math.hypot(a.x - spike.x, a.z - spike.z) < 45) return { key: 'getspike', x: spike.x, z: spike.z };
-            const siteName = plan.site || 'A';
+            const siteName = TACTIC[plan.site] ? plan.site : siteNames()[0];
             const t = TACTIC[siteName];
             if (s.role === plan.lurker) return { key: 'lurk', ...TACTIC.mid.watch[0], wait: true };
             if (match.phase === 'round' && match.timer < TIMES.round - 22000 || plan.go) {
@@ -3109,9 +4057,13 @@
             if (nearest === a) return { key: 'defuse', x: spike.x, z: spike.z };
             return { key: `retake${s.role}`, ...t.hold[s.role % t.hold.length], wait: true };
         }
-        const posts = [TACTIC.A.hold[0], TACTIC.B.hold[0], TACTIC.mid.hold[0], TACTIC.A.hold[1], TACTIC.B.hold[1]];
+        // One defender per site first, then mid, then a second player on each site.
+        const names = siteNames();
+        const posts = [...names.map((n) => TACTIC[n].hold[0]), TACTIC.mid.hold[0], ...names.map((n) => TACTIC[n].hold[1])];
         return { key: `hold${s.role}`, ...posts[s.role % posts.length], wait: true };
     }
+
+    const siteWatch = (role) => { const names = siteNames(); return TACTIC[names[role % names.length]].watch[0]; };
 
     function botFacePoint(a, x, z) {
         a.yaw = Math.atan2(-(x - a.x), -(z - a.z));
@@ -3137,8 +4089,15 @@
         if (!s.usedRoundStart && match.phase === 'round') {
             s.usedRoundStart = true;
             if (side === DEF && s.agent === 'kale') {
-                const t = (s.role % 2 === 0 ? TACTIC.A : TACTIC.B).watch[0];
+                const t = siteWatch(s.role);
                 if (cast('c', () => { a.aim = { x: t.x, z: t.z }; botFacePoint(a, t.x, t.z); })) return;
+            }
+            if (side === DEF && s.agent === 'nobet') {
+                const names = siteNames();
+                const t = TACTIC[names[s.role % names.length]];
+                cast('c', () => { a.aim = { x: t.watch[0].x, z: t.watch[0].z }; });
+                s.castAt = 0;
+                if (cast('e', () => { a.aim = { x: t.hold[1].x, z: t.hold[1].z }; botFacePoint(a, t.watch[0].x, t.watch[0].z); })) return;
             }
         }
         if (tgt) {
@@ -3149,12 +4108,20 @@
                 if (ab.c.kind === 'molotov' && cast('c', () => { botFacePoint(a, tgt.x, tgt.z); a.pitch = 0.25; })) return;
                 if (ab.c.kind === 'shock' && cast('c', () => { botFacePoint(a, tgt.x, tgt.z); a.pitch = 0.1; })) return;
                 if (ab.q.kind === 'dark' && cast('q', () => botFacePoint(a, tgt.x, tgt.z))) return;
+                const lob = clamp((Math.hypot(tgt.x - a.x, tgt.z - a.z) - 10) / 30, -0.15, 0.45);
+                if (ab.c.kind === 'stun' && cast('c', () => { botFacePoint(a, tgt.x, tgt.z); a.pitch = lob; })) return;
+                if (ab.q.kind === 'frost' && cast('q', () => { botFacePoint(a, tgt.x, tgt.z); a.pitch = lob; })) return;
+                if (ab.q.kind === 'quake' && Math.hypot(tgt.x - a.x, tgt.z - a.z) < 20 && cast('q', () => botFacePoint(a, tgt.x, tgt.z))) return;
             }
+            const tdist = Math.hypot(tgt.x - a.x, tgt.z - a.z);
+            if (ab.x.kind === 'blades' && cast('x')) return;
+            if (ab.x.kind === 'rupture' && tdist < 35 && cast('x', () => botFacePoint(a, tgt.x, tgt.z))) return;
+            if (ab.x.kind === 'blizzard' && tdist < 35 && cast('x', () => { a.aim = { x: tgt.x, z: tgt.z }; })) return;
             return;
         }
         if (s.agent === 'kale' && s.hp < 60 && cast('e')) return;
         if (side === ATK && plan.go && !s.execUtil) {
-            const t = TACTIC[plan.site || 'A'];
+            const t = TACTIC[plan.site] || TACTIC[siteNames()[0]];
             const d = Math.hypot(a.x - t.entry.x, a.z - t.entry.z);
             if (d < 14) {
                 s.execUtil = true;
@@ -3162,15 +4129,23 @@
                 if (s.agent === 'sis') { cast('e', () => { a.aim = { x: t.watch[1].x, z: t.watch[1].z }; }); return; }
                 if (s.agent === 'ok') { cast('e', () => { botFacePoint(a, watch.x, watch.z); a.pitch = 0.15; }); return; }
                 if (s.agent === 'kor') { cast('q', () => { botFacePoint(a, watch.x, watch.z); a.pitch = 0.2; }); return; }
+                if (s.agent === 'ayaz') { cast('e', () => { a.aim = { x: t.watch[1].x, z: t.watch[1].z }; }); return; }
+                if (s.agent === 'ruzgar') { cast('q', () => { a.aim = { x: t.watch[1].x, z: t.watch[1].z }; }); return; }
+                if (s.agent === 'fay') { if (!cast('q', () => botFacePoint(a, watch.x, watch.z))) cast('e'); return; }
+                if (s.agent === 'nobet') { cast('q'); if (s.ult >= ULT_COST) { s.castAt = 0; cast('x'); } return; }
             }
         }
+        if (s.agent === 'fay' && match.phase === 'round' && Math.random() < 0.004) cast('e');
+        if (side === DEF && match.phase === 'planted' && s.agent === 'nobet' && Math.hypot(a.x - spike.x, a.z - spike.z) < 25 && cast('x')) return;
+        if (side === DEF && match.phase === 'planted' && s.agent === 'ayaz' && Math.hypot(a.x - spike.x, a.z - spike.z) < 22) cast('e', () => { a.aim = { x: spike.x, z: spike.z }; });
         if (s.agent === 'ok' && match.phase === 'round' && match.timer < TIMES.round - 40000 && cast('x')) return;
         if (side === DEF && match.phase === 'planted' && s.agent === 'sis' && Math.hypot(a.x - spike.x, a.z - spike.z) < 20) cast('e', () => { a.aim = { x: spike.x, z: spike.z }; });
     }
 
+    let botsFrozen = false; // yalnızca ?debug testleri
     function updateBot(a, dt, now) {
         const s = a.sim;
-        if (!s.alive) return;
+        if (!s.alive || botsFrozen) return;
         const diff = DIFFICULTY[match.diff];
         const w = WEAPONS[s.slot];
         // Buy during the buy phase, or on the way out if the phase ended first.
@@ -3182,6 +4157,12 @@
         if (now < s.blindUntil) tgt = null;
         if (active) botAbilities(a, s, tgt, now);
 
+        if (s.slot === W.blades && (now > s.bladesUntil || (s.ammo[W.blades]?.[0] ?? 0) <= 0)) {
+            s.bladesUntil = 0;
+            s.slot = s.primary >= 0 ? s.primary : s.secondary;
+            setActorWeapon(a, s.slot);
+            return;
+        }
         const am = s.ammo[s.slot] || (s.ammo[s.slot] = [w.mag || 0, w.reserve || 0]);
         if (s.reloadEnd && now >= s.reloadEnd) { const take = Math.min(w.mag - am[0], am[1]); am[0] += take; am[1] -= take; s.reloadEnd = 0; }
         if (!s.reloadEnd && w.mag && (am[0] <= 0 || (!tgt && am[0] < w.mag * 0.5)) && am[1] > 0) s.reloadEnd = now + w.reload;
@@ -3244,12 +4225,13 @@
                 if (s.goalKey === 'plant' && a.hasSpike && match.phase === 'round' && inSite(a.x, a.z) && now - s.lastSeenAt > 1500) { s.action = 'plant'; s.actionStart = now; }
                 if (s.goalKey === 'defuse' && match.phase === 'planted' && Math.hypot(a.x - spike.x, a.z - spike.z) < 1.8 && now - s.lastSeenAt > 1500) { s.action = 'defuse'; s.actionStart = now; }
                 const intel = [...teamIntel[a.team].values()].filter((i) => now - i.at < 4000).sort((i1, i2) => Math.hypot(i1.x - a.x, i1.z - a.z) - Math.hypot(i2.x - a.x, i2.z - a.z))[0];
-                const watch = intel || (sideOf(a.team) === DEF ? (s.role % 2 === 0 ? TACTIC.A : TACTIC.B).watch[0] : null);
+                const watch = intel || (sideOf(a.team) === DEF ? siteWatch(s.role) : null);
                 if (watch) a.yaw += angleDiff(a.yaw, Math.atan2(-(watch.x - a.x), -(watch.z - a.z))) * Math.min(1, dt * 3);
             }
             if (sideOf(a.team) === ATK && !teamPlan[a.team].go && match.phase === 'round') speed = SPEED.walk + 1;
         }
         if (now < s.slowUntil) speed *= 0.5;
+        if (now < s.stunUntil) speed *= 0.65;
         if (now < s.tagUntil) speed *= 0.72;
         if (now < s.buffUntil) speed *= 1.15;
         const ml = Math.hypot(mx, mz);
@@ -3310,7 +4292,7 @@
         }
         const settle = clamp((now - s.targetSince) / 2000, 0, 1);
         const moveErr = (w.move || 0) * clamp(movedSpeed / SPEED.run, 0, 1);
-        const err = diff.aimErr * (1.4 - settle) + (w.id === 'yayla' ? w.scoped : w.spread || 0) + moveErr;
+        const err = diff.aimErr * (1.4 - settle) + (w.id === 'yayla' ? w.scoped : w.spread || 0) + moveErr + (now < s.stunUntil ? 0.07 : 0);
         const ts = STANCE_SCALE[tgt.stance] || 1;
         const aimY = tgt.y + (Math.random() < diff.head ? 1.6 : 1.1) * ts;
         let dx = tgt.x - a.x;
@@ -3530,7 +4512,7 @@
         return {
             t: 's',
             p: [...roster].map(([nid, r]) => [nid, r.name, r.team, r.agent, r.camo, r.bot ? 1 : 0, r.kills, r.deaths]),
-            m: { ph: match.phase, tm: Math.round(match.timer), rn: match.round, half: match.half, sc: match.score, wt: match.winTarget, size: match.size, diff: match.diff },
+            m: { ph: match.phase, tm: Math.round(match.timer), rn: match.round, half: match.half, sc: match.score, wt: match.winTarget, size: match.size, diff: match.diff, map: mapId },
             sp: { st: spike.state, c: spike.carrier, p: [spike.x, spike.y, spike.z], site: spike.site, tm: Math.round(match.timer) }
         };
     }
@@ -3629,7 +4611,7 @@
                 if (host) return;
                 const p = vec(d.p, 3);
                 if (!p || !['carried', 'dropped', 'planted', 'defused', 'exploded'].includes(d.st)) return;
-                applySpike({ st: d.st, c: Math.floor(num(d.c)) || 0, p, site: d.site === 'A' || d.site === 'B' ? d.site : '', tm: clamp(num(d.tm) || 0, 0, 60000) }, now);
+                applySpike({ st: d.st, c: Math.floor(num(d.c)) || 0, p, site: SITES[d.site] ? d.site : '', tm: clamp(num(d.tm) || 0, 0, 60000) }, now);
                 return;
             }
             case 'h': {
@@ -3660,6 +4642,11 @@
                 const v = d.v ? vec(d.v, 3) : null;
                 if (fromClient) broadcast(d, conn);
                 applyAbility({ t: 'ab', f, k: d.k, p, v: v || [0, 0, 0], id: Math.floor(num(d.id)) || 0 }, now);
+                return;
+            }
+            case 'zd': {
+                if (fromClient) broadcast(d, conn);
+                destroyTurret(Math.floor(num(d.id)));
                 return;
             }
             case 'abx': {
@@ -3918,6 +4905,7 @@
         roster.set(player.nid, { name: myName(), team: 0, agent: player.agent, camo: myCamo(), bot: false, kills: 0, deaths: 0 });
         if (mode === 'client') {
             roomCode = code || '';
+            buildMap(MAPS[snap.m?.map] ? snap.m.map : 'liman');
             applySnapshot(snap);
             const m = snap.m || {};
             match.phase = ['buy', 'round', 'planted', 'post'].includes(m.ph) ? m.ph : 'post';
@@ -3932,6 +4920,7 @@
             if (!player.alive) showRoundBanner('Maç sürüyor', 'Bir sonraki raunda katılacaksın', 'neutral');
             return;
         }
+        buildMap(prefs.map === 'random' ? pick(MAP_IDS) : prefs.map);
         match.winTarget = prefs.rounds;
         match.size = prefs.size;
         match.diff = prefs.diff;
@@ -4214,12 +5203,13 @@
     const miniBase = document.createElement('canvas');
     miniBase.width = COLS * CELL * MM;
     miniBase.height = ROWS * CELL * MM;
-    (function drawMiniBase() {
+    function drawMiniBase() {
         const g = miniBase.getContext('2d');
         g.fillStyle = 'rgba(15,25,35,.55)';
         g.fillRect(0, 0, miniBase.width, miniBase.height);
         const cs = CELL * MM;
-        g.fillStyle = 'rgba(205,212,218,.8)';
+        g.clearRect(0, 0, miniBase.width, miniBase.height);
+        g.fillStyle = mapLook.mini;
         for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (!cellGrid[r][c]) g.fillRect(c * cs, r * cs, cs + 0.5, cs + 0.5);
         g.fillStyle = 'rgba(70,82,94,.9)';
         for (const s of solids) {
@@ -4235,7 +5225,7 @@
             g.textBaseline = 'middle';
             g.fillText(site.name, ((site.x0 + site.x1) / 2 + HALF_X) * MM, ((site.z0 + site.z1) / 2 + HALF_Z) * MM);
         }
-    })();
+    }
     let miniAt = 0;
     function drawMinimap(now) {
         if (now - miniAt < 80) return;
@@ -4251,9 +5241,14 @@
         g.drawImage(miniBase, 0, 0);
         const P2 = (x, z) => [(x + HALF_X) * MM, (z + HALF_Z) * MM];
         for (const z of zones) {
-            if (z.kind !== 'smoke' && z.kind !== 'fire' && z.kind !== 'slow') continue;
             const [px, pz] = P2(z.x, z.z);
-            g.fillStyle = z.kind === 'smoke' ? 'rgba(155,123,255,.55)' : z.kind === 'fire' ? 'rgba(255,122,61,.45)' : 'rgba(155,123,255,.3)';
+            if ((z.kind === 'turret' || z.kind === 'alarm') && z.team === player.team) {
+                g.fillStyle = '#5ff5e1';
+                g.fillRect(px - 5, pz - 5, 10, 10);
+                continue;
+            }
+            if (z.kind !== 'smoke' && z.kind !== 'fire' && z.kind !== 'slow' && z.kind !== 'blizzard') continue;
+            g.fillStyle = z.kind === 'smoke' ? 'rgba(155,123,255,.55)' : z.kind === 'fire' ? 'rgba(255,122,61,.45)' : z.kind === 'blizzard' ? 'rgba(232,246,255,.45)' : 'rgba(155,123,255,.3)';
             g.beginPath(); g.arc(px, pz, z.r * MM, 0, TAU); g.fill();
         }
         const dot = (x, z, color, yaw, big) => {
@@ -4396,12 +5391,64 @@
                 ['rounds', 'Kazanmak için', ROUND_CHOICES.map((n) => [n, `${n} raunt`])]
             ];
             if (host) groups.push(['fill', 'Boş yerler', [[true, 'Botlarla doldur'], [false, 'Yalnızca oyuncular']]]);
+            groups.unshift(['map', 'Harita', [...MAP_IDS.map((id) => [id, MAPS[id].name]), ['random', 'Rastgele']]]);
             for (const [key, label, choices] of groups) {
                 const wrap = el('div', 'opt');
                 wrap.append(el('div', 'field-label', label), segmented(label, choices, prefs[key], (value) => { prefs[key] = value; savePrefs(); renderOptions(); }));
+                if (key === 'map') wrap.append(mapPreview(prefs.map));
                 box.append(wrap);
             }
         });
+    }
+    function mapPreview(id) {
+        const card = el('div', 'map-preview');
+        const thumb = document.createElement('canvas');
+        thumb.width = COLS * 3;
+        thumb.height = ROWS * 3;
+        thumb.setAttribute('aria-hidden', 'true');
+        const info = el('div', 'map-info');
+        if (MAPS[id]) {
+            drawMapThumb(thumb, MAPS[id]);
+            info.append(el('b', '', MAPS[id].name), el('small', '', MAPS[id].tag), el('p', '', MAPS[id].desc));
+        } else {
+            const g = thumb.getContext('2d');
+            g.fillStyle = 'rgba(236,232,225,.08)';
+            g.fillRect(0, 0, thumb.width, thumb.height);
+            g.fillStyle = '#ff4655';
+            g.font = '700 90px Teko, Impact, sans-serif';
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+            g.fillText('?', thumb.width / 2, thumb.height / 2 + 8);
+            info.append(el('b', '', 'Rastgele'), el('small', '', `${MAP_IDS.length} harita`), el('p', '', MAP_IDS.map((m) => MAPS[m].name).join(' · ')));
+        }
+        card.append(thumb, info);
+        return card;
+    }
+    // Plan view: floor, walls, sites (red) and spawns (attackers at the bottom).
+    function drawMapThumb(c, def) {
+        const g = c.getContext('2d');
+        const k = c.width / COLS;
+        g.fillStyle = '#16222d';
+        g.fillRect(0, 0, c.width, c.height);
+        for (let r = 0; r < ROWS; r++) {
+            for (let col = 0; col < COLS; col++) {
+                const ch = def.grid[r][col];
+                if (ch === '#') continue;
+                g.fillStyle = ch === '.' ? def.look.mini : 'rgba(120,132,144,.9)';
+                g.fillRect(col * k, r * k, k + 0.3, k + 0.3);
+            }
+        }
+        const rect = ([c0, r0, c1, r1], color) => { g.fillStyle = color; g.fillRect(c0 * k, r0 * k, (c1 - c0 + 1) * k, (r1 - r0 + 1) * k); };
+        rect(def.spawns[0], 'rgba(255,70,85,.28)');
+        rect(def.spawns[1], 'rgba(95,245,225,.28)');
+        g.font = `700 ${Math.round(k * 5)}px Teko, Impact, sans-serif`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        for (const [name, cells] of Object.entries(def.sites)) {
+            rect(cells, 'rgba(255,70,85,.35)');
+            g.fillStyle = '#ff4655';
+            g.fillText(name, ((cells[0] + cells[2] + 1) / 2) * k, ((cells[1] + cells[3] + 1) / 2) * k + k * 0.4);
+        }
     }
     function renderAgents() {
         const grid = $('agent-grid');
@@ -4856,6 +5903,7 @@
                 } else match.timer = Math.max(0, match.timer - dt * 1000);
                 stepProjectiles(dt, now);
                 updateZones(dt, now);
+                tickMap(dt, now);
                 if (match.phase === 'planted') {
                     const left = match.timer / TIMES.spike;
                     const gap = lerp(120, 1000, clamp(left, 0, 1));
@@ -4919,6 +5967,7 @@
             }
             camera.position.set(cx, cy, cz);
             if (shake > 0) camera.position.add(new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(shake * 0.12));
+            if (player.alive && now < player.stunUntil) { yaw += Math.sin(now / 90) * 0.012; pitch += Math.sin(now / 130) * 0.01; }
             camera.rotation.set(pitch, yaw, 0);
             const zoom = player.ads && player.alive ? (w.zoom || 1.15) : 1;
             const fovT = prefs.fov / zoom;
@@ -4957,7 +6006,7 @@
             }
             vmFlashLight.intensity = now < flashUntil ? 1.6 : 0;
         }
-        renderer.setClearColor(SKY_HORIZON, 1);
+        renderer.setClearColor(mapLook.sky[0], 1);
         renderer.clear();
         renderer.render(scene, camera);
         if (match.phase !== 'menu' && player.alive) {
@@ -5010,11 +6059,36 @@
                 plantSpike(nid, [(s.x0 + s.x1) / 2, 0, (s.z0 + s.z1) / 2], performance.now());
             },
             credits(n) { player.credits = n; },
+            freeze(on) { botsFrozen = Boolean(on); },
+            sim(nid) {
+                const a = actors.get(nid);
+                if (!a || !a.sim) return null;
+                const now = performance.now();
+                return { hp: a.sim.hp, armor: a.sim.armor, alive: a.sim.alive, stun: Math.max(0, a.sim.stunUntil - now), slow: Math.max(0, a.sim.slowUntil - now), slot: a.sim.slot, x: a.x, z: a.z, team: a.team };
+            },
+            setSim(nid, v) { const a = actors.get(nid); if (a && a.sim) Object.assign(a.sim, v); if (a && v.x !== undefined) { a.x = v.x; a.z = v.z; } },
+            revealed: (nid) => Math.max(0, (reveals.get(nid) || 0) - performance.now()),
+            slotName: () => WEAPONS[player.slot].id,
             ult() { player.ult = ULT_COST; updateAbilityHud(); },
-            sites: SITES
+            sites: SITES,
+            map: (id) => { if (id) buildMap(id); return mapId; },
+            zoneList: () => zones.map((z) => ({ kind: z.kind, x: z.x, y: z.y, z: z.z, r: z.r, team: z.team })),
+            mapCheck() {
+                // Every tactical and spawn point must stand on free nav cells and be reachable from both spawns.
+                const bad = [];
+                const all = [...SPAWN_POINTS[0], ...SPAWN_POINTS[1]];
+                for (const [k, t] of Object.entries(TACTIC)) for (const list of [t.hold, t.watch, t.stage, t.plant || [], t.entry ? [t.entry] : []]) for (const q of list) all.push({ ...q, k });
+                for (const q of all) {
+                    if (nav[navIndex(q.x, q.z)]) bad.push(['blocked', q]);
+                    for (const side of [0, 1]) { const s0 = SPAWN_POINTS[side][0]; if (!findPath(s0.x, s0.z, q.x, q.z)) bad.push(['unreachable', side, q]); }
+                }
+                for (const [k, t] of Object.entries(TACTIC)) if (t.plant) for (const q of t.plant) if (inSite(q.x, q.z)?.name !== k) bad.push(['plant-outside', k, q]);
+                return { map: mapId, solids: solids.length, barriers: barriers.length, sites: Object.keys(SITES), bad };
+            }
         };
     }
 
+    buildMap(prefs.map === 'random' ? 'liman' : prefs.map);
     applyQuality();
     renderOptions();
     renderSettings();
