@@ -113,3 +113,39 @@ test('invalid or expired callback never persists a session', async () => {
     const expired = boot({ hash: '#error=access_denied&error_description=untrusted' }); await expired.cloud.ready;
     assert.equal(expired.calls.length, 0); assert.equal(expired.cloud.getState().error.includes('untrusted'), false);
 });
+test('username/password signup and login normalize identifiers and never persist password', async () => {
+    const password = 'test-only-long-password';
+    const response = { ...makeSession(), user: { id: 'user-a', email: 'player_1@accounts.casualpass.invalid' } };
+    const b = boot({ handler: async () => response }); await b.cloud.ready;
+    await b.cloud.signUp(' Player_1 ', password);
+    assert.equal(b.calls[0].json.email, 'player_1@accounts.casualpass.invalid');
+    assert.ok(b.calls[0].url.endsWith('/signup')); assert.equal(b.calls[0].json.password, password);
+    assert.equal(b.cloud.getState().username, 'player_1');
+    assert.equal(b.storage.get(storedKey).includes(password), false);
+    await b.cloud.signIn('PLAYER_1', password);
+    assert.ok(b.calls.at(-1).url.endsWith('grant_type=password'));
+    assert.equal(JSON.stringify(b.cloud.getState()).includes(password), false);
+});
+test('username and bcrypt byte-limit validation happens before network calls', async () => {
+    const b = boot(); await b.cloud.ready;
+    for (const [name, pass] of [['ab','long-test-password'], ['bad@name','long-test-password'], ['user','short'], ['user','a'.repeat(73)], ['user','ş'.repeat(37)]]) await assert.rejects(b.cloud.signUp(name,pass));
+    assert.equal(b.calls.length, 0);
+});
+test('legacy account credential setup preserves authenticated user ID and cloud-save ownership', async () => {
+    const user = { id: 'user-a', email: 'player_1@accounts.casualpass.invalid' };
+    const b = boot({ initial: makeSession(), handler: async c => c.method === 'PUT' ? user : c.url.includes('/auth/') ? makeSession().user : ({ raw: '' }) }); await b.cloud.ready;
+    await b.cloud.setupCredentials('player_1','test-only-long-password');
+    assert.equal(b.calls[1].method, 'PUT'); assert.equal(b.calls[1].headers.Authorization,'Bearer access-private');
+    assert.equal(b.cloud.getState().username,'player_1');
+    assert.equal(JSON.parse(b.storage.get(storedKey)).user.id,'user-a');
+    await b.cloud.uploadSave(); assert.equal(b.calls.at(-1).json.user_id,'user-a');
+    await assert.rejects(b.cloud.setupCredentials('other_name','test-only-long-password'), /zaten/);
+});
+test('confirmation-required signup and pending legacy change are not reported as completed', async () => {
+    const b=boot({handler:async()=>({user:makeSession().user})});await b.cloud.ready;
+    await assert.rejects(b.cloud.signUp('player_1','test-only-long-password'),/Kayıt tamamlanamadı/);
+    assert.equal(b.cloud.getState().authenticated,false);
+    const c=boot({initial:makeSession(),handler:async()=>makeSession().user});await c.cloud.ready;
+    await assert.rejects(c.cloud.setupCredentials('player_1','test-only-long-password'), /geçiş tamamlanmadı/);
+    assert.equal(c.cloud.getState().username,'');assert.equal(c.cloud.getState().authenticated,true);
+});

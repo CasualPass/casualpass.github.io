@@ -225,7 +225,7 @@ footer { padding: 19px 0 96px; display: flex; align-items: center; gap: 18px; co
 .account-form[hidden], #account-member[hidden], #account-guest[hidden], #account-restore[hidden] { display: none; }
 .account-form label { font-size: 13px; font-weight: 700; }
 .account-input-row { display: flex; flex-wrap: wrap; gap: 10px; }
-.account-input-row input { min-width: 0; flex: 1 1 200px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--dashboard-border); border-radius: 10px; background: var(--dashboard-surface-strong); color: var(--cp-text); font: inherit; font-size: 16px; }
+.account-input-row input, .account-form > input, #account-confirm-row input { min-width: 0; flex: 1 1 200px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--dashboard-border); border-radius: 10px; background: var(--dashboard-surface-strong); color: var(--cp-text); font: inherit; font-size: 16px; }
 .account-input-row input:focus-visible { outline: 2px solid var(--dashboard-accent); outline-offset: 2px; }
 .account-panel button { min-height: 44px; cursor: pointer; }
 .account-panel button:disabled { opacity: .5; cursor: default; }
@@ -235,3 +235,6 @@ body.theme-paper .account-error { color: #a82d1e; }
 #account-identity { overflow-wrap: anywhere; }
 .account-restore { margin-top: 16px; padding: 16px; border: 1px solid var(--dashboard-accent); border-radius: 12px; }
 @media (max-width:720px) { .account-panel { padding: 16px; }.account-link { font-size: 11px; }.account-panel .save-actions { flex-wrap: wrap; } }
+
+#account-confirm-row[hidden] { display: none; }
+#account-confirm-row:not([hidden]) { display: grid; gap: 8px; }

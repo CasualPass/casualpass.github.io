@@ -11,7 +11,7 @@
     }
     const storageKey = `sb-casualpass-${base}`;
     let session = null, epoch = 0, refreshing = null;
-    const state = { configured, authenticated: false, status: configured ? 'loading' : 'unconfigured', email: '', lastSyncedAt: '', error: '', persistent: true };
+    const state = { configured, authenticated: false, status: configured ? 'loading' : 'unconfigured', email: '', username: '', lastSyncedAt: '', error: '', persistent: true };
     const snapshot = () => ({ ...state });
     function emit(patch = {}) {
         Object.assign(state, patch);
@@ -24,11 +24,23 @@
     function validSession(s) {
         return Boolean(s && typeof s.access_token === 'string' && typeof s.refresh_token === 'string' && s.user?.id && Number.isFinite(s.expires_at));
     }
+    const USER_DOMAIN = 'accounts.casualpass.invalid';
+    function usernameOf(user) {
+        const email = String(user?.email || '');
+        const suffix = '@' + USER_DOMAIN;
+        return email.endsWith(suffix) ? email.slice(0, -suffix.length) : '';
+    }
+    function credentials(username, password) {
+        username = String(username).trim().toLowerCase();
+        if (!/^[a-z0-9_]{3,24}$/.test(username)) throw new Error('Kullanıcı adı 3–24 karakter olmalı; a–z, 0–9 ve alt çizgi kullan.');
+        if (typeof password !== 'string' || password.length < 12 || new TextEncoder().encode(password).length > 72) throw new Error('Şifre en az 12 karakter, en fazla 72 bayt olmalı.');
+        return { username, email: username + '@' + USER_DOMAIN, password };
+    }
     function setSession(s) {
         session = s;
         try { if (s) localStorage.setItem(storageKey, JSON.stringify(s)); else localStorage.removeItem(storageKey); }
         catch { state.persistent = false; }
-        emit({ authenticated: Boolean(s), email: s?.user?.email || '', status: s ? 'signed-in' : 'signed-out', error: '' });
+        emit({ authenticated: Boolean(s), email: s?.user?.email || '', username: usernameOf(s?.user), status: s ? 'signed-in' : 'signed-out', error: '' });
     }
     function requireConfig() { if (!configured) throw new Error('Hesap bağlantısı henüz hazır değil. Misafir olarak oynayabilirsin.'); }
     async function request(path, body, token, options = {}) {
@@ -43,8 +55,8 @@
             let data;
             try { data = raw ? JSON.parse(raw) : null; } catch { throw new Error('Sunucudan geçersiz yanıt geldi.'); }
             if (!response.ok) {
-                const messages = { 401: 'Oturum veya doğrulama kodu geçersiz. Yeniden giriş yap.', 403: 'Bu işlem için izin yok.', 429: 'Çok fazla deneme yapıldı. Bir süre bekleyip yeniden dene.' };
-                const error = new Error(messages[response.status] || (path.includes('/rest/') ? 'Bulut kaydı işlenemedi. Bağlantıyı ve sunucu kurulumunu kontrol et.' : 'Giriş işlemi tamamlanamadı. E-posta ve kodu kontrol et.'));
+                const messages = { 401: 'Giriş bilgileri veya oturum geçersiz. Yeniden giriş yap.', 403: 'Bu işlem için izin yok.', 429: 'Çok fazla deneme yapıldı. Bir süre bekleyip yeniden dene.' };
+                const error = new Error(messages[response.status] || (path.includes('/rest/') ? 'Bulut kaydı işlenemedi. Bağlantıyı ve sunucu kurulumunu kontrol et.' : 'İşlem tamamlanamadı. Kullanıcı adı kullanımda olabilir veya giriş bilgileri geçersiz olabilir.'));
                 error.status = response.status; throw error;
             }
             return data;
@@ -93,6 +105,27 @@
         if (!/^\d{6,10}$/.test(token)) throw new Error('E-postadaki sayısal kodu gir.');
         const version = ++epoch;
         return accept(await request('/auth/v1/verify', { email: String(email).trim(), token, type: 'email' }), version);
+    }
+    async function signIn(username, password) {
+        const input = credentials(username, password), version = ++epoch;
+        const data = await request('/auth/v1/token?grant_type=password', { email: input.email, password: input.password });
+        return accept(data, version);
+    }
+    async function signUp(username, password) {
+        const input = credentials(username, password), version = ++epoch;
+        const data = await request('/auth/v1/signup', { email: input.email, password: input.password, data: { username: input.username } });
+        if (!data?.access_token) throw new Error('Kayıt tamamlanamadı. Kullanıcı adı kullanımda olabilir veya sunucuda e-posta doğrulaması açık olabilir.');
+        return accept(data, version);
+    }
+    async function setupCredentials(username, password) {
+        const input = credentials(username, password), version = epoch, s = await access();
+        if (usernameOf(s.user)) throw new Error('Bu hesapta kullanıcı adı zaten tanımlı.');
+        const user = await request('/auth/v1/user', { email: input.email, password: input.password, data: { username: input.username } }, s.access_token, { method: 'PUT' });
+        if (version !== epoch) throw new Error('Oturum değişti; işlemi yeniden başlat.');
+        if (user?.id !== s.user.id || user.email !== input.email) throw new Error('Kullanıcı adına geçiş tamamlanmadı. Hesaptan çıkmadan sunucu ayarını kontrol et.');
+        // Auth user ID is unchanged; its RLS-protected cloud save stays attached.
+        epoch++; setSession({ ...s, user });
+        return snapshot();
     }
     async function signOut() {
         const previous = session; epoch++; setSession(null);
@@ -152,14 +185,14 @@
             if (version === epoch && session) setSession({ ...session, user });
         } catch (error) {
             if (error.status === 401 || error.status === 403) { epoch++; setSession(null); }
-            else emit({ status: 'offline', authenticated: Boolean(session), email: session?.user?.email || '', error: error.message });
+            else emit({ status: 'offline', authenticated: Boolean(session), email: session?.user?.email || '', username: usernameOf(session?.user), error: error.message });
         }
         return snapshot();
     })();
     window.addEventListener('storage', event => {
         if (event.key !== storageKey && event.key !== null) return;
         epoch++; session = readStored();
-        emit({ authenticated: Boolean(session), email: session?.user?.email || '', status: session ? 'signed-in' : 'signed-out', error: '' });
+        emit({ authenticated: Boolean(session), email: session?.user?.email || '', username: usernameOf(session?.user), status: session ? 'signed-in' : 'signed-out', error: '' });
     });
-    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signOut, uploadSave, downloadSave, applySave });
+    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, setupCredentials, signOut, uploadSave, downloadSave, applySave });
 })();

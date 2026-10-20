@@ -373,3 +373,27 @@ E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından
 - [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; e-posta giriş testi ve aynı tarayıcıda bulut yükle/geri getir/uygula akışı başarılı (yukarıdaki kayıt).
 
 Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.
+
+
+## 2026-10-20 — Kullanıcı adı ve şifreyle giriş
+
+### Amaç ve kararlar
+
+Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı adı + şifre akışına geçildi. Bu kayıt, yukarıdaki e-posta girişinin güncel ürün davranışı olarak değerlendirilmesini geçersiz kılar.
+
+- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ve mevcut hesaba kimlik bilgisi tanımlama (`PUT /user`). Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Uygulama en az 12 karakter, en fazla 72 UTF-8 bayt kabul eder.
+- Mevcut e-posta hesabına kullanıcı adı/şifre tanımlanırken Auth kullanıcı ID’sinin aynı kalması doğrulanır; bulut kaydı aynı ID’ye bağlı kalır. İşlem tam uygulanmazsa başarılı gösterilmez ve oturum kapatılmaz. Parola yalnızca form/istek sırasında kullanılır, formdan temizlenir; oyun yedeğine ve localStorage’a yazılmaz.
+- `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve mevcut hesaba kullanıcı adı/şifre tanımlama formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
+- `cloud-config.js`: `loginMode: 'password'`. Eski e-posta/OTP fonksiyonları yalnızca kod uyumluluğu için kaldı; yeni arayüzde sunulmaz.
+- Kullanıcının işlem anındaki açık onayıyla yalnızca CasualPass projesinde **Confirm email** kapatıldı. Canlı `/auth/v1/settings` sonucu `mailer_autoconfirm: true`, `disable_signup: false`; SMTP bu kullanıcı adı akışı için gerekli değil.
+- README/Hakkında ve PWA varlık sürümleri güncellendi. Şema ve oyun/ödül kuralları değişmedi.
+
+### Hedefler ve testler
+
+- [x] Kullanıcı adı/şifre kodu ve mevcut hesaba geçiş formu uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 16 test başarılı. Yeni testler kullanıcı adı eşleme, parola byte sınırı, parolanın saklanmaması, mevcut Auth ID/bulut sahipliği ve eksik onayın başarısız gösterilmesini kapsar.
+- [x] `node --check`, HTML ID/ARIA/form bağları, `git diff --check`: başarılı; `build-sw.py` çalıştırıldı.
+- [x] E-posta onayının kapandığı canlı API’den doğrulandı.
+- [ ] Gerçek kullanıcı adı/şifre ile mevcut hesabın geçişi ve yeniden giriş: kullanıcının yeni parolayı kendisi girmesi bekleniyor; henüz doğrulanmadı.
+
+Bilinen sınır: Supabase parola uzunluğu sunucu ayarı ayrıca 12 olarak yapılandırılmalıdır; bu çalışmada sunucu varsayılanı henüz değiştirilmedi. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.

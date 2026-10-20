@@ -15,7 +15,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 
 ## Çerez tabanlı profil ve CasualMoney
 
-Hesapsız oynanabilir. Oyun profili, CasualMoney, ilerleme ve rekorlar birinci taraf tarayıcı çerezlerinde tutulur. İsteğe bağlı Supabase hesabıyla e-postaya gelen bağlantı üzerinden giriş/kayıt yapılır; dashboard’daki **Buluta kaydet / Buluttan getir** ile ilerleme cihazlar arasında aktarılır. Otomatik birleştirme/senkronizasyon yapılmaz.
+Hesapsız oynanabilir. Oyun profili, CasualMoney, ilerleme ve rekorlar birinci taraf tarayıcı çerezlerinde tutulur. İsteğe bağlı Supabase hesabıyla kullanıcı adı ve şifre üzerinden giriş/kayıt yapılır; dashboard’daki **Buluta kaydet / Buluttan getir** ile ilerleme cihazlar arasında aktarılır. Otomatik birleştirme/senkronizasyon yapılmaz.
 
 - Oturumu başlatmak günde bir kez **15 CM** verir.
 - Günlük ödül günde bir kez **20 CM** verir.
@@ -67,16 +67,25 @@ Bu proje büyük ölçüde AI araçlarıyla geliştirilmiştir.
 
 <p><img src="ai-generated.svg" height="64" alt="AI Generated"></p>
 
-## Supabase hesabı ve kurulum
+## Supabase kullanıcı adı ve şifre
 
-1. `cloud-config.js` içinde `enabled`, HTTPS `url` ve açık `publishableKey` alanlarını ayarla. Varsayılan `loginMode: 'magiclink'` e-posta bağlantısı kullanır. Tarayıcıya yalnızca `sb_publishable_…` veya eski `anon` anahtarı koy; secret/service_role kullanma.
-2. Yeni projenin SQL Editor’ünde `supabase/schema.sql` çalıştır. `casual_profiles` tablosunda RLS ve `auth.uid() = user_id` okuma/ekleme/güncelleme politikaları bulunur; anonim role tablo yetkisi verilmez. Yeni tablolara otomatik yetki açma kapalı tutulmalıdır.
-3. Authentication → URL Configuration içinde Site URL’yi `https://casualpass.github.io/` yap. Yerel test için `http://127.0.0.1:4173/` adresini Redirect URLs listesine ekle. Bağlantı dönüşünde token parçaları URL’den hemen temizlenir ve `/user` ile doğrulanır. E-posta sağlayıcısı ve yeni kullanıcı kaydı açık olmalıdır. Genel kullanıma açarken kendi SMTP sağlayıcını yapılandır; Supabase’in varsayılan e-posta hizmetinin alıcı ve hız sınırları vardır.
-   İsteğe bağlı sayısal kod: SMTP yapılandırıldıktan sonra Confirm signup ve Magic Link şablonlarına `supabase/email-otp.html` içeriğini uygula (`{{ .Token }}`) ve `loginMode: 'otp'` seç. Ücretsiz varsayılan e-posta hizmeti panelinde özel şablon düzenleme kapalıdır; varsayılan bağlantı akışı şablon değişikliği istemez.
-4. `python3 tools/build-sw.py` çalıştırıp siteyi yayınla. Giriş ve bulut işlemleri internet ister; yerel oyunlar çevrimdışı devam eder.
+Giriş/kayıt için e-posta veya SMTP gerekmez. Kullanıcı adı 3–24 karakterdir (`a-z`, `0-9`, `_`); baş/son boşluklar temizlenir ve küçük harfe çevrilir. Supabase’in e-posta tabanlı Auth kimliği, `<kullanıcı-adı>@accounts.casualpass.invalid` biçiminde dahili bir tanımlayıcıya eşlenir. Bu posta almayan bir kimliktir; e-posta sahipliği iddiası veya e-postayla şifre sıfırlama yoktur. Kullanıcı adını ve şifreni güvenli yerde sakla.
 
-`casual-cloud.js`, Supabase Auth HTTP API’sini (`otp`, `verify`, `token`, `user`, `logout`) ve PostgREST’i kullanır. Ek paket/CDN bağımlılığı yoktur. Access/refresh token’ları `sb-casualpass-…` localStorage anahtarında saklanır; oyun çerezlerine, dışa aktarılan dosyaya veya bulut kaydına girmez. Bu, eski yalnızca-çerez kuralına kimlik doğrulama için sınırlı bir istisnadır. Kalıcı depolama kapalıysa oturum yalnızca açık sayfada sürer. Süresi yaklaşan token, yetkili bulut işlemi öncesinde yenilenir; Web Locks aynı cihazdaki yenilemeleri sıraya alır.
+- Parolalar HTTPS üzerinden Supabase Auth’a gider; Supabase bunları **bcrypt hash** olarak saklar. Uygulama şifreyi veya hash’ini kendi tablolarına, çerezlerine, localStorage’a veya oyun yedeklerine yazmaz. Hash’i istemcide üretip parola yerine göndermeyiz.
+- Uygulama en az 12 karakter ve bcrypt sınırı nedeniyle en fazla 72 UTF-8 bayt kabul eder. Supabase Email sağlayıcısının Minimum password length ayarını da 12 yap.
+- Dashboard’da giriş ve yeni hesap oluşturma vardır. E-postayla açılmış mevcut hesapta **Bu hesaba tanımla** formu, oturumu açık kullanıcının aynı Auth kullanıcı ID’sine kullanıcı adı/şifre atar; bulut kaydı korunur. Hesap tanımlandıktan sonra giriş için kullanıcı adı kullanılır. Yeni şifreyi kullanıcı kendisi formda girer.
 
-Giriş yapmak yerel ilerlemeyi hesaba otomatik taşımaz veya başka hesaba geçince silmez. Ortak cihazda yerel kayıt paylaşılır; arayüz bunu belirtir. Buluta yükleme mevcut bulut kaydının üzerine yazar ve onay ister. Getirme önce kaydı doğrular ve önizler; yükleme açık kullanıcı eylemiyle yerel çerezleri değiştirir. En son kullanıcı tarafından yüklenen bulut kaydı geçerlidir; eşzamanlı düzenlemeler birleştirilmez. CM istemcide hesaplandığı için bulut kaydı hileye dayanıklı bir ekonomi sağlamaz.
+### Sunucu kurulumu
 
-Doğrulama: `node --test tools/test-cloud.cjs` (taklit HTTP ile auth, token yenileme, çıkış, kayıt izolasyonu ve yedekte token bulunmaması). Canlı e-posta/cihazlar arası kabul testi ayrıca yapılmalıdır.
+1. `cloud-config.js`: HTTPS `url`, yalnızca açık `publishableKey`, `enabled: true`, `loginMode: 'password'`. Secret/service_role anahtarı tarayıcıya konmaz.
+2. `supabase/schema.sql` şemasını uygula. `casual_profiles` tablosunda `auth.uid() = user_id` RLS politikaları vardır; anonim role tablo yetkisi verilmez. Uygulamaya özel bir parola tablosu yoktur.
+3. Authentication → Sign In / Providers: **Allow new users to sign up** açık, **Confirm email** kapalı. Bu proje kullanıcı adı kimlikleri kullandığından gerçek e-posta doğrulaması yapılmaz. Email sağlayıcısı şifre girişinin altyapısı olarak açık kalır. E-posta değişimi/şifre değişimi bildirimleri için SMTP kullanılmaz; eski e-posta/OTP yardımcıları yalnızca geriye dönük kod uyumluluğu içindir, yeni arayüzde sunulmaz.
+4. `python3 tools/build-sw.py` ile önbelleği üretip yayınla. Giriş ve bulut aktarımı internet ister; yerel oyunlar çevrimdışı sürer.
+
+`casual-cloud.js`, Supabase Auth HTTP API’sini ve PostgREST’i kullanır; ek paket/CDN yoktur. Access/refresh token’ları `sb-casualpass-…` localStorage anahtarında tutulur. Bu, yalnızca-çerez oyun depolamasına auth için sınırlı istisnadır; giriş token’ları oyun yedeğine girmez. Depolama kapalıysa oturum sayfa ömrüyle sınırlıdır. Süresi yaklaşan token yetkili işlem öncesinde yenilenir; Web Locks desteklendiğinde yenilemeler sıraya alınır.
+
+Giriş yerel ilerlemeyi otomatik yüklemez veya başka hesaba geçince silmez. Ortak cihazda yerel kayıt paylaşılır. Buluta yükleme açık onayla önceki bulut kaydını değiştirir. Getirme doğrulama ve önizlemeden sonra açık kullanıcı eylemiyle yerel kaydı değiştirir. Otomatik birleştirme yoktur; son yüklenen kayıt geçerlidir. CM istemcide hesaplanır; bulut kaydı hileye dayanıklı ekonomi sağlamaz.
+
+Doğrulama: `node --test tools/test-cloud.cjs`. Testler taklit HTTP ile parola girişi/kayıt, mevcut kullanıcı ID’sinin korunması, şifrenin saklanmaması, doğrulama, token yenileme, çıkış ve yedek/token ayrımını kapsar. Canlı kullanıcı adı/şifre testi ayrıca yapılmalıdır.
+
+Kaynaklar: [Supabase password security](https://supabase.com/docs/guides/auth/password-security), [password-based Auth](https://supabase.com/docs/guides/auth/passwords).
