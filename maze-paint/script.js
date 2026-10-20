@@ -6,24 +6,33 @@
     const copy=s=>({position:s.position,painted:s.painted.slice()});
     function say(text){$('message').textContent=text;}
     function save(){tainted ||= cheatsActive();if(!tainted)setCookieValue('cp_maze_v1',JSON.stringify({number,state:copy(state),moves,completed}));}
-    let previousPosition = null;
-    function render(path=[]) {
+    let tiles=[], player=null, renderedLevel=null, animation=null, queuedDirection=null;
+    const transform=p=>`translate(${p%level.width*100}%,${Math.floor(p/level.width)*100}%)`;
+    function cancelAnimation(){
+        if(animation)window.cancelAnimationFrame?.(animation.frame);
+        animation=null;queuedDirection=null;
+    }
+    function updateCoverage(painted){
+        const count=level.cells.filter(Boolean).length;
+        $('coverage').textContent=`${painted.size} / ${count}`;
+        $('fill').style.width=`${painted.size/count*100}%`;
+    }
+    function render() {
         const board=$('board');board.classList.toggle('stop-chapter',number>E.classicLevels);board.style.setProperty('--size',level.width);
-        board.replaceChildren();
-        level.cells.forEach((open,index)=>{
-            const tile=document.createElement('span');tile.className='tile'+(!open?' wall':state.painted.includes(index)?' painted':'');
-            if(open===E.STOP)tile.classList.add('stop-pad');
-            const step=path.indexOf(index);if(step>=0){tile.classList.add('fresh');tile.style.setProperty('--delay',`${step*25}ms`);}
-            tile.setAttribute('aria-hidden','true');board.append(tile);
-        });
-        const player=document.createElement('span');player.className='player';player.setAttribute('aria-hidden','true');
-        const transform=p=>`translate(${p%level.width*100}%,${Math.floor(p/level.width)*100}%)`;
-        player.style.transform=transform(state.position);board.append(player);
-        if(path.length && previousPosition!==null && player.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.body.classList.contains('disable-effects')) {
-            const frames=[previousPosition,...path].map(p=>({transform:transform(p)}));
-            player.animate(frames,{duration:Math.min(300,path.length*55),easing:'linear'});
+        // Keep the board and player nodes alive between moves; only a level
+        // change rebuilds them. Paint and position share one frame clock.
+        if(renderedLevel!==level){
+            board.replaceChildren();tiles=[];
+            level.cells.forEach((open,index)=>{
+                const tile=document.createElement('span');tile.className='tile'+(!open?' wall':'');
+                if(open===E.STOP)tile.classList.add('stop-pad');
+                tile.setAttribute('aria-hidden','true');board.append(tile);tiles.push(tile);
+            });
+            player=document.createElement('span');player.className='player';player.setAttribute('aria-hidden','true');board.append(player);renderedLevel=level;
         }
-        previousPosition=state.position;
+        const painted=new Set(state.painted);
+        tiles.forEach((tile,index)=>tile.classList.toggle('painted',painted.has(index)));
+        player.style.transform=transform(state.position);
         const count=level.cells.filter(Boolean).length;
         board.setAttribute('aria-label',`Labirent ${level.width}×${level.height}. Top satır ${Math.floor(state.position/level.width)+1}, sütun ${state.position%level.width+1}. ${state.painted.length}/${count} kare boyalı. Ok tuşlarıyla hareket et.`);
         $('coverage').textContent=`${state.painted.length} / ${count}`;$('fill').style.width=`${state.painted.length/count*100}%`;
@@ -34,19 +43,48 @@
         $('undo').disabled=!history.length;$('next').hidden=!E.isSolved(level,state)||number===E.totalLevels;
         $('restart').textContent=resetting?'Sıfırlamak için tekrar bas':'↻ Yeniden başla';
     }
-    function start(n){hintedDirection=null;number=n;level=E.createLevel(n);state=E.initial(level);moves=0;history=[];resetting=false;pointer=null;tainted=cheatsActive();save();render();say('Kaydır veya yön düğmelerini kullan. Top duvara kadar gider.');}
+    function animateSlide(before,next,done){
+        const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(!window.requestAnimationFrame||reduced||document.body.classList.contains('disable-effects')){render();done();return;}
+        const path=[before.position,...next.path], painted=new Set(before.painted);
+        const run={frame:null,start:null,paintedThrough:0};animation=run;
+        $('moves').textContent=moves;$('hint').disabled=true;$('undo').disabled=true;$('level').disabled=true;$('next').hidden=true;
+        const duration=next.path.length*65;
+        function frame(now){
+            if(animation!==run)return;
+            if(run.start===null)run.start=now;
+            const distance=Math.min(next.path.length,(now-run.start)/duration*next.path.length);
+            const reached=Math.min(next.path.length,Math.floor(distance+1e-7));
+            while(run.paintedThrough<reached){
+                const cell=path[++run.paintedThrough];painted.add(cell);tiles[cell].classList.add('painted');
+            }
+            const from=path[reached],to=path[Math.min(reached+1,next.path.length)],fraction=distance-reached;
+            const x=from%level.width+(to%level.width-from%level.width)*fraction;
+            const y=Math.floor(from/level.width)+(Math.floor(to/level.width)-Math.floor(from/level.width))*fraction;
+            player.style.transform=`translate(${x*100}%,${y*100}%)`;updateCoverage(painted);
+            if(distance<next.path.length)run.frame=window.requestAnimationFrame(frame);
+            else{animation=null;$('level').disabled=false;render();done();const queued=queuedDirection;queuedDirection=null;if(queued)play(queued);}
+        }
+        run.frame=window.requestAnimationFrame(frame);
+    }
+    function start(n){cancelAnimation();$('level').disabled=false;hintedDirection=null;number=n;level=E.createLevel(n);state=E.initial(level);moves=0;history=[];resetting=false;pointer=null;tainted=cheatsActive();save();render();say('Kaydır veya yön düğmelerini kullan. Top duvara kadar gider.');}
     function play(direction){
+        if(animation){queuedDirection=direction;return;}
         hintedDirection=null;
         if(E.isSolved(level,state))return;
         const next=E.move(level,state,direction);resetting=false;
         if(!next){if(typeof playHaptic==='function')playHaptic('tap');say('Bu yönde duvar var. Başka bir yön dene.');return;}
         history.push({state:copy(state),moves});if(history.length>300)history.shift();
-        state=copy(next);moves++;if(typeof playHaptic==='function')playHaptic(E.isSolved(level,state)?'win':'move');tainted ||= cheatsActive();
+        const before=copy(state);state=copy(next);moves++;if(typeof playHaptic==='function')playHaptic('move');tainted ||= cheatsActive();
         if(E.isSolved(level,state)){
             if(!tainted&&!completed.includes(number)){completed.push(number);recordGameResult('Maze Paint',{won:true,score:number});}
-            say(number===E.totalLevels?'Bütün kareler boyalı! Son bölümü de tamamladın.':`Tamamı boyandı! ${moves} hamlede bitirdin.`);
-        }else say(`${level.cells.filter(Boolean).length-state.painted.length} kare kaldı. Boyalı yoldan tekrar geçebilirsin.`);
-        save();render(next.path);
+        }
+        save();
+        say('Top yuvarlanıyor…');
+        animateSlide(before,next,()=>{
+            if(E.isSolved(level,state)){say(number===E.totalLevels?'Bütün kareler boyalı! Son bölümü de tamamladın.':`Tamamı boyandı! ${moves} hamlede bitirdin.`);if(typeof playHaptic==='function')playHaptic('win');}
+            else say(`${level.cells.filter(Boolean).length-state.painted.length} kare kaldı. Boyalı yoldan tekrar geçebilirsin.`);
+        });
     }
     function restore(){
         try{
@@ -66,14 +104,15 @@
     $('level').addEventListener('change',()=>start(Number($('level').value)));
     document.querySelectorAll('[data-dir]').forEach(button=>button.addEventListener('click',()=>play(button.dataset.dir)));
     $('next').addEventListener('click',()=>{if(E.isSolved(level,state)&&number<E.totalLevels)start(number+1);});
-    $('undo').addEventListener('click',()=>{const old=history.pop();if(!old)return;state=old.state;moves=old.moves;resetting=false;save();render();say('Son kaydırış geri alındı.');});
-    $('restart').addEventListener('click',()=>{if(moves&&!resetting&&!E.isSolved(level,state)){resetting=true;render();say('Yeniden başlatmak için düğmeye tekrar bas.');return;}start(number);});
+    $('undo').addEventListener('click',()=>{cancelAnimation();$('level').disabled=false;const old=history.pop();if(!old)return;state=old.state;moves=old.moves;resetting=false;save();render();say('Son kaydırış geri alındı.');});
+    $('restart').addEventListener('click',()=>{cancelAnimation();$('level').disabled=false;if(moves&&!resetting&&!E.isSolved(level,state)){resetting=true;render();say('Yeniden başlatmak için düğmeye tekrar bas.');return;}start(number);});
     const keys={ArrowUp:'up',ArrowRight:'right',ArrowDown:'down',ArrowLeft:'left',w:'up',d:'right',s:'down',a:'left'};
     document.addEventListener('keydown',event=>{if(event.target?.closest('input,select,textarea')||event.ctrlKey||event.metaKey||event.altKey)return;const dir=keys[event.key]||keys[event.key.toLowerCase()];if(dir){event.preventDefault();if(!event.repeat)play(dir);}});
     const board=$('board');
     board.addEventListener('pointerdown',event=>{if(event.isPrimary===false||event.button!==0)return;pointer={id:event.pointerId,x:event.clientX,y:event.clientY};board.setPointerCapture?.(event.pointerId);board.focus({preventScroll:true});});
     board.addEventListener('pointerup',event=>{if(!pointer||pointer.id!==event.pointerId)return;const dx=event.clientX-pointer.x,dy=event.clientY-pointer.y;pointer=null;if(Math.max(Math.abs(dx),Math.abs(dy))<18)return;play(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up');});
     board.addEventListener('pointercancel',()=>{pointer=null;});board.addEventListener('lostpointercapture',()=>{pointer=null;});
-    window.addEventListener('blur',()=>{pointer=null;});window.addEventListener('casual-cheat',()=>{tainted=true;say('Hile oturumunda ilerleme kaydedilmez.');});
+    window.addEventListener('blur',()=>{pointer=null;});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&animation){cancelAnimation();$('level').disabled=false;render();say('Hamle tamamlandı. Devam edebilirsin.');}});window.addEventListener('casual-cheat',()=>{tainted=true;say('Hile oturumunda ilerleme kaydedilmez.');});
     if(!restore())start(1);else{tainted=cheatsActive();render();if(E.isSolved(level,state))say('Bu bölüm tamamlandı. Bir sonrakine geçebilirsin.');}
 })();
