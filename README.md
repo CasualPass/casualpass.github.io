@@ -101,3 +101,8 @@ Yeni sürüm yayınlandığında uygulama açılışta, sekmeye dönünce, bağl
 Son Hat, yerelde bulunan `fps-game/vendor/three.min.js` (Three.js r128) ile gerçek 3B köprü, asker/zombi animasyonları, silah sandıkları ve helikopter çizer. Karakter ve çevre modelleri proje için kodla oluşturulmuştur; Last War dosyaları kullanılmaz. WebGL yoksa veya bağlam kaybolursa Canvas 2D görünümü devreye girer. Savaş ekranı masaüstünde 620 px genişliğinde, telefonda ekran genişliğindedir.
 
 İlk üç bölümde sağdaki ardışık `+1` kapıları ile soldaki silah sandığı arasında seçim yapılır; sonraki kapılar, sürüler ve helikopter sandığı kararları devam eder. Askerler otomatik ateş eder. Sürükleme / A-D / yön tuşlarıyla hareket edilir; **Boşluk / Hava desteği** 18 saniye beklemeli alan saldırısıdır. Boss’un kırmızı işaretlediği şerit 1,35 saniye sonra vurulur. Mevcut `cp_sonhat_v2` üs/kahraman kaydı ve ödül kuralları korunur.
+
+
+## Android / iPhone / iPad uygulaması
+
+`native/android` ve `native/ios` canlı CasualPass web uygulamasını açan native kabuklardır. Oyun sürümleri webdeki `version.json` üzerinden güncellenir; kabuk sürümü ayrı tutulur. Android test APK derlemesi GitHub Actions’tadır; iOS projesi Xcode ile imzalanır. [Derleme, kurulum, veri taşıma ve gelecekte gamepad notları](native/README.md).

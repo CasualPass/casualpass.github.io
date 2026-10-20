@@ -426,3 +426,24 @@ Kullanıcının Last War Google Play bağlantısını referans alarak Son Hat’
 - Brave’de gerçek WebGL savaş sahası açıldı; asker kapılarından geçerken birlik 1’den 7’ye yükseldi, 3B kapı/sandık/zombi ve mermiler çizildi.
 - Son kamera ayarı ve gölgeli 3B görünüm Brave ekran görüntüsünde doğrulandı. Klavyeyle sol şeride yönlendirme sonrası Makineli silahı, 11 kişilik birlik ve güncellenen HUD görüldü. Sonraki devam/hava desteği tıklamaları CUA’da duraklatma ekranını değiştirmedi; canlı hava desteği testi tamamlanamadı. Gerçek telefon dokunma/FPS ve WebGL bağlam kaybı testi çalıştırılmadı; bunlar VM testiyle doğrulanmış sayılmaz.
 - `node --check` (iki JS), HTML ID/label/yerel dosya ve script hedefleri, `git diff --check`: başarılı. Yeni PWA varlıkları `build-sw.py` ile üretildi.
+
+
+## 2026-10-20 — Android ve iOS web uygulaması kabukları
+
+### Amaç ve kapsam
+
+Kullanıcı Android APK ve iPhone/iPad kabuğunu seçti; oyun sürümleri webden gelsin, gelecekte gamepad eklenebilsin. Bu çalışma gerçek gamepad eşlemesi veya mağazaya yayınlamayı kapsamaz.
+
+### Teknik kararlar
+
+- `native/android`: Java 17 / AGP 8.9.2 / SDK 35, Android 8+ WebView kabuğu. Canlı HTTPS kökü açılır, depolama ve çerezler korunur. Origin sınırlı gezinme, dış bağlantılar, sistem geri, hata/yeniden dene ekranı, JS onayları, kullanıcı dosya seçicisi ve origin/main-frame sınırlı AndroidX WebMessageListener kayıt paylaşımı. Geniş dosya izni yok.
+- `native/ios`: iOS/iPadOS 16+ SwiftUI/WKWebView Xcode projesi; kalıcı veri deposu, app-bound domain, safe area, yatay/dikey ekran, JS onayları ve sınırlı JSON paylaşım köprüsü. Gerçek cihaz dağıtımı için Apple imzası gerekir; kullanıcı hesabı/sertifikası eklenmedi.
+- Native sürüm 1.0.0(1), web sürümü `version.json` ile ayrı. Oyunlar pakete gömülmez. İlk yükleme internet gerektirir; offline önbellek ve yeni web sürümleri mevcut SW tarafından yönetilir. Native API değişimi yeni APK/IPA gerektirir. Gamepad desteği henüz uygulanmadı.
+- `casual-save.js`: Sınırlı native köprü varsa dosya dışa aktarmayı sistem seçicisine yönlendirir; iptal/hata sonucu beklenir. Köprü yoksa mevcut web paylaşımı kalır.
+- `.github/workflows/android-app.yml`: Android değişikliği pushunda test debug APK üretir. Üretim imzası yok; geçici CI debug anahtarı build’ler arasında değişebilir. `tools/build-sw.py` native kaynak/build ürünlerini web önbelleğine almaz.
+- `native/README.md`: Kurulum/derleme, iki sürüm katmanı, PWA/kabuk veri depolarının ayrı oluşu ve gelecekte gamepad sınırları.
+
+### Doğrulama
+
+- Xcode Debug iOS Simulator build: başarılı. Simülatör çalıştırma ilk ortam kontrolünde CoreSimulator bağlantı/izin hatası verdi; gerçek cihaz ve native runtime akışları henüz doğrulanmadı.
+- Android build ve iOS cihaz build sonuçları tamamlanınca bu kayıt güncellenecek.
