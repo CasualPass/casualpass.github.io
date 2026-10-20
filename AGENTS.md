@@ -285,3 +285,18 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 ### Testler
 
 - Playwright 390 px: günlük ödülle 35 CM → dışa aktarma (3 çerez, `873-6`) → çerezleri silme (0) → içe aktarma "doğrulandı", bakiye 35'e döndü; profildeki bakiye elle +9000 yapılınca "Kayıt doğrulanamadı" uyarısı (7-3-1 ve mühür tutmuyor), Vazgeç bakiyeyi değiştirmedi, kabul 9.035 yükleyip "doğrulanmamış" uyarısını gösterdi; CasualPass kaydı olmayan dosya reddedildi; sayfa hatası yok.
+
+## 2026-10-20 — CasualFish yeni motor
+
+### Yapılanlar
+
+- `chess-game/casualfish.js`: CasualPass'in kendi motoru (Stockfish değil). Eski CasualFish yalnızca taş sayan 2–3 yarım hamlelik bir minimax'tı ve chess.js'in hamle üretimini kullandığı için saniyede ~1.500 pozisyona bakabiliyordu (chess.js her hamleye SAN üretiyor). Yeni motorun kendi tahtası var: 0x88 dizi, Zobrist anahtarı, yap/geri al; ~250 bin pozisyon/sn. Arama: kademeli derinleşme ve süre sınırı, negamax + alfa-beta + PVS, dönüşüm tablosu, boş hamle budaması, geç hamle azaltması, şah çekince uzatma, katil/geçmiş sezgileri, taş almaları sonuna kadar izleyen sakinlik araması; tekrar ve 50 hamle beraberlik sayılır. Değerlendirme: taş değerleri, kare tabloları (şah için orta oyun/oyun sonu karışımı), fil çifti, geçer/ikili/yalnız piyon, açık hatta kale.
+- Seviyeler (`LEVELS`): Kolay (1 yarım hamle, sakinlik araması yok, ±220 gürültü, %30 rastgele hamle), Orta (3 yarım hamle, ±35 gürültü, 0,6 sn), Zor (1,5 sn), Usta (3 sn; başlangıç pozisyonunda ~8+ yarım hamle). Seçici 1–4 (`index.html`).
+- `chess-game/casualfish-worker.js`: arama Web Worker'da; sayfa donmaz. Ana iş parçacığı hamle listesini (`e2e4` biçiminde) yollar, motor tekrarları görür; ölümsüzlük hilesinde izinli hamleler listesi gider. Worker yoksa eski minimax yedek olarak kalır. `script.js?v=2`.
+
+### Testler
+
+- Perft (5 standart pozisyon, başlangıç derinlik 4 = 197.281, Kiwipete derinlik 3 = 97.862 dahil) chess.js ile birebir.
+- Tek hamlede mat (Rd8#) ve asılı vezir alma bulundu.
+- Node'da eski motora karşı 10'ar oyun: yeni Orta–eski Orta 10/10, yeni Orta–eski Zor 10/10, yeni Zor–eski Zor 10/10. Kolay yeni başlayanlara göre ayarlandı: eski Kolay'a (rastgele) 10/10, eski Orta'ya 1,5/10, eski Zor'a 0/10.
+- Playwright: Usta'ya karşı 4 hamle; her yanıt geldi, düşünürken ana iş parçacığı gecikmesi 0–11 ms, sayfa hatası yok.
