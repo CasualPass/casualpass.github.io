@@ -738,3 +738,30 @@ body.theme-paper .board-wrapper {
         width: min(400px, calc(100vw - 3.5rem), calc(100dvh - var(--board-reserve, 300px)));
     }
 }
+/* Mode selection and run details share the global theme palette. */
+.game-container::before { pointer-events: none; }
+.mode-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mode-btn { min-width: 0; padding: 12px 6px; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-bg); color: var(--text-primary); cursor: pointer; }
+.mode-btn.active { border-color: var(--accent); background: var(--glass-highlight); box-shadow: 0 0 0 1px var(--accent); }
+.mode-icon { width: 26px; height: 26px; color: var(--accent); }
+.mode-name, .mode-desc { display: block; }
+.mode-name { margin: 5px 0; font-weight: 800; }
+.mode-desc { color: var(--text-muted); font-size: .72rem; line-height: 1.35; }
+.config-menu .sub-title { font-size: 1.1rem; margin: 0; }
+.custom-settings summary { cursor: pointer; padding: 10px 0; color: var(--text-muted); }
+.custom-settings[open] .setting-row { margin-top: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: .75rem; color: var(--text-muted); line-height: 1.5; }
+.dot { width: 7px; height: 7px; display: inline-block; border-radius: 50%; margin-right: 4px; }
+.dot-apple { background: var(--cp-o-color, #ff00cc); }.dot-gold { background: #ffcc70; }.dot-combo { background: var(--accent); }
+.mode-chip { margin-top: 10px; font-size: .75rem; color: var(--text-muted); }
+.result-overlay { gap: .55rem; overflow-y: auto; }
+.result-overlay .final-score, .result-overlay .new-record { margin-top: 0; }
+.result-overlay .btn { padding: .55rem 1.2rem; font-size: .85rem; flex-shrink: 0; }
+.best-line { color: #ddd; font-size: .8rem; }
+.result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 16px; font-size: .75rem; }
+.result-stats div { display: flex; gap: 10px; justify-content: space-between; }
+.result-stats dt { color: #ddd; }.result-stats dd { font-weight: 800; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.touch-only { display: none !important; }
+@media (pointer: coarse) { .touch-only { display: flex !important; } }
+@media (max-width: 360px) { .scores { gap: 8px; }.mode-desc { font-size: .65rem; }.result-overlay { gap: .3rem; padding: .6rem; }.result-overlay .game-over-text { font-size: 1.3rem; } }

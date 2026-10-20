@@ -3525,12 +3525,26 @@
 
     /* ---------- Menü olayları ---------- */
 
-    document.querySelectorAll('.tab').forEach((tab) => {
+    const menuTabs = [...document.querySelectorAll('.tab')];
+    menuTabs.forEach((tab, index) => {
+        tab.tabIndex = tab.classList.contains('active') ? 0 : -1;
+        tab.addEventListener('keydown', (e) => {
+            let next;
+            if (e.key === 'ArrowRight') next = (index + 1) % menuTabs.length;
+            else if (e.key === 'ArrowLeft') next = (index + menuTabs.length - 1) % menuTabs.length;
+            else if (e.key === 'Home') next = 0;
+            else if (e.key === 'End') next = menuTabs.length - 1;
+            else return;
+            e.preventDefault();
+            menuTabs[next].click();
+            menuTabs[next].focus();
+        });
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach((t) => {
                 const on = t === tab;
                 t.classList.toggle('active', on);
                 t.setAttribute('aria-selected', String(on));
+                t.tabIndex = on ? 0 : -1;
                 $(`tab-${t.dataset.tab}`).classList.toggle('hidden', !on);
             });
             setStatus('');

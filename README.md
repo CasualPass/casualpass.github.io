@@ -60,3 +60,9 @@ MIT
 ## PWA ve çevrimdışı
 
 Site ana ekrana eklenebilen bir PWA'dır; ilk açılışta tüm oyunlar telefona indirilir ve internetsiz oynanır (çevrimiçi odalar hariç). Yayından önce `python3 tools/build-sw.py` çalıştırın: `sw.js` önbellek listesini ve `version.json` sürümünü yeniden üretir.
+
+## AI Generated
+
+Bu proje büyük ölçüde AI araçlarıyla geliştirilmiştir.
+
+<p><img src="ai-generated.svg" height="64" alt="AI Generated"></p>

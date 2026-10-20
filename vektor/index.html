@@ -24,7 +24,7 @@
 </head>
 <body class="theme-liquid">
     <main class="vk" id="vk">
-        <canvas id="game-canvas" role="img" aria-label="Vektör: Liman haritası, iki kurma bölgesi ve orta alan"></canvas>
+        <canvas id="game-canvas" role="img" aria-label="Vektör: seçilen haritada beşe beş taktik savaş alanı"></canvas>
 
         <div class="hud hidden" id="hud">
             <div id="scope" aria-hidden="true"></div>
@@ -62,7 +62,7 @@
             <div id="notice" aria-live="polite"></div>
             <div id="killbanner" aria-hidden="true"></div>
             <div id="revealed" class="hidden">YERİN GÖRÜNÜYOR</div>
-            <div id="clickhint" class="hidden">Oynamak için ekrana tıkla</div>
+            <div id="clickhint" class="hidden">Devam etmek için ekrana tıkla · Esc menü</div>
             <div id="spectating"></div>
 
             <div id="action" class="hidden">
@@ -134,25 +134,26 @@
                     <p class="eyebrow">5'E 5 TAKTİK KAHRAMAN NİŞANCI</p>
                     <h1 id="menu-title">VEKTÖR</h1>
                     <p class="lead">Saldırırken çekirdeği bir bölgeye kur, savunurken kurulmasını engelle ya da çöz. Turlar arasında kredini silah, kalkan ve yeteneğe harca. Önce hedef raunda ulaşan takım kazanır.</p>
+                    <div class="field-guide" aria-label="Taktik rehberi"><span><b>01 · HAZIRLAN</b>Ajanını seç · B ile ekipman al</span><span><b>02 · POZİSYON AL</b>Durarak ateş et · Shift ile sessiz yürü</span><span><b>03 · HEDEFİ TAMAMLA</b>Bölgede F basılı tut: kur / çöz</span></div>
                     <div class="session-line" id="session-line"></div>
 
                     <div class="tabs" role="tablist" aria-label="Oyun türü">
-                        <button class="tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-solo" data-tab="solo">Botlara karşı</button>
-                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-host" data-tab="host">Oda aç</button>
-                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-join" data-tab="join">Katıl</button>
+                        <button class="tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-solo" id="tab-btn-solo" data-tab="solo">Botlara karşı</button>
+                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-host" id="tab-btn-host" data-tab="host">Oda aç</button>
+                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-join" id="tab-btn-join" data-tab="join">Katıl</button>
                     </div>
-                    <div class="tab-panel" id="tab-solo" role="tabpanel">
+                    <div class="tab-panel" id="tab-solo" role="tabpanel" aria-labelledby="tab-btn-solo">
                         <div class="match-options" data-scope="solo"></div>
                         <button class="primary" id="solo-btn" type="button">MAÇA BAŞLA</button>
                     </div>
-                    <div class="tab-panel hidden" id="tab-host" role="tabpanel">
+                    <div class="tab-panel hidden" id="tab-host" role="tabpanel" aria-labelledby="tab-btn-host">
                         <div class="match-options" data-scope="host"></div>
                         <button class="primary" id="host-btn" type="button">ODA OLUŞTUR</button>
                     </div>
-                    <div class="tab-panel hidden" id="tab-join" role="tabpanel">
+                    <div class="tab-panel hidden" id="tab-join" role="tabpanel" aria-labelledby="tab-btn-join">
                         <label class="field-label" for="join-input">Host'un gönderdiği 6 haneli kod</label>
                         <div class="join-row">
-                            <input class="code-input" id="join-input" type="text" maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="off" spellcheck="false">
+                            <input class="code-input" id="join-input" type="text" maxlength="6" pattern="[0-9]{6}" aria-describedby="status-line" placeholder="000000" inputmode="numeric" autocomplete="off" spellcheck="false">
                             <button class="primary" id="join-btn" type="button">KATIL</button>
                         </div>
                     </div>
@@ -172,7 +173,7 @@
                     <details class="more">
                         <summary>Gelişmiş bağlantı (TURN)</summary>
                         <p class="small-note">Doğrudan bağlantı kurulamazsa TURN sağlayıcının <code>iceServers</code> listesini yapıştır. Yalnızca bu sekmede kalır.</p>
-                        <textarea id="turn-json" rows="3" spellcheck="false" placeholder='[{"urls":"turn:...","username":"...","credential":"..."}]'></textarea>
+                        <textarea id="turn-json" aria-label="TURN sunucuları JSON listesi" rows="3" spellcheck="false" placeholder='[{"urls":"turn:...","username":"...","credential":"..."}]'></textarea>
                     </details>
                     <button class="ghost" id="menu-settings-btn" type="button">Ayarlar</button>
                 </div>

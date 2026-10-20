@@ -52,7 +52,7 @@
             <div id="killfeed" aria-live="polite"></div>
             <div id="banner" aria-live="polite"></div>
             <div id="bushmsg" class="hidden">Çalılıktasın: uzaktan görünmezsin</div>
-            <div id="clickhint" class="hidden">Oynamak için ekrana tıkla</div>
+            <div id="clickhint" class="hidden">Devam etmek için ekrana tıkla · Esc menü</div>
 
             <div id="hpbox">
                 <span class="hp-label">Can <b id="hp-val">100</b></span>
@@ -102,6 +102,7 @@
                 <p class="eyebrow">ÇOK OYUNCULU NİŞANCI</p>
                 <h1 id="menu-title">Arena FPS</h1>
                 <p class="lead">Botlara karşı ısın ya da oda açıp 6 haneli kodu arkadaşlarına gönder. Öldürme başına <b>2 CM</b>, maç birincisine <b>+6 CM</b> (maç başına en fazla 40 CM).</p>
+                <div class="field-guide" aria-label="Maça hazırlık"><span><b>HEDEF</b>Öldürme hedefine ilk ulaş</span><span><b>BAŞLANGIÇ</b>WASD hareket · fareyle nişan</span><span><b>MOBİL</b>Sol taraf hareket · sağ taraf bakış</span></div>
                 <div class="session-line" id="session-line"></div>
 
                 <div class="tabs" role="tablist" aria-label="Oyun türü">
@@ -128,7 +129,7 @@
                 <div class="tab-panel hidden" id="tab-join" role="tabpanel" aria-labelledby="tab-btn-join">
                     <label class="field-label" for="join-input">Host'un gönderdiği 6 haneli kod</label>
                     <div class="join-row">
-                        <input class="code-input" id="join-input" type="text" maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="off" spellcheck="false">
+                        <input class="code-input" id="join-input" type="text" maxlength="6" pattern="[0-9]{6}" aria-describedby="status-line" placeholder="000000" inputmode="numeric" autocomplete="off" spellcheck="false">
                         <button class="primary" id="join-btn" type="button">Katıl</button>
                     </div>
                 </div>
@@ -155,7 +156,7 @@
                 <details class="more">
                     <summary>Gelişmiş bağlantı (TURN)</summary>
                     <p class="small-note">İki cihaz doğrudan bağlanamazsa (zaman aşımı, ICE failed) kendi TURN sağlayıcının <code>iceServers</code> listesini yapıştır. Liste yalnızca bu sekmede kalır, hiçbir yere kaydedilmez.</p>
-                    <textarea id="turn-json" rows="4" spellcheck="false" placeholder='[{"urls":"turn:...","username":"...","credential":"..."}]'></textarea>
+                    <textarea id="turn-json" aria-label="TURN sunucuları JSON listesi" rows="4" spellcheck="false" placeholder='[{"urls":"turn:...","username":"...","credential":"..."}]'></textarea>
                 </details>
                 <button class="ghost" id="menu-settings-btn" type="button">Ayarlar</button>
             </div>

@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let recorded = false;      // this run's result is already in the stats
     let recordedScore = 0;     // score stored when the run was recorded
     let moving = false;
+    let runId = 0, moves = 0;
+    const RUN_COOKIE = 'cp_2048_run';
     let queuedDir = null;      // one move typed during the slide animation
 
     bestScoreEl.textContent = bestScore;
@@ -112,6 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── init ────────────────────────────────────── */
 
     function init() {
+        runId += 1;
+        moves = 0;
         // A run continued after 2048 keeps its stats up to date when abandoned.
         if (won) recordResult(true);
 
@@ -140,6 +144,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         spawnTile();
         spawnTile();
+        saveRun();
+    }
+
+    function updateProgress() {
+        const values = cells.flat().map(t => t ? t.value : 0);
+        const highest = Math.max(2, ...values);
+        document.getElementById('run-progress').textContent = `${won ? '2048 tamamlandı!' : 'Hedef 2048'} · En büyük taş ${highest} · ${moves} hamle`;
+        gridEl.setAttribute('aria-label', '2048 tahtası. ' + cells.map(row => row.map(t => t ? t.value : 'boş').join(', ')).join('; '));
+    }
+
+    function saveRun() {
+        updateProgress();
+        if (cheatsActive()) return;
+        setCookieValue(RUN_COOKIE, JSON.stringify({ grid: cells.map(row => row.map(t => t ? t.value : 0)), score, moves, won, keepPlaying, recorded, recordedScore }));
+    }
+
+    function restoreRun(raw) {
+        try {
+            const saved = JSON.parse(raw || 'null');
+            if (!saved || !Array.isArray(saved.grid) || saved.grid.length !== SIZE ||
+                !saved.grid.every(row => Array.isArray(row) && row.length === SIZE && row.every(v => Number.isInteger(v) && (v === 0 || (v >= 2 && v <= 131072 && Number.isInteger(Math.log2(v)))))) ||
+                !Number.isFinite(saved.score) || saved.score < 0 || !Number.isInteger(saved.moves) || saved.moves < 0) return;
+            gridEl.querySelectorAll('.tile').forEach(t => t.remove());
+            cells = saved.grid.map((row, r) => row.map((value, c) => value ? { value, r, c, el: makeTileEl(value, r, c, false) } : null));
+            score = saved.score; moves = saved.moves;
+            won = cells.flat().some(t => t && t.value >= 2048);
+            keepPlaying = Boolean(saved.keepPlaying);
+            recorded = Boolean(saved.recorded); recordedScore = Number(saved.recordedScore) || 0;
+            scoreEl.textContent = score;
+            saveRun();
+            if (isGameOver()) endGame(false);
+            else if (won && !keepPlaying) endGame(true);
+        } catch { /* A malformed cookie starts a fresh board. */ }
     }
 
     function spawnTile() {
@@ -158,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── move engine ─────────────────────────────── */
 
     function move(dir) {
+        if (!['left', 'right', 'up', 'down'].includes(dir)) return;
         if (gameOver) return;
         if (moving) { queuedDir = dir; return; }
 
@@ -239,8 +277,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         moving = true;
+        moves += 1;
+        const thisRun = runId;
 
         setTimeout(() => {
+            if (thisRun !== runId) return;
             toRemove.forEach(t => t.el.remove());
 
             scoreEl.textContent = score;
@@ -254,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             spawnTile();
             moving = false;
+            saveRun();
 
             if (anyMerge && typeof playPopSound   === 'function') playPopSound();
             else if        (typeof playClickSound === 'function') playClickSound();
@@ -303,7 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
         queuedDir = null;
         // The win is stored right away; playing on only raises its score later.
         recordResult(won);
+        const thisRun = runId;
+        saveRun();
         setTimeout(() => {
+            if (thisRun !== runId) return;
             gameOverText.textContent = didWin ? 'Tebrikler! 2048!' : 'Oyun Bitti!';
             gameOverText.classList.toggle('win', didWin);
             finalScoreEl.textContent = score;
@@ -319,6 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keepPlaying = true;
         gameOver = false;
         hideOverlay();
+        saveRun();
         if (isGameOver()) endGame(false);
     }
 
@@ -396,5 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '../index.html';
     });
 
+    const savedRun = getCookieValue(RUN_COOKIE);
     init();
+    restoreRun(savedRun);
 });

@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "b2dca9f069e4";
+const VERSION = "4bd904393f90";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -20,15 +20,14 @@ const PRECACHE = [
         "index.html",
         "manifest.webmanifest",
         "script.js",
-        "script.js?v=13",
+        "script.js?v=14",
         "shared-settings.css",
         "shared-settings.css?v=5",
         "shared-settings.css?v=6",
         "shared-settings.js",
         "shared-settings.js?v=9",
         "style.css",
-        "style.css?v=18",
-        "style.css?v=19",
+        "style.css?v=20",
         "./",
         "2048-game/",
         "2048-game/index.html",
@@ -39,9 +38,9 @@ const PRECACHE = [
         "chess-game/casualfish.js",
         "chess-game/index.html",
         "chess-game/script.js",
-        "chess-game/script.js?v=3",
+        "chess-game/script.js?v=4",
         "chess-game/style.css",
-        "chess-game/style.css?v=2",
+        "chess-game/style.css?v=3",
         "fps-game/",
         "fps-game/index.html",
         "fps-game/script.js",
@@ -62,7 +61,9 @@ const PRECACHE = [
         "snake-game/",
         "snake-game/index.html",
         "snake-game/script.js",
+        "snake-game/script.js?v=2",
         "snake-game/style.css",
+        "snake-game/style.css?v=2",
         "son-hat/",
         "son-hat/index.html",
         "son-hat/script.js",
@@ -90,7 +91,9 @@ const PRECACHE = [
         "xox-game/",
         "xox-game/index.html",
         "xox-game/script.js",
+        "xox-game/script.js?v=2",
         "xox-game/style.css",
+        "xox-game/style.css?v=2",
         "chess-game/vendor/LICENSE-chess.js.txt",
         "chess-game/vendor/chess.js",
         "fps-game/vendor/peerjs.min.js",

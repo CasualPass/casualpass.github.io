@@ -328,3 +328,53 @@ textarea { width: 100%; margin-bottom: 12px; padding: 8px 10px; color: var(--vk-
 .map-info b { font-family: var(--num); font-size: 28px; font-weight: 500; letter-spacing: .04em; line-height: 1; }
 .map-info small { color: var(--vk-red); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .map-info p { margin: 4px 0 0; color: var(--vk-muted); font-size: 13px; line-height: 1.4; }
+
+/* A short, visible briefing keeps essential controls beside the start action. */
+.field-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 16px; }
+.field-guide span { min-width: 0; padding: 10px; font-size: 12px; line-height: 1.5; }
+.field-guide b { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: .06em; }
+@media (max-width: 480px) {
+    .field-guide { grid-template-columns: 1fr; gap: 5px; }
+    .field-guide span { padding: 7px 10px; }
+    .field-guide b { display: inline; margin-right: 8px; }
+}
+.field-guide span { color: var(--vk-muted); border-left: 2px solid var(--vk-ally); background: rgba(236, 232, 225, .05); }
+.field-guide b { color: var(--vk-text); }
+.menu-agents { padding: 18px; border: 1px solid var(--vk-line); background: rgba(15, 25, 35, .55); }
+.back-link { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 560px) {
+    .menu-agents { padding: 12px; }
+    .buy { padding-left: 12px; padding-right: 12px; }
+    .buy-head { flex-wrap: wrap; gap: 10px; }
+    .buy-head h2 { font-size: 34px; }
+    .buy-grid { gap: 8px; }
+    .buy-info { flex-wrap: wrap; }
+    .map-preview { align-items: flex-start; }
+}
+
+/* Portrait phones keep the movement pad clear of the action buttons. */
+@media (max-width: 480px) and (orientation: portrait) {
+    body.touch-mode #stick { left: max(12px, env(safe-area-inset-left)); width: 100px; height: 100px; transform: none; }
+    body.touch-mode #stick i { left: 23px; top: 23px; }
+    body.touch-mode .touch-buttons { right: max(12px, env(safe-area-inset-right)); width: 180px; height: 220px; transform: none; }
+    .touch-buttons .tbtn.fire { right: 0; bottom: 58px; width: 72px; height: 72px; }
+    .touch-buttons .tbtn[data-act="ads"] { right: 76px; bottom: 76px; }
+    .touch-buttons .tbtn[data-act="jump"] { right: 0; bottom: 142px; }
+    .touch-buttons .tbtn[data-act="crouch"] { right: 60px; bottom: 0; }
+    .touch-buttons .tbtn[data-act="reload"] { right: 120px; bottom: 12px; width: 48px; height: 48px; }
+    .touch-buttons .tbtn[data-act="swap"] { right: 62px; bottom: 142px; }
+    .touch-buttons .tbtn[data-act="nade"], .touch-buttons .tbtn[data-act="use"] { right: 120px; bottom: 142px; width: 50px; height: 50px; }
+    #clickhint { max-width: calc(100% - 32px); width: max-content; text-align: center; font-size: 14px; }
+    .room-box { flex-wrap: wrap; gap: 8px; }
+    .session-line { flex-wrap: wrap; }
+}
+@media (max-width: 480px) and (orientation: portrait) {
+    body.touch-mode .bottombar { left: 12px; right: 12px; bottom: calc(max(24px, env(safe-area-inset-bottom)) + 286px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; transform: none; }
+    body.touch-mode .vitals { grid-column: 1; grid-row: 1; }
+    body.touch-mode .weapon { grid-column: 2; grid-row: 1; min-width: 0; }
+    body.touch-mode .abilities { grid-column: 1 / -1; justify-content: center; }
+    body.touch-mode .ability { width: 64px; }
+    body.touch-mode .hp span, body.touch-mode .ammo b { font-size: 34px; }
+    body.touch-mode .hp-bar { width: 88px; }
+    body.touch-mode #spike-carry { font-size: 10px; text-align: right; }
+}

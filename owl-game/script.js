@@ -733,6 +733,9 @@
         const button = $('pause-btn');
         button.classList.toggle('hidden', mode !== 'playing' && mode !== 'paused');
         const paused = mode === 'paused';
+        $('pause-panel').classList.toggle('hidden', !paused);
+        button.setAttribute('aria-pressed', String(paused));
+        if (paused) $('resume-btn').focus({ preventScroll: true });
         button.setAttribute('aria-label', paused ? 'Devam et' : 'Duraklat');
         button.innerHTML = paused
             ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"></path></svg>'
@@ -765,9 +768,11 @@
 
     window.addEventListener('keydown', (event) => {
         const target = event.target;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
         if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
-        if (event.key === 'Escape' && (mode === 'playing' || mode === 'paused')) { togglePause(); return; }
+        if (event.key === 'Escape' && !event.repeat && (mode === 'playing' || mode === 'paused')) { togglePause(); return; }
         if (!FLAP_KEYS.has(event.code)) return;
+        if (target instanceof HTMLButtonElement || target instanceof HTMLAnchorElement) return;
         if (mode === 'menu') return;
         if (mode === 'over') {
             if (target instanceof HTMLButtonElement) return;
@@ -788,6 +793,7 @@
     });
     window.addEventListener('blur', () => { if (mode === 'playing') mode = 'paused'; });
 
+    $('resume-btn').addEventListener('click', () => { flap(); stage.focus({ preventScroll: true }); });
     $('pause-btn').addEventListener('click', () => {
         togglePause();
         stage.focus({ preventScroll: true });

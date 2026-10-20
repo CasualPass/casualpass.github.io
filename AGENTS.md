@@ -311,3 +311,35 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 
 - Node: FailFish (siyah) CasualFish v2 Kolay'a 10/10, Orta'ya 10/10, Zor'a 6/6 kaybetti (Zor'a karşı 7 yarım hamlede mat); rastgele oynayan rakibe karşı 10 oyunda hiç kazanmadı (6 kayıp, 1 beraberlik, 3'ü 300 yarım hamlede bitmedi; rastgele rakip mat etmeye çalışmıyor).
 - Playwright 1280 px: e4, Qh5, Bc4, Qxf7# ile 4 hamlede kazanıldı, "Tebrikler, FailFish'i yendin!"; 390 px lobi ve taşma kontrolü, sayfa hatası yok.
+
+
+## 2026-10-20 — Kesilen arayüz çalışmasının devamı
+
+### Amaç
+
+Claude oturumundaki UI ve oyun geliştirme isteğini `3d16f73` kontrol kaydından sürdürmek; kaydedilmiş HTML ile eksik CSS/JavaScript entegrasyonunu tamamlamak. Önceki turda yenilenen Wood Turning bu çalışmanın dışında tutuldu.
+
+### Yapılanlar ve teknik kararlar
+
+- `index.html`, `script.js`, `style.css`: Kontrol kaydındaki tür filtreleri, kişisel oyun rekorları, ödül adımları ve kazanç çarpanı için responsive tasarım tamamlandı. Filtreleme yalnızca görünümü değiştirir.
+- `xox-game/`: Klasik, 4×4 ve Ultimate kuralları; ilk oyuncu seçimi, raunt geçmişi ve sonuçtan tahtayı inceleme tamamlandı. Zor bot klasikte minimax, büyük tahtalarda sınırlı taktiksel değerlendirme kullanır; arayüz bunu açıklar.
+- `chess-game/`: Hamle geçmişi, rakip özeti ve sonuç ekranını kapatıp bitmiş tahtayı inceleme eklendi; motorlar değiştirilmedi.
+- `snake-game/`: Klasik/Hızlanan/Engelli modları, engellerden kaçınan yem üretimi, altın yem/kombo ve sonuç istatistikleri tamamlandı.
+- `2048-game/`: `cp_2048_run` çereziyle otomatik devam, hamle/en büyük taş göstergesi ve eski animasyon çağrılarının yeni oyuna karışmasını önleyen nesil kontrolü eklendi. Başarılı yükleme kaydı hemen yeniden yazar; hamle yapmadan iki kez yenilemek oyunu kaybettirmez.
+- `owl-game/`, `wood-blocks/`: Erişilebilir duraklatma paneli ve dokunarak parça seçip yerleştirme eklendi; mevcut kontroller korundu.
+- `son-hat/`, `fps-game/`, `vektor/`: Kontrol/amaç rehberleri, klavyeyle menü sekmeleri, okunabilir HUD ve dikey telefon kontrol yerleşimi iyileştirildi. Ağ/ödül kuralları değiştirilmedi.
+- `about.html`, `README.md`: Güncel oyun davranışı ve mevcut yerel görselle AI Generated açıklaması belgelendi. Yeni bağımlılık eklenmedi.
+- `sw.js`, `version.json`: Yayın varlıkları için `python3 tools/build-sw.py` ile yeniden üretilir.
+
+### Hedef durumu
+
+- [x] Kaydedilmiş yarım HTML değişikliklerini tamamlamak ve oyun arayüzlerini geliştirmek.
+- [x] Sözdizimi, HTML bağlantıları ve hedefli oyun mantığı doğrulamaları.
+- [ ] Gerçek tarayıcıda tüm oyunların görsel/mobil dokunma doğrulaması: environment nedeniyle doğrulanamadı; otomatik devam görevi değildir.
+
+### Testler ve sınırlar
+
+- Değişen tüm JavaScript dosyalarında `node --check` ve `git diff --check`: başarılı.
+- Node VM: XOX klasik/4×4/Ultimate kazanma ve yönlendirme, bot/başlangıç/raunt/hile korumaları; gerçek chess.js ile hamle geçmişi; Snake yem/engel/hız/kombo/duraklatma; 2048 birleştirme/eski callback/yükleme/iki yenileme; Owl duraklatma ve Blocks dokunma/sürükleme/iptal: başarılı.
+- 12 HTML sayfasında benzersiz ID, yerel dosya bağlantıları ve ARIA hedefleri: başarılı.
+- Yerel Brave erişilebilirlik ağacında dashboard ödül/filtre/10 oyun ve Hakkında içeriği yüklendi. Ekran yakalama ScreenCaptureKit hatası verdi; sonraki tıklama/klavye etkileşimleri güvenilir çalışmadı. Görsel yerleşim ve gerçek dokunma davranışı doğrulanamadı. VM testleri gerçek DOM/CSS render doğrulaması değildir.

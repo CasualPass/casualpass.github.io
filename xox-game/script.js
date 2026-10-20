@@ -1,515 +1,210 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // UI Elements
-    const cells = document.querySelectorAll('.cell');
-    const statusDisplay = document.getElementById('status');
-    const resetBtn = document.getElementById('reset-btn');
-    const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
-    const scoreXElem = document.getElementById('score-x');
-    const scoreOElem = document.getElementById('score-o');
-    const labelX = document.getElementById('label-x');
-    const labelO = document.getElementById('label-o');
-    const cardX = document.querySelector('.x-score');
-    const cardO = document.querySelector('.o-score');
-
-    // Lobby Elements
-    const configMenu = document.getElementById('config-menu');
-    const gameArea = document.getElementById('game-area');
-    const startGameBtn = document.getElementById('start-game-btn');
-
-    // Player name (prefilled from the cookie profile when a session is open)
-    const playerNameInput = document.getElementById('player-name-input');
-    const profileHint = document.getElementById('profile-hint');
-    const boardElem = document.getElementById('board');
-    const resetBtnText = resetBtn.querySelector('.btn-text');
-
-    // Settings Elements
-    const modeBotBtn = document.getElementById('mode-bot');
-    const modeLocalBtn = document.getElementById('mode-local');
-    const localPlayer2Row = document.getElementById('local-player2-row');
-    const botDifficultyRow = document.getElementById('bot-difficulty-row');
-    const diffBtns = document.querySelectorAll('[data-difficulty]');
-    const player2NameInput = document.getElementById('player2-name-input');
-
-    // Leaderboard
-    const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
-    const leaderboardModal = document.getElementById('leaderboard-modal');
-    const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
-    const leaderboardContent = document.getElementById('leaderboard-content');
-
-    // State Variables
-    let mode = "bot"; // "bot" or "local"
-    let botDifficulty = "easy"; // "easy", "medium", "impossible"
-    let player1Name = "Oyuncu 1";
-    let player2Name = "Bot";
-    const difficultyLabels = { easy: 'Kolay', medium: 'Orta', impossible: 'İmkansız' };
-
-    let board = ['', '', '', '', '', '', '', '', ''];
-    let currentPlayer = 'X';
-    let gameActive = false;
-    let scoreX = 0;
-    let scoreO = 0;
-
-    const winningConditions = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-        [0, 4, 8], [2, 4, 6]             // Diagonals
-    ];
-
-    const winningMessage = () => `${currentPlayer === 'X' ? player1Name : player2Name} Kazandı!`;
-    const drawMessage = () => `Berabere!`;
-    const currentPlayerTurn = () => `Sıra: ${currentPlayer === 'X' ? player1Name : player2Name}`;
-
-    function handleCellClick(clickedCellEvent) {
-        const clickedCell = clickedCellEvent.currentTarget;
-        const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
-
-        if (board[clickedCellIndex] !== '' || !gameActive) {
-            return;
+    const $ = id => document.getElementById(id);
+    let mode = 'bot', variant = 'classic', difficulty = 'easy', first = 'x';
+    let boards, claims, turn, active = false, forced = -1, timer, round = 1;
+    let names = {}, scores = { X: 0, O: 0, draw: 0 }, results = [];
+    const lines = size => {
+        const all = [];
+        for (let i = 0; i < size; i++) {
+            all.push(Array.from({ length: size }, (_, j) => i * size + j));
+            all.push(Array.from({ length: size }, (_, j) => j * size + i));
         }
-
-        // Prevent human clicking when it's bot's turn
-        if (mode === "bot" && currentPlayer === 'O') {
-            return;
-        }
-
-        if (isImmortalEnabled() && (mode === 'local' || currentPlayer === 'O') && wouldWin(clickedCellIndex, currentPlayer)) {
-            if (getAvailableCells(board).every((index) => wouldWin(index, currentPlayer))) {
-                finishRound('draw', 'Berabere! Kazandıran kutular engellendi.');
-            } else {
-                statusDisplay.textContent = 'Ölümsüzlük: kazandıran kutu engellendi. Başka kutu seç.';
-            }
-            return;
-        }
-
-        handleCellPlayed(clickedCell, clickedCellIndex);
-        handleResultValidation();
-    }
-
-    function handleCellPlayed(clickedCell, clickedCellIndex) {
-        board[clickedCellIndex] = currentPlayer;
-        clickedCell.classList.add('occupied');
-        clickedCell.classList.add(currentPlayer.toLowerCase());
-        updateCellLabel(clickedCellIndex);
-
-        if (typeof playClickSound === 'function') playClickSound();
-    }
-
-    function handleResultValidation() {
-        let roundWon = false;
-        let winningCells = [];
-
-        for (let i = 0; i < winningConditions.length; i++) {
-            const winCondition = winningConditions[i];
-            const a = board[winCondition[0]];
-            const b = board[winCondition[1]];
-            const c = board[winCondition[2]];
-
-            if (a === '' || b === '' || c === '') {
-                continue;
-            }
-
-            if (a === b && b === c) {
-                roundWon = true;
-                winningCells = winCondition;
-                break;
-            }
-        }
-
-        if (roundWon) {
-            finishRound(currentPlayer === 'X' ? 'win-x' : 'win-o', winningMessage());
-
-            winningCells.forEach(index => {
-                cells[index].classList.add('winning-cell');
-            });
-
-            if (typeof playPopSound === 'function') playPopSound();
-
-            let winnerName = "";
-            if (currentPlayer === 'X') {
-                scoreX++;
-                scoreXElem.textContent = scoreX;
-                winnerName = player1Name;
-            } else {
-                scoreO++;
-                scoreOElem.textContent = scoreO;
-                winnerName = player2Name;
-            }
-
-            // Bot wins are never ranked; only human names reach the leaderboard.
-            if (mode === 'local' || currentPlayer === 'X') saveToLeaderboard(winnerName);
-
-            // Record stats
-            if (typeof recordGameResult === 'function') {
-                const isPlayer1Win = currentPlayer === 'X';
-                recordGameResult('XOX', { won: isPlayer1Win, score: 0 });
-            }
-            return;
-        }
-
-        const roundDraw = !board.includes('');
-        if (roundDraw) {
-            finishRound('draw', drawMessage());
-
-            // Record draw as played
-            if (typeof recordGameResult === 'function') {
-                recordGameResult('XOX', { won: false, score: 0 });
-            }
-            return;
-        }
-
-        handlePlayerChange();
-    }
-
-    function handlePlayerChange() {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        statusDisplay.textContent = currentPlayerTurn();
-        updateActiveCard();
-        setStatusTone('');
-        updateBoardLock();
-
-        // Trigger Bot Move
-        if (gameActive && mode === "bot" && currentPlayer === 'O') {
-            setTimeout(makeBotMove, 500);
-        }
-    }
-
-    /** Ends the round: shows the result, locks the board and offers a new round. */
-    function finishRound(tone, message) {
-        gameActive = false;
-        statusDisplay.textContent = message;
-        setStatusTone(tone);
-        updateBoardLock();
-        resetBtnText.textContent = 'Tekrar Oyna';
-        resetBtn.classList.add('primary');
-    }
-
-    function setStatusTone(tone) {
-        statusDisplay.classList.remove('win-x', 'win-o', 'draw');
-        if (tone) statusDisplay.classList.add(tone);
-    }
-
-    // The board is locked after the round ends and while the bot is thinking.
-    function updateBoardLock() {
-        const botTurn = mode === 'bot' && currentPlayer === 'O';
-        boardElem.classList.toggle('locked', !gameActive || botTurn);
-        boardElem.setAttribute('aria-busy', String(gameActive && botTurn));
-    }
-
-    function updateCellLabel(index) {
-        const row = Math.floor(index / 3) + 1;
-        const col = (index % 3) + 1;
-        const value = board[index] || 'boş';
-        cells[index].setAttribute('aria-label', `Satır ${row}, sütun ${col}: ${value}`);
-    }
-
-    function updateActiveCard() {
-        if (currentPlayer === 'X') {
-            cardX.classList.add('active');
-            cardO.classList.remove('active');
-        } else {
-            cardO.classList.add('active');
-            cardX.classList.remove('active');
-        }
-    }
-
-    function handleRestartGame() {
-        // Only restart if game actually started
-        gameActive = true;
-        currentPlayer = 'X';
-        board = ['', '', '', '', '', '', '', '', ''];
-
-        statusDisplay.textContent = currentPlayerTurn();
-        setStatusTone('');
-        resetBtnText.textContent = 'Yeniden Başlat';
-        resetBtn.classList.remove('primary');
-
-        updateActiveCard();
-
-        cells.forEach((cell, index) => {
-            cell.className = 'cell'; // reset classes
-            updateCellLabel(index);
-        });
-        updateBoardLock();
-
-        if (typeof playClickSound === 'function') playClickSound();
-    }
-
-    /* --- LOBBY LOGIC --- */
-    function prefillPlayerName() {
-        const profile = window.CasualProfile?.current?.();
-        if (profile?.displayName && !playerNameInput.value.trim()) {
-            playerNameInput.value = profile.displayName;
-            profileHint.classList.remove('hidden');
-        }
-    }
-
-    function setPressed(activeBtn, group) {
-        group.forEach(b => {
-            const on = b === activeBtn;
-            b.classList.toggle('active', on);
-            b.setAttribute('aria-pressed', String(on));
-        });
-    }
-
-    modeBotBtn.addEventListener('click', () => {
-        mode = "bot";
-        setPressed(modeBotBtn, [modeBotBtn, modeLocalBtn]);
-        botDifficultyRow.classList.remove('hidden');
-        localPlayer2Row.classList.add('hidden');
-    });
-
-    modeLocalBtn.addEventListener('click', () => {
-        mode = "local";
-        setPressed(modeLocalBtn, [modeBotBtn, modeLocalBtn]);
-        botDifficultyRow.classList.add('hidden');
-        localPlayer2Row.classList.remove('hidden');
-    });
-
-    diffBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            setPressed(btn, [...diffBtns]);
-            botDifficulty = btn.getAttribute('data-difficulty');
-        });
-    });
-
-    startGameBtn.addEventListener('click', () => {
-        if (typeof playClickSound === 'function') playClickSound();
-
-        // Setup Players
-        player1Name = playerNameInput.value.trim() || "Misafir";
-
-        if (mode === "bot") {
-            player2Name = `Bot · ${difficultyLabels[botDifficulty]}`;
-        } else {
-            player2Name = player2NameInput.value.trim() || "Oyuncu 2";
-        }
-
-        labelX.textContent = player1Name;
-        labelO.textContent = player2Name;
-        labelX.title = player1Name;
-        labelO.title = player2Name;
-
-        // Reset scores
-        scoreX = 0; scoreO = 0;
-        scoreXElem.textContent = scoreX;
-        scoreOElem.textContent = scoreO;
-
-        configMenu.classList.add('hidden');
-        gameArea.classList.remove('hidden');
-
-        handleRestartGame();
-    });
-
-    backToLobbyBtn.addEventListener('click', () => {
-        if (typeof playClickSound === 'function') playClickSound();
-        gameActive = false;
-        gameArea.classList.add('hidden');
-        configMenu.classList.remove('hidden');
-        startGameBtn.focus();
-    });
-
-    /* --- LEADERBOARD LOGIC --- */
-    function getLeaderboard() {
-        try {
-            const leaderboard = JSON.parse(getCookieValue('cp_xox_leaderboard') || '{}');
-            return leaderboard && typeof leaderboard === 'object' && !Array.isArray(leaderboard) ? leaderboard : {};
-        } catch {
-            return {};
-        }
-    }
-
-    function saveToLeaderboard(winnerName) {
-        if (window.CasualCheats?.active()) return;
-
-        const lb = getLeaderboard();
-        if (!lb[winnerName]) lb[winnerName] = 0;
-        lb[winnerName] += 1;
-
-        setCookieValue('cp_xox_leaderboard', JSON.stringify(lb));
-    }
-
-    function renderLeaderboard() {
-        const lb = getLeaderboard();
-        leaderboardContent.innerHTML = '';
-
-        const sorted = Object.entries(lb).sort((a, b) => b[1] - a[1]);
-
-        if (sorted.length === 0) {
-            leaderboardContent.innerHTML = '<p class="lb-empty">Henüz hiç galibiyet yok. İlk galibiyeti sen al!</p>';
-            return;
-        }
-
-        sorted.forEach(([name, wins], index) => {
-            const row = document.createElement('div');
-            row.className = 'lb-row';
-            const player = document.createElement('span');
-            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
-            player.textContent = `${medal} ${name}`;
-            const total = document.createElement('span');
-            total.className = 'lb-wins';
-            total.textContent = `${wins} galibiyet`;
-            row.append(player, total);
-            leaderboardContent.appendChild(row);
-        });
-    }
-
-    function closeLeaderboard() {
-        if (leaderboardModal.classList.contains('hidden')) return;
-        leaderboardModal.classList.add('hidden');
-        showLeaderboardBtn.focus();
-    }
-
-    showLeaderboardBtn.addEventListener('click', () => {
-        renderLeaderboard();
-        leaderboardModal.classList.remove('hidden');
-        closeLeaderboardBtn.focus();
-    });
-
-    closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
-    leaderboardModal.addEventListener('click', (event) => {
-        if (event.target === leaderboardModal) closeLeaderboard();
-    });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') closeLeaderboard();
-    });
-
-    /* --- AI BOT LOGIC --- */
-    function getAvailableCells(currentBoard) {
-        return currentBoard.map((c, i) => c === '' ? i : null).filter(val => val !== null);
-    }
-
-    function checkWinCondition(currentBoard, player) {
-        let plays = currentBoard.reduce((a, e, i) => (e === player) ? a.concat(i) : a, []);
-        let gameWon = null;
-        for (let [index, win] of winningConditions.entries()) {
-            if (win.every(elem => plays.indexOf(elem) > -1)) {
-                gameWon = { index: index, player: player };
-                break;
-            }
-        }
-        return gameWon;
-    }
-
-    function isImmortalEnabled() {
-        return Boolean(window.CasualCheats && CasualCheats.immortal());
-    }
-
-    function wouldWin(index, player) {
-        const candidate = [...board];
-        candidate[index] = player;
-        return Boolean(checkWinCondition(candidate, player));
-    }
-
-    function makeBotMove() {
-        if (!gameActive || currentPlayer !== 'O') return;
-
-        let available = getAvailableCells(board);
-        if (available.length === 0) return;
-
-        if (isImmortalEnabled()) {
-            available = available.filter(index => !wouldWin(index, 'O'));
-            if (available.length === 0) {
-                finishRound('draw', 'Berabere! Kazandıran kutular engellendi.');
-                return;
-            }
-        }
-
-        let moveIndex;
-
-        if (botDifficulty === "easy") {
-            // Random move
-            moveIndex = available[Math.floor(Math.random() * available.length)];
-        }
-        else if (botDifficulty === "medium") {
-            // Try to block/win, otherwise random
-            moveIndex = findBestMoveMedium(available);
-        }
-        else if (botDifficulty === "impossible") {
-            // Minimax algorithm
-            moveIndex = minimax(board, "O").index;
-            if (!available.includes(moveIndex)) moveIndex = available[Math.floor(Math.random() * available.length)];
-        }
-
-        const cellToClick = cells[moveIndex];
-        handleCellPlayed(cellToClick, moveIndex);
-        handleResultValidation();
-    }
-
-    // Medium: Block X or Win O, else random
-    function findBestMoveMedium(available) {
-        // Can O win?
-        for (let i = 0; i < available.length; i++) {
-            let tempBoard = [...board];
-            tempBoard[available[i]] = "O";
-            if (checkWinCondition(tempBoard, "O")) return available[i];
-        }
-        // Can X win? (Block)
-        for (let i = 0; i < available.length; i++) {
-            let tempBoard = [...board];
-            tempBoard[available[i]] = "X";
-            if (checkWinCondition(tempBoard, "X")) return available[i];
-        }
-        // Random fallback
-        return available[Math.floor(Math.random() * available.length)];
-    }
-
-    // Impossible: Minimax
-    function minimax(newBoard, player) {
-        const availSpots = getAvailableCells(newBoard);
-
-        if (checkWinCondition(newBoard, "X")) {
-            return { score: -10 };
-        } else if (checkWinCondition(newBoard, "O")) {
-            return { score: 10 };
-        } else if (availSpots.length === 0) {
-            return { score: 0 };
-        }
-
+        all.push(Array.from({ length: size }, (_, i) => i * (size + 1)));
+        all.push(Array.from({ length: size }, (_, i) => (i + 1) * (size - 1)));
+        return all;
+    };
+    const winner = (b, n) => lines(n).find(line => b[line[0]] && b[line[0]] !== 'draw' && line.every(i => b[i] === b[line[0]]));
+    const size = () => variant === 'four' ? 4 : 3;
+    const immortal = () => Boolean(window.CasualCheats?.immortal());
+    const cheat = () => Boolean(window.CasualCheats?.active());
+    function legal() {
         const moves = [];
-        for (let i = 0; i < availSpots.length; i++) {
-            const move = {};
-            move.index = availSpots[i];
-            newBoard[availSpots[i]] = player;
-
-            if (player === "O") {
-                const result = minimax(newBoard, "X");
-                move.score = result.score;
-            } else {
-                const result = minimax(newBoard, "O");
-                move.score = result.score;
-            }
-
-            newBoard[availSpots[i]] = ''; // Reset spot
-            moves.push(move);
-        }
-
-        let bestMove;
-        if (player === "O") {
-            let bestScore = -10000;
-            for (let i = 0; i < moves.length; i++) {
-                if (moves[i].score > bestScore) {
-                    bestScore = moves[i].score;
-                    bestMove = i;
-                }
-            }
-        } else {
-            let bestScore = 10000;
-            for (let i = 0; i < moves.length; i++) {
-                if (moves[i].score < bestScore) {
-                    bestScore = moves[i].score;
-                    bestMove = i;
-                }
-            }
-        }
-
-        return moves[bestMove];
+        boards.forEach((b, bi) => {
+            if (claims[bi] || (forced >= 0 && bi !== forced)) return;
+            b.forEach((v, i) => { if (!v) moves.push([bi, i]); });
+        });
+        return moves;
     }
-
-    // Bind Event Listeners
-    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-    prefillPlayerName();
-    resetBtn.addEventListener('click', () => {
+    function preview(bi, i, player) {
+        const b = boards[bi].slice(); b[i] = player;
+        const win = winner(b, size());
+        if (variant !== 'ultimate') return Boolean(win);
+        if (!win) return false;
+        const c = claims.slice(); c[bi] = player;
+        return Boolean(winner(c, 3));
+    }
+    function render() {
+        const cells = $('board').querySelectorAll('.cell');
+        const botTurn = mode === 'bot' && turn === 'O';
+        cells.forEach(cell => {
+            const bi = Number(cell.dataset.board), i = Number(cell.dataset.index), v = boards[bi][i];
+            const unavailable = Boolean(claims[bi]) || (forced >= 0 && forced !== bi);
+            cell.className = `cell${v ? ` occupied ${v.toLowerCase()}` : ''}`;
+            cell.disabled = !active || botTurn || Boolean(v) || unavailable;
+            cell.setAttribute('aria-label', `${variant === 'ultimate' ? `Tahta ${bi + 1}, ` : ''}satır ${Math.floor(i / size()) + 1}, sütun ${i % size() + 1}: ${v || 'boş'}`);
+        });
+        $('board').querySelectorAll('.mini-board').forEach((el, bi) => {
+            el.classList.toggle('available', active && !claims[bi] && (forced < 0 || forced === bi));
+            el.dataset.claim = claims[bi] === 'draw' ? '—' : claims[bi] || '';
+            el.classList.toggle('claimed', Boolean(claims[bi]));
+            el.setAttribute('aria-label', `Küçük tahta ${bi + 1}${claims[bi] ? `: ${claims[bi] === 'draw' ? 'berabere' : claims[bi] + ' kazandı'}` : ''}`);
+        });
+        $('board').classList.toggle('locked', !active || botTurn);
+        $('board').setAttribute('aria-busy', String(active && botTurn));
+        document.querySelector('.x-score').classList.toggle('active', active && turn === 'X');
+        document.querySelector('.o-score').classList.toggle('active', active && turn === 'O');
+        if (active) $('status').textContent = `${botTurn ? 'Bot düşünüyor…' : `Sıra: ${names[turn]}`}${variant === 'ultimate' ? forced < 0 ? ' · Serbest tahta' : ` · ${forced + 1}. tahta` : ''}`;
+    }
+    function finish(result, note) {
+        active = false; clearTimeout(timer);
+        scores[result]++; results.push(result);
+        ['X', 'O'].forEach(p => $(`score-${p.toLowerCase()}`).textContent = scores[p]);
+        $('score-draw').textContent = scores.draw;
+        const title = result === 'draw' ? 'Berabere!' : `${names[result]} kazandı!`;
+        $('status').textContent = title;
+        $('result-title').textContent = title;
+        $('result-badge').textContent = result === 'draw' ? '=' : result;
+        $('result-detail').textContent = note || `${round}. raunt tamamlandı.`;
+        $('result-series').textContent = `${scores.X} — ${scores.O} · ${scores.draw} beraberlik`;
+        $('round-history').replaceChildren(...results.slice(-12).map((p, i) => {
+            const el = document.createElement('li'); el.textContent = p === 'draw' ? '=' : p;
+            el.title = `${Math.max(1, results.length - 11) + i}. raunt: ${p === 'draw' ? 'berabere' : names[p]}`; return el;
+        }));
+        $('result-overlay').classList.remove('hidden');
+        $('reset-btn').querySelector('.btn-text').textContent = 'Sonraki raunt';
+        render(); $('next-round-btn').focus();
+        if (!cheat()) {
+            if (typeof recordGameResult === 'function') recordGameResult('XOX', { won: result === 'X', score: 0 });
+            if (result !== 'draw' && (mode === 'local' || result === 'X')) {
+                const lb = leaderboard();
+                Object.defineProperty(lb, names[result], { value: (Number(Object.prototype.hasOwnProperty.call(lb, names[result]) ? lb[names[result]] : 0) || 0) + 1, enumerable: true, configurable: true, writable: true });
+                setCookieValue('cp_xox_leaderboard', JSON.stringify(lb));
+            }
+        }
+    }
+    function play(bi, i, fromBot = false) {
+        if (!active || (mode === 'bot' && turn === 'O' && !fromBot) || !legal().some(m => m[0] === bi && m[1] === i)) return;
+        if (immortal() && (mode === 'local' || turn === 'O') && preview(bi, i, turn)) {
+            $('status').textContent = 'Ölümsüzlük: kazandıran kare engellendi. Başka kare seç.';
+            if (legal().every(m => preview(...m, turn))) finish('draw', 'Ölümsüzlük: kazandıran kareler engellendi.');
+            return;
+        }
+        boards[bi][i] = turn;
         if (typeof playClickSound === 'function') playClickSound();
-        handleRestartGame();
+        const line = winner(boards[bi], size());
+        if (line) claims[bi] = turn;
+        else if (boards[bi].every(Boolean)) claims[bi] = 'draw';
+        const won = variant === 'ultimate' ? winner(claims, 3) : line;
+        if (won) { finish(turn); return; }
+        if (claims.every(Boolean)) { finish('draw'); return; }
+        forced = variant === 'ultimate' && !claims[i] ? i : -1;
+        turn = turn === 'X' ? 'O' : 'X'; render(); scheduleBot();
+    }
+    // Exact search for classic; larger boards use bounded positional/tactical search.
+    function classicScore(b, player) {
+        const win = winner(b, 3);
+        if (win) return b[win[0]] === 'O' ? 10 : -10;
+        if (b.every(Boolean)) return 0;
+        const values = [];
+        b.forEach((v, i) => { if (!v) { b[i] = player; values.push(classicScore(b, player === 'O' ? 'X' : 'O')); b[i] = ''; } });
+        return player === 'O' ? Math.max(...values) : Math.min(...values);
+    }
+    function chooseBot(moves) {
+        const random = () => moves[Math.floor(Math.random() * moves.length)];
+        if (difficulty === 'easy') return random();
+        for (const p of ['O', 'X']) {
+            const win = moves.find(m => preview(...m, p)); if (win) return win;
+        }
+        if (difficulty === 'hard' && variant === 'classic') {
+            return moves.reduce((best, m) => {
+                const b = boards[0].slice(); b[m[1]] = 'O'; const score = classicScore(b, 'X');
+                return !best || score > best.score ? { move: m, score } : best;
+            }, null).move;
+        }
+        if (difficulty === 'hard') {
+            const ranked = moves.map(m => {
+                const [bi, i] = m, b = boards[bi].slice(); b[i] = 'O';
+                let value = Math.random();
+                if (winner(b, size())) value += 40;
+                const block = boards[bi].slice(); block[i] = 'X'; if (winner(block, size())) value += 25;
+                for (const line of lines(size()).filter(l => l.includes(i))) {
+                    if (!line.some(j => b[j] === 'X')) value += line.filter(j => b[j] === 'O').length * 2;
+                }
+                if (variant === 'ultimate' && claims[i]) value -= 8;
+                return { move: m, value };
+            });
+            ranked.sort((a, b) => b.value - a.value); return ranked[0].move;
+        }
+        return random();
+    }
+    function scheduleBot() {
+        clearTimeout(timer);
+        if (!active || mode !== 'bot' || turn !== 'O') return;
+        timer = setTimeout(() => {
+            if (!active || mode !== 'bot' || turn !== 'O') return;
+            const moves = legal().filter(m => !immortal() || !preview(...m, 'O'));
+            if (!moves.length) { finish('draw', 'Kazandıran kareler engellendi.'); return; }
+            play(...chooseBot(moves), true);
+        }, 350);
+    }
+    function startRound() {
+        clearTimeout(timer); forced = -1; active = true;
+        boards = Array.from({ length: variant === 'ultimate' ? 9 : 1 }, () => Array(size() ** 2).fill(''));
+        claims = Array(boards.length).fill('');
+        turn = first === 'o' || (first === 'alt' && round % 2 === 0) ? 'O' : 'X';
+        $('board').replaceChildren(); $('board').className = `board ${variant}`;
+        boards.forEach((b, bi) => {
+            const parent = variant === 'ultimate' ? document.createElement('div') : $('board');
+            if (variant === 'ultimate') { parent.className = 'mini-board'; parent.setAttribute('role', 'group'); $('board').appendChild(parent); }
+            b.forEach((_, i) => {
+                const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'cell';
+                cell.dataset.board = bi; cell.dataset.index = i; cell.setAttribute('role', 'gridcell');
+                cell.addEventListener('click', () => play(bi, i)); parent.appendChild(cell);
+            });
+        });
+        $('round-label').textContent = `${round}. raunt`;
+        $('result-overlay').classList.add('hidden');
+        $('reset-btn').querySelector('.btn-text').textContent = 'Raundu yeniden başlat';
+        render(); scheduleBot();
+        $('board').querySelector('.cell:not(:disabled)')?.focus();
+    }
+    for (const [attr, update] of Object.entries({ mode: v => { mode = v; $('local-player2-row').classList.toggle('hidden', v !== 'local'); $('bot-difficulty-row').classList.toggle('hidden', v !== 'bot'); document.querySelector('[data-first="o"]').textContent = v === 'bot' ? 'Bot' : 'Oyuncu 2'; }, variant: v => { variant = v; $('ultimate-hint').classList.toggle('hidden', v !== 'ultimate'); }, difficulty: v => { difficulty = v; $('difficulty-hint').textContent = v === 'easy' ? 'Kolay: rastgele oynar.' : v === 'medium' ? 'Orta: kazanmayı ve engellemeyi dener.' : 'Zor: klasikte kusursuz, büyük tahtalarda taktiksel oynar.'; }, first: v => { first = v; } })) {
+        const buttons = document.querySelectorAll(`[data-${attr}]`);
+        buttons.forEach(btn => btn.addEventListener('click', () => { buttons.forEach(b => { b.classList.toggle('active', b === btn); b.setAttribute('aria-pressed', String(b === btn)); }); update(btn.dataset[attr]); }));
+    }
+    $('start-game-btn').addEventListener('click', () => {
+        names = { X: $('player-name-input').value.trim() || 'Misafir', O: mode === 'bot' ? 'Bot' : $('player2-name-input').value.trim() || 'Oyuncu 2' };
+        scores = { X: 0, O: 0, draw: 0 }; results = []; round = 1;
+        ['X', 'O'].forEach(p => { $(`label-${p.toLowerCase()}`).textContent = names[p]; $(`score-${p.toLowerCase()}`).textContent = '0'; });
+        $('score-draw').textContent = '0'; $('round-history').replaceChildren();
+        $('config-menu').classList.add('hidden'); $('game-area').classList.remove('hidden'); startRound();
     });
+    const next = () => { if (!active) round++; startRound(); };
+    $('reset-btn').addEventListener('click', next); $('next-round-btn').addEventListener('click', next);
+    $('view-board-btn').addEventListener('click', () => { $('result-overlay').classList.add('hidden'); $('reset-btn').focus(); });
+    $('back-to-lobby-btn').addEventListener('click', () => { active = false; clearTimeout(timer); $('game-area').classList.add('hidden'); $('config-menu').classList.remove('hidden'); $('start-game-btn').focus(); });
+    $('board').addEventListener('keydown', e => {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+        e.preventDefault();
+        const cells = [...$('board').querySelectorAll('.cell')];
+        const index = cells.indexOf(document.activeElement), cols = variant === 'four' ? 4 : 3;
+        const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols }[e.key];
+        for (let n = 1; n <= cells.length; n++) { const c = cells[(index + step * n + cells.length * n) % cells.length]; if (!c.disabled) { c.focus(); break; } }
+    });
+    function leaderboard() {
+        try { const lb = JSON.parse(getCookieValue('cp_xox_leaderboard') || '{}'); return lb && typeof lb === 'object' && !Array.isArray(lb) ? lb : {}; } catch { return {}; }
+    }
+    $('show-leaderboard-btn').addEventListener('click', () => {
+        const entries = Object.entries(leaderboard()).filter(([, n]) => Number.isFinite(n) && n > 0).sort((a, b) => b[1] - a[1]);
+        $('leaderboard-content').replaceChildren();
+        entries.forEach(([name, count], i) => { const row = document.createElement('div'); row.className = 'lb-row'; const label = document.createElement('span'); label.textContent = `${i + 1}. ${name}`; const wins = document.createElement('span'); wins.className = 'lb-wins'; wins.textContent = `${count} galibiyet`; row.append(label, wins); $('leaderboard-content').appendChild(row); });
+        if (!entries.length) $('leaderboard-content').textContent = 'Henüz galibiyet yok.';
+        $('leaderboard-modal').classList.remove('hidden'); $('close-leaderboard-btn').focus();
+    });
+    const close = () => { $('leaderboard-modal').classList.add('hidden'); $('show-leaderboard-btn').focus(); };
+    $('close-leaderboard-btn').addEventListener('click', close);
+    $('leaderboard-modal').addEventListener('click', e => { if (e.target === $('leaderboard-modal')) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('leaderboard-modal').classList.contains('hidden')) close(); });
+    const profile = window.CasualProfile?.current?.();
+    if (profile?.displayName) { $('player-name-input').value = profile.displayName; $('profile-hint').classList.remove('hidden'); }
 });

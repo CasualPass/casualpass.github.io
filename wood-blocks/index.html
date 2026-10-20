@@ -37,7 +37,7 @@
 
         <section class="stage" id="stage" tabindex="-1" aria-label="Wood Blocks">
             <canvas id="board" width="540" height="780" role="img" aria-label="9x9 ahşap tahta ve altında yerleştirilecek üç parça"></canvas>
-            <p class="stage-hint hidden" id="stage-hint">Parçayı tahtaya sürükle<span class="kbd-only"> · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> seç, oklarla taşı, <kbd>Enter</kbd> bırak</span></p>
+            <p class="stage-hint hidden" id="stage-hint">Sürükle veya parçaya, sonra tahtaya dokun<span class="kbd-only"> · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> seç, oklarla taşı, <kbd>Enter</kbd> bırak</span></p>
 
             <div class="sheet-overlay" id="menu">
                 <div class="sheet">
@@ -50,11 +50,11 @@
                         <span id="wood-count">1 / 4</span>
                     </div>
                     <div class="wood-grid" id="wood-grid"></div>
-                    <button class="primary" id="start-btn" type="button">Oyuna başla</button>
+                    <div class="sheet-footer"><button class="primary" id="start-btn" type="button">Oyuna başla</button></div>
                 </div>
             </div>
 
-            <div class="sheet-overlay hidden" id="over">
+            <div class="sheet-overlay hidden" id="over" role="dialog" aria-labelledby="over-title">
                 <div class="sheet compact">
                     <p class="eyebrow">OYUN BİTTİ</p>
                     <h2 id="over-title">Yer kalmadı</h2>

@@ -120,3 +120,6 @@ body.theme-paper .primary, body.theme-paper .session-line button, body.theme-pap
     .owl-card canvas { width: 48px; height: 48px; }
 }
 @media (prefers-reduced-motion: reduce) { .stage-hint { animation: none; } .owl-toast { transition: none; } }
+
+#pause-panel { z-index: 3; background: rgba(8, 10, 30, .65); }
+#pause-panel .over-note { margin-top: 14px; }
