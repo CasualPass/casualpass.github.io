@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#0f111a">
     <title>XOX — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js?v=9"></script>
     <script src="../casual-profile.js"></script>
@@ -22,7 +22,6 @@
 </head>
 
 <body class="theme-liquid">
-    <!-- Dynamic Background via Shared Settings -->
     <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
     <a href="../index.html" class="back-btn">
@@ -34,14 +33,14 @@
         <span>Oyunlara Dön</span>
     </a>
 
-    <main class="game-container">
-        <header>
-            <h1 class="glow-text">XOX</h1>
+    <main class="game-container" id="game-container">
+        <header class="xo-header">
+            <h1 class="glow-text"><span class="title-x">X</span><span class="title-o">O</span><span class="title-x">X</span></h1>
         </header>
 
-        <!-- Pre-Game Lobby / Config Menu -->
+        <!-- Lobby -->
         <section id="config-menu" class="config-menu" aria-labelledby="lobby-title">
-            <h2 id="lobby-title">Lobi</h2>
+            <h2 id="lobby-title" class="visually-hidden">Lobi</h2>
 
             <div class="custom-settings">
                 <div class="setting-row">
@@ -52,50 +51,84 @@
                 </div>
 
                 <div class="setting-row">
-                    <span class="setting-label" id="mode-label">Oyun Modu</span>
-                    <div class="preset-buttons" role="group" aria-labelledby="mode-label">
-                        <button type="button" class="preset-btn active" id="mode-bot" aria-pressed="true">Bot'a Karşı</button>
-                        <button type="button" class="preset-btn" id="mode-local" aria-pressed="false">2 Oyuncu (Lokal)</button>
+                    <span class="setting-label" id="mode-label">Rakip</span>
+                    <div class="segmented" role="group" aria-labelledby="mode-label">
+                        <button type="button" class="preset-btn active" data-mode="bot" aria-pressed="true">Bot</button>
+                        <button type="button" class="preset-btn" data-mode="local" aria-pressed="false">2 Oyuncu</button>
                     </div>
                 </div>
 
-                <!-- Opponent Name (For Local 2P) -->
                 <div class="setting-row hidden" id="local-player2-row">
-                    <label for="player2-name-input">2. Oyuncu İsmi</label>
+                    <label for="player2-name-input">2. oyuncunun adı</label>
                     <input type="text" id="player2-name-input" placeholder="Oyuncu 2" class="custom-input"
                         maxlength="20">
                 </div>
 
-                <!-- Bot Difficulty (For Bot Mode) -->
+                <div class="setting-row">
+                    <span class="setting-label" id="variant-label">Tahta</span>
+                    <div class="variant-grid" role="group" aria-labelledby="variant-label">
+                        <button type="button" class="variant-btn active" data-variant="classic" aria-pressed="true">
+                            <span class="variant-icon icon-3" aria-hidden="true"></span>
+                            <span class="variant-name">Klasik</span>
+                            <span class="variant-sub">3×3, üçlü</span>
+                        </button>
+                        <button type="button" class="variant-btn" data-variant="four" aria-pressed="false">
+                            <span class="variant-icon icon-4" aria-hidden="true"></span>
+                            <span class="variant-name">Büyük</span>
+                            <span class="variant-sub">4×4, dörtlü</span>
+                        </button>
+                        <button type="button" class="variant-btn" data-variant="ultimate" aria-pressed="false">
+                            <span class="variant-icon icon-u" aria-hidden="true"></span>
+                            <span class="variant-name">Ultimate</span>
+                            <span class="variant-sub">9 küçük tahta</span>
+                        </button>
+                    </div>
+                    <p class="setting-hint hidden" id="ultimate-hint">Oynadığın kare, rakibin hangi küçük tahtada oynayacağını belirler. Küçük tahtaları kazan, büyük tahtada üçlü yap.</p>
+                </div>
+
                 <div class="setting-row" id="bot-difficulty-row">
-                    <span class="setting-label" id="difficulty-label">Bot Zorluğu</span>
-                    <div class="preset-buttons preset-buttons--three" role="group" aria-labelledby="difficulty-label">
+                    <span class="setting-label" id="difficulty-label">Bot zorluğu</span>
+                    <div class="segmented segmented--three" role="group" aria-labelledby="difficulty-label">
                         <button type="button" class="preset-btn active" data-difficulty="easy" aria-pressed="true">Kolay</button>
                         <button type="button" class="preset-btn" data-difficulty="medium" aria-pressed="false">Orta</button>
-                        <button type="button" class="preset-btn" data-difficulty="impossible" aria-pressed="false">İmkansız</button>
+                        <button type="button" class="preset-btn" data-difficulty="hard" aria-pressed="false">Zor</button>
+                    </div>
+                    <p class="setting-hint" id="difficulty-hint">Kolay: rastgele oynar, ara sıra fırsatı görür.</p>
+                </div>
+
+                <div class="setting-row">
+                    <span class="setting-label" id="first-label">İlk hamle</span>
+                    <div class="segmented segmented--three" role="group" aria-labelledby="first-label">
+                        <button type="button" class="preset-btn active" data-first="x" aria-pressed="true">Ben</button>
+                        <button type="button" class="preset-btn" data-first="o" aria-pressed="false">Bot</button>
+                        <button type="button" class="preset-btn" data-first="alt" aria-pressed="false">Sırayla</button>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn start-btn" id="start-game-btn">
+            <button type="button" class="btn start-btn primary" id="start-game-btn">
                 <span class="btn-text">Oyuna Başla</span>
             </button>
 
-            <!-- Leaderboard Trigger -->
             <button type="button" class="btn text-btn" id="show-leaderboard-btn">
                 🏆 Liderlik Tablosu
             </button>
         </section>
 
+        <!-- Game -->
         <section id="game-area" class="game-area hidden" aria-label="Oyun alanı">
-            <div class="scores" id="scores">
+            <div class="scoreboard" id="scores">
                 <div class="score-card x-score active">
-                    <span class="player-mark" aria-hidden="true">X</span>
+                    <svg class="score-mark" viewBox="0 0 100 100" aria-hidden="true"><path d="M26 26 L74 74 M74 26 L26 74"/></svg>
                     <span class="player-label" id="label-x">Oyuncu X</span>
                     <span class="score-value" id="score-x">0</span>
                 </div>
+                <div class="score-mid">
+                    <span class="round-label" id="round-label">1. raunt</span>
+                    <span class="draw-count"><span id="score-draw">0</span> berabere</span>
+                </div>
                 <div class="score-card o-score">
-                    <span class="player-mark" aria-hidden="true">O</span>
+                    <svg class="score-mark" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="25"/></svg>
                     <span class="player-label" id="label-o">Oyuncu O</span>
                     <span class="score-value" id="score-o">0</span>
                 </div>
@@ -103,43 +136,45 @@
 
             <div class="status-display" id="status" role="status" aria-live="polite">Sıra: Oyuncu X</div>
 
-            <div class="board" id="board" role="group" aria-label="Oyun tahtası">
-                <button type="button" class="cell" data-index="0"></button>
-                <button type="button" class="cell" data-index="1"></button>
-                <button type="button" class="cell" data-index="2"></button>
-                <button type="button" class="cell" data-index="3"></button>
-                <button type="button" class="cell" data-index="4"></button>
-                <button type="button" class="cell" data-index="5"></button>
-                <button type="button" class="cell" data-index="6"></button>
-                <button type="button" class="cell" data-index="7"></button>
-                <button type="button" class="cell" data-index="8"></button>
+            <div class="board-frame" id="board-frame">
+                <div class="board" id="board" role="grid" aria-label="Oyun tahtası. Ok tuşlarıyla gezin, Enter ile oynayın."></div>
+                <svg class="win-line" id="win-line" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="0" pathLength="1"/></svg>
+
+                <div class="result-overlay hidden" id="result-overlay">
+                    <div class="result-card" role="dialog" aria-modal="false" aria-labelledby="result-title">
+                        <div class="result-badge" id="result-badge" aria-hidden="true"></div>
+                        <h2 class="result-title" id="result-title">Kazandın!</h2>
+                        <p class="result-detail" id="result-detail"></p>
+                        <div class="result-series" id="result-series" aria-hidden="true"></div>
+                        <div class="result-actions">
+                            <button type="button" class="btn primary" id="next-round-btn">Sonraki raunt</button>
+                            <button type="button" class="btn ghost-btn" id="view-board-btn">Tahtayı gör</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <ol class="round-history" id="round-history" aria-label="Raunt geçmişi"></ol>
+
             <div class="game-actions">
-                <button type="button" class="btn text-btn" id="back-to-lobby-btn">
-                    Lobiye Dön
-                </button>
+                <button type="button" class="btn text-btn" id="back-to-lobby-btn">Lobiye Dön</button>
                 <button type="button" class="btn reset-btn" id="reset-btn">
                     <span class="btn-text">Yeniden Başlat</span>
                 </button>
             </div>
         </section>
 
-        <!-- Leaderboard Modal -->
         <div id="leaderboard-modal" class="overlay hidden">
             <div class="config-menu leaderboard-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
                 <h2 id="leaderboard-title">🏆 Liderlik Tablosu</h2>
-                <div id="leaderboard-content" class="leaderboard-content">
-                    <!-- Rows populated via JS -->
-                </div>
+                <div id="leaderboard-content" class="leaderboard-content"></div>
                 <button type="button" class="btn" id="close-leaderboard-btn">Kapat</button>
             </div>
         </div>
     </main>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 
-    <!-- Audio assets to be used globally -->
     <audio id="global-click-sound" src="https://cdn.freesound.org/previews/415/415096_7413867-lq.mp3"
         preload="auto"></audio>
     <audio id="global-pop-sound" src="https://cdn.freesound.org/previews/242/242501_4414128-lq.mp3"

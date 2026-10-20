@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <script src="shared-settings.js?v=9"></script>
 </head>
 <body class="theme-liquid">
@@ -49,10 +49,22 @@
                 <p class="eyebrow">CASUALPASS DASHBOARD</p>
                 <h1 id="dashboard-title">Aç, seç, <em>oyna.</em></h1>
                 <p>Hesap ve bekleme yok. Oyun seç, CasualMoney kazan, temalarını aç.</p>
+                <ul class="hero-facts" aria-label="Öne çıkanlar">
+                    <li><b id="hero-games-count">10</b> oyun</li>
+                    <li>Reklamsız</li>
+                    <li>Çevrimdışı da açılır</li>
+                </ul>
             </div>
             <section class="balance-card" aria-label="CasualMoney bakiyesi">
-                <span class="balance-coin" aria-hidden="true">C</span>
-                <div><small>CASUALMONEY</small><strong id="balance-value">0</strong></div>
+                <div class="balance-head">
+                    <span class="balance-coin" aria-hidden="true">C</span>
+                    <div class="balance-amount"><small>CASUALMONEY</small><strong id="balance-value">0</strong></div>
+                    <span class="balance-mult" id="balance-multiplier" title="Kazanç çarpanı">x1</span>
+                </div>
+                <ul class="reward-steps" aria-label="Bugünkü ödüller">
+                    <li class="reward-step" id="step-session"><i aria-hidden="true"></i><span>Oturum ödülü</span><b id="step-session-value">+15 CM</b></li>
+                    <li class="reward-step" id="step-daily"><i aria-hidden="true"></i><span>Günlük ödül</span><b id="step-daily-value">+20 CM</b></li>
+                </ul>
                 <button id="daily-bonus-button" type="button">Günlük ödül</button>
             </section>
         </section>
@@ -62,18 +74,27 @@
                 <div><p class="eyebrow">OYUNLAR</p><h2 id="games-title">Birini seç, tak diye oyna.</h2></div>
                 <p id="games-count">On oyun aynı ekranda.</p>
             </div>
-            <div class="game-grid">
-                <a class="game-card wood-card" href="wood-turning/index.html"><span class="game-index">01</span><span class="game-art wood-art" aria-hidden="true"><i></i><b></b></span><span><small>USTALIK</small><strong>Wood Turning</strong><em>Şekillendir · Zımparala · Kazan</em></span></a>
-                <a class="game-card snake-card" href="snake-game/index.html"><span class="game-index">02</span><span class="game-art snake-art" aria-hidden="true"><i></i><i></i><i></i><b></b></span><span><small>REFLEKS</small><strong>Snake</strong><em>Yemi kap, rekoru uzat</em></span></a>
-                <a class="game-card tile-card" href="2048-game/index.html"><span class="game-index">03</span><span class="game-art tile-art" aria-hidden="true"><b>2</b><b>0</b><b>4</b><b>8</b></span><span><small>ZEKA</small><strong>2048</strong><em>Taşları birleştir</em></span></a>
-                <a class="game-card xox-card" href="xox-game/index.html"><span class="game-index">04</span><span class="game-art xox-art" aria-hidden="true">× <b>○</b> ×</span><span><small>STRATEJİ</small><strong>XOX</strong><em>Üçlüyü ilk sen kur</em></span></a>
-                <a class="game-card chess-card" href="chess-game/index.html"><span class="game-index">05</span><span class="game-art chess-art" aria-hidden="true">♞</span><span><small>TAKTİK</small><strong>Chess</strong><em>CasualFish'e karşı oyna</em></span></a>
-                <a class="game-card line-card" href="son-hat/index.html"><span class="game-index">06</span><span class="game-art line-art" aria-hidden="true"><i></i><b></b><b></b></span><span><small>HAYATTA KAL</small><span class="title-row"><strong>Son Hat</strong><b class="beta-badge">Beta</b></span><em>Şerit seç, birliğini büyüt</em></span></a>
-                <a class="game-card owl-card" href="owl-game/index.html"><span class="game-index">07</span><span class="game-art owl-art" aria-hidden="true"><b><i></i></b><s></s></span><span><small>UÇUŞ</small><span class="title-row"><strong>Minerva Owl</strong><b class="new-badge">Yeni</b></span><em>Sütunlardan süzül, baykuş aç</em></span></a>
-                <a class="game-card blocks-card" href="wood-blocks/index.html"><span class="game-index">08</span><span class="game-art blocks-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span><small>BULMACA</small><span class="title-row"><strong>Wood Blocks</strong><b class="new-badge">Yeni</b></span><em>Blokları yerleştir, satırları sil</em></span></a>
-                <a class="game-card arena-card" href="fps-game/index.html"><span class="game-index">09</span><span class="game-art arena-art" aria-hidden="true"><b></b><i></i></span><span><small>ÇOK OYUNCULU</small><span class="title-row"><strong>Arena FPS</strong><b class="new-badge">Yeni</b></span><em>Oda aç, kodla katıl</em></span></a>
-                <a class="game-card vektor-card" href="vektor/index.html"><span class="game-index">10</span><span class="game-art vektor-art" aria-hidden="true"><b></b><i></i></span><span><small>TAKTİK 5v5</small><span class="title-row"><strong>Vektör</strong><b class="new-badge">Yeni</b></span><em>Çekirdeği kur ya da çöz</em></span></a>
+            <div class="game-filters" id="game-filters" role="group" aria-label="Oyunları türe göre süz">
+                <button type="button" class="filter-chip" data-filter="all" aria-pressed="true">Tümü <span></span></button>
+                <button type="button" class="filter-chip" data-filter="hizli" aria-pressed="false">Hızlı <span></span></button>
+                <button type="button" class="filter-chip" data-filter="zeka" aria-pressed="false">Zekâ <span></span></button>
+                <button type="button" class="filter-chip" data-filter="beceri" aria-pressed="false">Beceri <span></span></button>
+                <button type="button" class="filter-chip" data-filter="aksiyon" aria-pressed="false">Aksiyon <span></span></button>
+                <button type="button" class="filter-chip" data-filter="coklu" aria-pressed="false">Çok oyunculu <span></span></button>
             </div>
+            <div class="game-grid" id="game-grid">
+                <a class="game-card wood-card" href="wood-turning/index.html" data-game="Wood Turning" data-tags="beceri"><span class="game-index">01</span><span class="game-art wood-art" aria-hidden="true"><i></i><b></b></span><span class="game-copy"><small>USTALIK</small><span class="title-row"><strong>Wood Turning</strong></span><em>Şekillendir · Zımparala · Kazan</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card snake-card" href="snake-game/index.html" data-game="Snake" data-tags="hizli beceri"><span class="game-index">02</span><span class="game-art snake-art" aria-hidden="true"><i></i><i></i><i></i><b></b></span><span class="game-copy"><small>REFLEKS</small><span class="title-row"><strong>Snake</strong></span><em>Yemi kap, rekoru uzat</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card tile-card" href="2048-game/index.html" data-game="2048" data-tags="hizli zeka"><span class="game-index">03</span><span class="game-art tile-art" aria-hidden="true"><b>2</b><b>0</b><b>4</b><b>8</b></span><span class="game-copy"><small>ZEKA</small><span class="title-row"><strong>2048</strong></span><em>Taşları birleştir</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card xox-card" href="xox-game/index.html" data-game="XOX" data-tags="hizli zeka coklu"><span class="game-index">04</span><span class="game-art xox-art" aria-hidden="true">× <b>○</b> ×</span><span class="game-copy"><small>STRATEJİ</small><span class="title-row"><strong>XOX</strong></span><em>Üçlüyü ilk sen kur</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card chess-card" href="chess-game/index.html" data-game="Chess" data-tags="zeka"><span class="game-index">05</span><span class="game-art chess-art" aria-hidden="true">♞</span><span class="game-copy"><small>TAKTİK</small><span class="title-row"><strong>Chess</strong></span><em>CasualFish'e karşı oyna</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card line-card" href="son-hat/index.html" data-game="Son Hat" data-tags="aksiyon"><span class="game-index">06</span><span class="game-art line-art" aria-hidden="true"><i></i><b></b><b></b></span><span class="game-copy"><small>HAYATTA KAL</small><span class="title-row"><strong>Son Hat</strong><b class="beta-badge">Beta</b></span><em>Şerit seç, birliğini büyüt</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card owl-card" href="owl-game/index.html" data-game="Minerva Owl" data-tags="hizli beceri"><span class="game-index">07</span><span class="game-art owl-art" aria-hidden="true"><b><i></i></b><s></s></span><span class="game-copy"><small>UÇUŞ</small><span class="title-row"><strong>Minerva Owl</strong><b class="new-badge">Yeni</b></span><em>Sütunlardan süzül, baykuş aç</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card blocks-card" href="wood-blocks/index.html" data-game="Wood Blocks" data-tags="zeka"><span class="game-index">08</span><span class="game-art blocks-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="game-copy"><small>BULMACA</small><span class="title-row"><strong>Wood Blocks</strong><b class="new-badge">Yeni</b></span><em>Blokları yerleştir, satırları sil</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card arena-card" href="fps-game/index.html" data-game="Arena FPS" data-tags="aksiyon coklu"><span class="game-index">09</span><span class="game-art arena-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>ÇOK OYUNCULU</small><span class="title-row"><strong>Arena FPS</strong><b class="new-badge">Yeni</b></span><em>Oda aç, kodla katıl</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card vektor-card" href="vektor/index.html" data-game="Vektör" data-tags="aksiyon coklu"><span class="game-index">10</span><span class="game-art vektor-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>TAKTİK 5v5</small><span class="title-row"><strong>Vektör</strong><b class="new-badge">Yeni</b></span><em>Çekirdeği kur ya da çöz</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+            </div>
+            <p class="filter-status" id="filter-status" role="status" aria-live="polite"></p>
         </section>
 
         <section class="metric-grid" aria-label="Oyuncu durumu">
@@ -112,7 +133,7 @@
                     <div><p class="eyebrow">SON HAREKETLER</p><h2 id="activity-title">Bugün</h2></div>
                     <button id="clear-activity-button" class="text-button" type="button" hidden>Temizle</button>
                 </div>
-                <ul class="activity-list" id="activity-list"><li class="empty-activity">İlk ödülün burada görünecek.</li></ul>
+                <ul class="activity-list" id="activity-list"><li class="empty-activity"><span aria-hidden="true">◎</span>İlk ödülün burada görünecek.</li></ul>
             </section>
         </section>
 
@@ -135,8 +156,8 @@
             <p class="save-note">İlerlemen bu tarayıcının çerezlerinde durur. Dışa aktardığın dosyayla başka bir cihaza ya da tarayıcıya taşıyabilir, çerezler silinirse geri yükleyebilirsin. Dosya 7-3-1 kontrol haneleri ve bir mühürle korunur; değiştirilmiş bir dosya yüklenmeden önce sorulur.</p>
             <p class="save-warning" id="save-unverified" hidden>Bu cihazdaki kayıt, doğrulanamayan bir dosyadan yüklendi.</p>
             <div class="save-actions">
-                <button class="save-button primary" id="save-export" type="button">Dışa aktar</button>
-                <button class="save-button" id="save-import" type="button">İçe aktar</button>
+                <button class="save-button primary" id="save-export" type="button"><span aria-hidden="true">↓</span> Dışa aktar</button>
+                <button class="save-button" id="save-import" type="button"><span aria-hidden="true">↑</span> İçe aktar</button>
                 <input id="save-file" type="file" accept=".json,application/json" hidden>
             </div>
         </section>
@@ -147,6 +168,7 @@
 
     <dialog class="save-dialog" id="save-dialog" aria-labelledby="save-dialog-title">
         <form method="dialog">
+            <span class="save-dialog-icon" aria-hidden="true">↥</span>
             <p class="eyebrow" id="save-dialog-kicker">KAYDI İÇE AKTAR</p>
             <h2 id="save-dialog-title"></h2>
             <p id="save-dialog-body"></p>
@@ -168,6 +190,6 @@
     <script src="casual-profile.js?v=16"></script>
     <script src="casual-cheats.js?v=8"></script>
     <script src="casual-save.js?v=1"></script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
 </body>
 </html>

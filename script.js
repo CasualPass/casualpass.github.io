@@ -48,7 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!activities.length) {
             const item = document.createElement('li');
             item.className = 'empty-activity';
-            item.textContent = 'İlk ödülün burada görünecek.';
+            const icon = document.createElement('span');
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = '◎';
+            item.append(icon, profile ? 'Henüz hareket yok. Bir oyun oyna ya da ödülünü al.' : 'İlk ödülün burada görünecek.');
             activityList.append(item);
             return;
         }
@@ -142,6 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('earned-value').textContent = `${CasualProfile.formatMoney(totalEarned(profile))} CM`;
         document.getElementById('plays-value').textContent = CasualProfile.formatMoney(totalPlays());
         document.getElementById('active-theme-value').textContent = theme.name;
+        const dailyTaken = profile?.dailyBonusDate === CasualProfile.todayKey();
+        document.getElementById('balance-multiplier').textContent = `x${rebirth.multiplier}`;
+        document.getElementById('step-session').classList.toggle('done', !sessionRewardReady);
+        document.getElementById('step-daily').classList.toggle('done', dailyTaken);
+        document.getElementById('step-session-value').textContent = !sessionRewardReady ? 'Alındı' : `+${CasualProfile.formatMoney(CasualProfile.SESSION_REWARD * rebirth.multiplier)} CM`;
+        document.getElementById('step-daily-value').textContent = dailyTaken ? 'Alındı' : `+${CasualProfile.formatMoney(CasualProfile.DAILY_REWARD * rebirth.multiplier)} CM`;
+        dailyBonusButton.classList.toggle('is-ready', !CasualCheats.active() && !dailyTaken);
+        renderGameStats();
         dailyBonusButton.disabled = CasualCheats.active() || profile?.dailyBonusDate === CasualProfile.todayKey();
         dailyBonusButton.textContent = CasualCheats.active() ? 'Hile açık' : profile?.dailyBonusDate === CasualProfile.todayKey() ? 'Yarın yine gel' : 'Günlük ödül';
         renderThemes(profile);
@@ -279,9 +290,47 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Hareketler temizlendi.');
     });
 
-    const gameCount = document.querySelectorAll('.game-grid .game-card').length;
+    const gameCards = Array.from(document.querySelectorAll('.game-grid .game-card'));
+    const gameCount = gameCards.length;
     const countWords = ['Sıfır', 'Bir', 'İki', 'Üç', 'Dört', 'Beş', 'Altı', 'Yedi', 'Sekiz', 'Dokuz', 'On'];
     document.getElementById('games-count').textContent = `${countWords[gameCount] || gameCount} oyun aynı ekranda.`;
+    document.getElementById('hero-games-count').textContent = String(gameCount);
+
+    function renderGameStats() {
+        const stats = getGameStats();
+        gameCards.forEach((card) => {
+            const stat = card.querySelector('.game-stat');
+            const game = stats[card.dataset.game];
+            const played = Number(game?.played) || 0;
+            stat.hidden = !played;
+            if (!played) return;
+            const best = Number(game.highScore) || 0;
+            stat.textContent = best ? `Rekor ${CasualProfile.formatMoney(best)}` : `${CasualProfile.formatMoney(played)} kez oynandı`;
+        });
+    }
+
+    /* Tür süzgeci: yalnızca görünümü değiştirir, hiçbir şey kaydedilmez. */
+    const filterButtons = Array.from(document.querySelectorAll('#game-filters .filter-chip'));
+    const filterStatus = document.getElementById('filter-status');
+    const matches = (card, filter) => filter === 'all' || card.dataset.tags.split(' ').includes(filter);
+    filterButtons.forEach((button) => {
+        const filter = button.dataset.filter;
+        button.querySelector('span').textContent = String(gameCards.filter((card) => matches(card, filter)).length);
+        button.addEventListener('click', () => {
+            filterButtons.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
+            let visible = 0;
+            gameCards.forEach((card) => {
+                const show = matches(card, filter);
+                card.hidden = !show;
+                card.classList.remove('span-last');
+                if (show) visible += 1;
+            });
+            const shown = gameCards.filter((card) => !card.hidden);
+            if (visible % 2 === 1) shown[shown.length - 1].classList.add('span-last');
+            filterStatus.textContent = filter === 'all' ? '' : `${visible} oyun gösteriliyor.`;
+        });
+    });
+    gameCards[gameCards.length - 1].classList.toggle('span-last', gameCount % 2 === 1);
 
     window.addEventListener('casualprofilechange', render);
     window.addEventListener('casual-cheat', render);
