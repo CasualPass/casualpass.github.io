@@ -3,7 +3,7 @@
 CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak oyunları tek ekranda sunar:
 
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
-- **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, sınırsız geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
+- **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
 - **Snake:** Yemi kapıp rekorunu uzat.
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
