@@ -2,7 +2,7 @@
 
 ## Proje özeti
 
-CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game` ve `vektor` sayfalarına doğrudan bağlanır.
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game`, `vektor` ve `nuts-bolts` sayfalarına doğrudan bağlanır.
 
 ## 2026-08-31 — Çerez odaklı dashboard yenilemesi
 
@@ -426,3 +426,25 @@ Kullanıcının Last War Google Play bağlantısını referans alarak Son Hat’
 - Brave’de gerçek WebGL savaş sahası açıldı; asker kapılarından geçerken birlik 1’den 7’ye yükseldi, 3B kapı/sandık/zombi ve mermiler çizildi.
 - Son kamera ayarı ve gölgeli 3B görünüm Brave ekran görüntüsünde doğrulandı. Klavyeyle sol şeride yönlendirme sonrası Makineli silahı, 11 kişilik birlik ve güncellenen HUD görüldü. Sonraki devam/hava desteği tıklamaları CUA’da duraklatma ekranını değiştirmedi; canlı hava desteği testi tamamlanamadı. Gerçek telefon dokunma/FPS ve WebGL bağlam kaybı testi çalıştırılmadı; bunlar VM testiyle doğrulanmış sayılmaz.
 - `node --check` (iki JS), HTML ID/label/yerel dosya ve script hedefleri, `git diff --check`: başarılı. Yeni PWA varlıkları `build-sw.py` ile üretildi.
+
+
+## 2026-10-20 — Nuts & Bolts renk bulmacası
+
+### Amaç ve kapsam
+
+Önce yayıncı mağaza açıklamalarından somun ayırma kurallarını araştırıp koleksiyona özgün bir oyun eklemek. Mevcut native kabuk PR’sinden bağımsız `codex/nuts-and-bolts` dalı main’den açıldı; diğer oyunlar ve hesap mimarisi değiştirilmedi.
+
+### Yapılanlar ve teknik kararlar
+
+- `nuts-bolts/engine.js`: Bağımsız saf motor. Tek üst somun, aynı renk/boş hedef, dört somun kapasitesi. Kazanmak için her dolu cıvata dört aynı renk somun içermeli. 30 sabit tohumlu bölüm, 3–8 renk ve iki ek cıvata yuvası. Çözülmüş düzenden ters hamlelerle üretilir; her bölümün ileri yönde geçerli çözüm tanığı vardır. Bölüm başında iki cıvatanın mutlaka tamamen boş olması şart değildir.
+- `nuts-bolts/index.html`, `style.css`, `script.js`: Özgün CSS metal cıvata/somun görünümü, renk simgeleri, uygun hedefler, dokunma/fare/klavye, geri alma, çift basışla yeniden başlatma, bölüm seçimi ve hamle sayacı. Süre veya ücretli yardım yok. Geri alma geçmişi bellekte en fazla 500 hamledir ve yenilemede sıfırlanır.
+- `cp_nuts_v1` çerezinde geçerli tahta, bölüm, hamle ve tamamlanan bölümler; ortak bulut/dosya yedeği bu öneki zaten kapsar. Bozuk kayıt reddedilir. Hileli oturum kaydedilmez. İlk tamamlama ortak istatistiğe eklenir; CM ödülü eklenmedi.
+- Dashboard kartı/zekâ filtresi, README ve PWA listesi güncellendi. Yalnızca bu web sürümü yayınlandıktan sonra native kabukta da görünür; yeni APK/IPA gerekmez. Bu görevde deploy yapılmadı.
+
+### Hedef durumu ve doğrulama
+
+- [x] Araştırma, oyun, dashboard bağlantısı ve PWA önbellek entegrasyonu.
+- [x] `node --test tools/test-nuts-bolts.cjs tools/test-nuts-ui.cjs`: 12 test başarılı; 30 bölümün çözümü, renk sayıları, geçersiz hamleler, kazanma koşulu, kayıt doğrulama, UI geri alma/sıfırlama/devam, tek tamamlama ve hile koruması.
+- [x] Brave’de gerçek oyun çizimi, somun seçimi, aynı renk üstüne taşıma (hamle 0→1) ve geri alma (1→0) doğrulandı.
+- [x] JS sözdizimi, yerel HTML dosya hedefleri ve `git diff --check`; `python3 tools/build-sw.py` başarılı.
+- Fiziksel telefon dokunma, native kabuk içi çalışma ve gerçek offline yeniden açılma bu görevde test edilmedi. UI VM testleri bu kontrollerin yerine geçmez.

@@ -238,3 +238,6 @@ body.theme-paper .account-error { color: #a82d1e; }
 
 #account-confirm-row[hidden] { display: none; }
 #account-confirm-row:not([hidden]) { display: grid; gap: 8px; }
+
+.nuts-card { --card-ink:#162d3d; background:linear-gradient(135deg,#cde8f2,#7da8bf); }
+.nuts-art { gap:5px; }.nuts-art i { font-style:normal; color:white; font-size:17px; display:grid; place-items:center; width:38px; height:31px; background:#eb657b; clip-path:polygon(22% 0,78% 0,100% 30%,100% 70%,78% 100%,22% 100%,0 70%,0 30%); box-shadow:inset 0 -5px #0003; }.nuts-art i:nth-child(2){background:#508cdb;transform:translateY(-10px)}.nuts-art i:nth-child(3){background:#d9972d}
