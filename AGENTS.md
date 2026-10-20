@@ -406,3 +406,23 @@ Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere 
 - Hesap formunda odak/değer veya bekleyen hesap işlemi varsa hub yenilemesi ertelenir; uygun olduğunda 5 saniyelik kontrol uygular. Oyun ortasında otomatik yenileme yapılmaz. HTML betik sürümleri ve PWA varlıkları güncellendi.
 - `johnappleseed` kullanıcı adıyla gerçek kayıt ve oturum açılması Brave’de görüldü; yerel Snake rekoru 10 ve Liquid teması korundu. Yeni hesapla çıkış/yeniden giriş henüz test edilmedi.
 - Doğrulama: `node --test tools/test-updates.cjs` 5/5; periyodik kontrol/bağlantı dönüşü, başarısız güncellemeyi tekrar deneme, form sırasında erteleme, oyun ortasında yenilememe ve worker olmadan güncelleme. `node --check shared-settings.js` ve `git diff --check` başarılı. Gerçek tarayıcıda yeni bir uzak sürüm yayınlanarak güncelleme testi yapılmadı.
+
+
+## 2026-10-20 — Son Hat 3B köprü savaşı
+
+### Amaç ve kapsam
+
+Kullanıcının Last War Google Play bağlantısını referans alarak Son Hat’ın görünür savaş deneyimini geliştirmek. Resmî mağaza açıklaması ve köprü/sayı kapısı/sandık görseli incelendi; APK kurulmadı. Bu çalışma üs/hesap mimarisini veya diğer oyunları değiştirmez.
+
+### Yapılanlar ve kararlar
+
+- `son-hat/battle-view.js`: Depoda zaten bulunan Three.js r128 ile perspektif kamera, ışık/gölge, animasyonlu instanced asker/zombi parçaları, 3B kapı/konteyner/boss/helikopter, mermi/parçacıklar ve sayı etiketleri. Modeller özgün kod geometrisidir; referans oyunun varlıkları kopyalanmadı. Canvas 2D çizimi WebGL yokluğunda/bağlam kaybında yedek olarak korunur.
+- `son-hat/script.js`: İlk üç bölümde öğretici ve sabit asker/silah/helikopter seçimleri; başlangıç silahının hızı ve açılış sandığı dayanıklılığı dengelendi. Elle hava desteği (18 sn), boss’un kaçılabilir şerit saldırısı (1,35 sn uyarı), birlik/öldürme/kalkan/boss HUD’u eklendi. `cp_sonhat_v2` ve mevcut ödül/hile korumaları korunur.
+- `son-hat/index.html`, `style.css`: Masaüstünde 620 px savaş sahası, telefonda tam genişlik; destek düğmesi ve kontrol açıklamaları. README ve PWA listesi güncellendi.
+
+### Doğrulama
+
+- `node --test tools/test-son-hat.cjs`: 7 test başarılı; bölüm üretimi, asker kapıları, silah sandığını vurarak kazanma/çarpmada ödül almama, hava desteği beklemesi, boss saldırısından kaçma, hilede kayıt engeli ve yükseltmesiz Bölüm 1 kazanılabilirliği.
+- Brave’de gerçek WebGL savaş sahası açıldı; asker kapılarından geçerken birlik 1’den 7’ye yükseldi, 3B kapı/sandık/zombi ve mermiler çizildi.
+- Son kamera ayarı ve gölgeli 3B görünüm Brave ekran görüntüsünde doğrulandı. Klavyeyle sol şeride yönlendirme sonrası Makineli silahı, 11 kişilik birlik ve güncellenen HUD görüldü. Sonraki devam/hava desteği tıklamaları CUA’da duraklatma ekranını değiştirmedi; canlı hava desteği testi tamamlanamadı. Gerçek telefon dokunma/FPS ve WebGL bağlam kaybı testi çalıştırılmadı; bunlar VM testiyle doğrulanmış sayılmaz.
+- `node --check` (iki JS), HTML ID/label/yerel dosya ve script hedefleri, `git diff --check`: başarılı. Yeni PWA varlıkları `build-sw.py` ile üretildi.

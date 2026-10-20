@@ -7,7 +7,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
 - **Chess:** CasualFish motoruna karşı hamleni hesapla.
-- **Son Hat (Beta):** Last War tarzı zombi koşusu. Şerit seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah ve helikopter kap, boss’u durdur. Ganimetle üssünde bina kur, madenlerden altın/demir/yiyecek topla, kahraman çağırıp üç kişilik takım kur. Koşu başına en fazla 40 CM (8 altın = 1 CM).
+- **Son Hat:** 3B askerler ve zombi sürüleriyle Last War’dan esinlenen köprü savaşı. Şerit seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah ve helikopter kap, boss’un işaretli saldırısından kaç, Boşluk veya dokunmatik düğmeyle hava desteği çağır. Ganimetle üssünde bina kur, madenlerden altın/demir/yiyecek topla, kahraman çağırıp üç kişilik takım kur. Koşu başına en fazla 40 CM (8 altın = 1 CM).
 - **Minerva Owl:** Minerva'nın baykuşuyla mermer sütunların arasından süzül; CasualMoney ile yeni baykuşlar aç.
 - **Wood Blocks:** Ahşap blokları 9×9 tahtaya yerleştir; dolu satır, sütun ve 3×3 kareleri sil, CasualMoney ile yeni ahşaplar aç.
 - **Vektör:** 5'e 5 taktik kahraman nişancı. Saldırıda çekirdeği bir bölgeye kur, savunmada engelle ya da çöz. Dört harita var: Liman, Kumsaray (çöl kalesi), Üçyol (A/B/C üç bölgeli teknopark) ve Buzul (kar yağışlı kutup üssü); menüden seçilir ya da rastgele gelir. Satın alma evresinde krediyle silah, kalkan ve yetenek al; sekiz ajanın (Kor, Sis, Ok, Kale, Rüzgâr, Ayaz, Fay, Nöbet) C/Q/E yetenekleri ve X nihai yeteneği var (duman, kör edici, ateş, keşif oku, tuzak teli, buz duvarı, sarsıntı, fay hattı, taret, alarm, tipi, fırlatma bıçakları…). Durarak ateş etmek isabetlidir, uzun taramada namlu kalıba göre kayar. Botlarla ya da oda koduyla arkadaşlarınla oynanır; boş yerleri botlar doldurur.
@@ -94,3 +94,10 @@ Kaynaklar: [Supabase password security](https://supabase.com/docs/guides/auth/pa
 ## Otomatik güncelleme
 
 Yeni sürüm yayınlandığında uygulama açılışta, sekmeye dönünce, bağlantı geri gelince ve görünür sekmede dakikada bir güncellemeyi kontrol eder. Yeni dosyalar hazır olduğunda dashboard/Hakkında yenilenir; hesap formu dolduruluyorsa veya hesap işlemi sürüyorsa bekler. Oyun sayfaları açılıştan 6 saniye sonra otomatik yenilenmez; yeni sürüm sonraki sayfa açılışında kullanılır. Yayın öncesi `python3 tools/build-sw.py` çalıştırılarak sürüm ve çevrimdışı önbellek listesi üretilmelidir. Bir PR dalına push yapmak canlı GitHub Pages sitesini güncellemez; yayınlanan dala alınması gerekir.
+
+
+### Son Hat savaş görünümü
+
+Son Hat, yerelde bulunan `fps-game/vendor/three.min.js` (Three.js r128) ile gerçek 3B köprü, asker/zombi animasyonları, silah sandıkları ve helikopter çizer. Karakter ve çevre modelleri proje için kodla oluşturulmuştur; Last War dosyaları kullanılmaz. WebGL yoksa veya bağlam kaybolursa Canvas 2D görünümü devreye girer. Savaş ekranı masaüstünde 620 px genişliğinde, telefonda ekran genişliğindedir.
+
+İlk üç bölümde sağdaki ardışık `+1` kapıları ile soldaki silah sandığı arasında seçim yapılır; sonraki kapılar, sürüler ve helikopter sandığı kararları devam eder. Askerler otomatik ateş eder. Sürükleme / A-D / yön tuşlarıyla hareket edilir; **Boşluk / Hava desteği** 18 saniye beklemeli alan saldırısıdır. Boss’un kırmızı işaretlediği şerit 1,35 saniye sonra vurulur. Mevcut `cp_sonhat_v2` üs/kahraman kaydı ve ödül kuralları korunur.

@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#1f8fa3">
     <title>Son Hat — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="../shared-settings.js?v=10"></script>
     <script src="../casual-profile.js?v=16"></script>
@@ -22,6 +22,7 @@
 <body class="sh-body">
     <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
     <main class="sh-app" id="app" data-mode="menu">
+        <canvas id="field-3d" aria-hidden="true"></canvas>
         <canvas id="field" width="480" height="800" role="img" aria-label="Zombilerle dolu köprü"></canvas>
 
         <header class="sh-top">
@@ -47,6 +48,9 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"></rect><rect x="14" y="5" width="4" height="14" rx="1.2"></rect></svg>
             </button>
         </div>
+        <div class="combat-strip" id="combat-strip"><span><small>BİRLİK</small><b id="run-troops">1</b></span><span><small>ETKİSİZ</small><b id="run-kills">0</b></span><span><small>KALKAN</small><b id="run-shield">0</b></span></div>
+        <button id="airstrike-btn" class="airstrike" type="button"><span>✦ HAVA DESTEĞİ</span><small id="airstrike-status">Hazır · Boşluk</small></button>
+        <div id="boss-hud" class="boss-hud hidden"><strong id="boss-label">DEV BOSS</strong><span><i id="boss-fill"></i></span></div>
         <p class="run-hint" id="run-hint" aria-live="polite"></p>
 
         <section class="screen" id="screen-map" aria-labelledby="map-title">
@@ -54,9 +58,9 @@
                 <div class="panel-head">
                     <p class="eyebrow" id="region-name">BÖLGE 1 · KÖPRÜ</p>
                     <h1 id="map-title">Son Hat</h1>
-                    <p class="lead">Şeridini seç, kapılardan geçip birliğini büyüt, sandıkları vurup silah kap ve boss'u durdur.</p>
+                    <p class="lead">Tek askerden bir orduya. Mavi kapılarda çoğal, silah sandıklarını parçala ve köprüyü geri al.</p>
                 </div>
-                <div class="field-guide" aria-label="Nasıl oynanır"><span><b>01 · HAREKET</b>Sürükle veya ← → / A D</span><span><b>02 · BÜYÜT</b>İyi kapıyı seç, otomatik ateş et</span><span><b>03 · GELİŞTİR</b>Ganimetle üssünü ve takımını güçlendir</span></div>
+                <div class="field-guide" aria-label="Nasıl oynanır"><span><b>01 · HAREKET</b>Sürükle veya ← → / A D</span><span><b>02 · BÜYÜT</b>İyi kapıyı seç, otomatik ateş et</span><span><b>03 · DESTEK</b>Boşluk / Hava desteği ile sürüyü temizle</span></div>
                 <p class="map-power" id="map-power"></p>
                 <ol class="map-path" id="map-path"></ol>
             </div>
@@ -148,6 +152,8 @@
 
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </main>
-    <script src="script.js?v=7"></script>
+    <script src="../fps-game/vendor/three.min.js"></script>
+    <script src="battle-view.js?v=2"></script>
+    <script src="script.js?v=9"></script>
 </body>
 </html>

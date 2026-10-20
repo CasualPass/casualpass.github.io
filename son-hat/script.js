@@ -4,6 +4,8 @@
     const app = $('app');
     const canvas = $('field');
     const ctx = canvas.getContext('2d');
+    const battleView = window.createSonHatBattleView?.($('field-3d'));
+    if (!battleView) $('field-3d').hidden = true;
     const Profile = window.CasualProfile;
     const cheats = () => window.CasualCheats;
     const cheatsOn = () => Boolean(cheats()?.active?.());
@@ -136,7 +138,7 @@
 
     // ---------- Squad stats ----------
     const WEAPONS = [
-        { name: 'Tabanca', rate: 2, dmg: 1, pellets: 1, color: '#ffd25a' },
+        { name: 'Tabanca', rate: 3.5, dmg: 1, pellets: 1, color: '#ffd25a' },
         { name: 'Makineli', rate: 5, dmg: .9, pellets: 1, color: '#ffb02e' },
         { name: 'Pompalı', rate: 2.2, dmg: 1.1, pellets: 3, color: '#ff8a3d' },
         { name: 'Lazer', rate: 4, dmg: 2.4, pellets: 1, color: '#5fe1ff' }
@@ -163,7 +165,7 @@
     const sy = d => view.topY + (view.baseY - view.topY) * scaleAt(d);
     const sx = (x, d) => view.cx + x * view.half * scaleAt(d);
     function resize() {
-        const w = window.innerWidth, h = window.innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = app.clientWidth, h = app.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
         view.w = w; view.h = h; view.dpr = dpr; view.cx = w / 2;
         view.half = Math.min(w * .42, h * .3);
         view.baseY = h * .74;
@@ -215,6 +217,18 @@
         };
         let z = 14;
         let first = true;
+        // The opening teaches the two choices before procedural stages take over.
+        if (n <= 3) {
+            for (let i = 0; i < 9; i++) gate(.5, 12 + i * 1.6, '+', 1, false, true);
+            crate(-.5, 14); Object.assign(ents[ents.length - 1], { hp: 6, max: 6, loot: ['weapon'] });
+            gate(-.5, 34, '+', 6 + n, true, false); gate(.5, 34, '−', 5, true, false);
+            horde(0, .85, 48, 22 + n * 3, zhp);
+            crate(.5, 66); Object.assign(ents[ents.length - 1], { hp: 22, max: 22, loot: ['heli'] });
+            gate(-.5, 66, '+', 5, true, false);
+            gate(-.5, 82, '×', 2, false, false); gate(.5, 82, '+', 4, true, false);
+            horde(0, .85, 98, 30 + n * 4, zhp);
+            z = 116; first = false;
+        }
         while (z < L - 26) {
             const roll = r();
             const lane = r() < .5 ? -1 : 1;
@@ -255,10 +269,10 @@
         const stage = buildStage(n);
         run = {
             n, L: stage.L, ents: stage.ents, boss: stage.boss,
-            z: 0, x: 0, tx: 0, soldiers: startSoldiers(), peak: startSoldiers(),
+            z: 0, x: .5, tx: .5, soldiers: startSoldiers(), peak: startSoldiers(),
             weapon: 0, rateBonus: 1, dmgBonus: 1, heli: levelOf('hangar') > 0 ? 1 : 0,
             bullets: [], fx: [], texts: [], rockets: [],
-            fireT: 0, heliT: 0, contactT: 0, minionT: 0,
+            fireT: 0, heliT: 0, contactT: 0, minionT: 0, airCooldown: 0, danger: null, bossAttackT: 3,
             shield: save$.tm.filter(i => HEROES[i].branch === 0).reduce((sum, i) => sum + shieldOf(i, save$.h[i]), 0),
             skills: save$.tm.filter(i => HEROES[i].branch > 0).map((i, k) => ({ i, l: save$.h[i], t: 1.5 + k })),
             coins: 0, iron: 0, food: 0, kills: 0, arena: false, over: false, endT: 0, won: false, t: 0, shake: 0
@@ -268,6 +282,7 @@
         hideOverlays();
         $('run-title').textContent = `Bölüm ${n}`;
         $('run-weapon').textContent = WEAPONS[0].name;
+        updateCombatHud();
         hint(window.matchMedia('(hover: none)').matches ? 'Sağa sola kaydır · kapıları seç' : 'Fareyle sürükle ya da ← → · kapıları seç', 3.2);
         lastT = performance.now();
         cancelAnimationFrame(rafId);
@@ -400,6 +415,27 @@
         run.shake = Math.max(run.shake, .15);
     }
 
+    function airstrike() {
+        if (mode !== 'run' || !run || run.paused || run.over || run.airCooldown > 0) return false;
+        const target = densest();
+        if (!target) { hint('Hava desteği için düşmanların yaklaşmasını bekle.', 1.5); return false; }
+        run.airCooldown = 18;
+        explode(target.x, target.z, 1.8, 18 * dmgMult() * (1 + run.n * .2), '#ffdf78');
+        addText(target.x, target.z, 'HAVA DESTEĞİ', '#fff1a1', 1.25);
+        updateCombatHud(); return true;
+    }
+    function updateCombatHud() {
+        if (!run) return;
+        $('run-troops').textContent = fmt(run.soldiers);
+        $('run-kills').textContent = fmt(run.kills);
+        $('run-shield').textContent = fmt(run.shield);
+        $('airstrike-btn').disabled = run.paused || run.over || run.airCooldown > 0;
+        $('airstrike-status').textContent = run.airCooldown > 0 ? `${Math.ceil(run.airCooldown)} sn` : 'Hazır · Boşluk';
+        $('boss-hud').classList.toggle('hidden', !run.arena || run.boss.hp <= 0);
+        $('boss-label').textContent = `${run.boss.big ? 'DEV BOSS' : 'KÖPRÜ MUHAFIZI'} · ${fmt(run.boss.hp)}`;
+        $('boss-fill').style.width = `${Math.max(0, run.boss.hp / run.boss.max * 100)}%`;
+    }
+
     // ---------- Simulation ----------
     function step(dt) {
         run.t += dt;
@@ -416,6 +452,23 @@
             if (run.endT > (run.won ? 1.4 : 1.1)) endRun();
             return;
         }
+
+        run.airCooldown = Math.max(0, run.airCooldown - dt);
+        if (run.arena) {
+            run.bossAttackT -= dt;
+            if (run.danger) {
+                run.danger.t -= dt;
+                if (run.danger.t <= 0) {
+                    if (Math.abs(run.x - run.danger.x) < .43) loseSoldiers(Math.max(2, Math.ceil(run.soldiers * .2)), run.x, run.z);
+                    burst(run.danger.x, run.z, '#ff693c', 20, .4); run.shake = .3; run.danger = null;
+                }
+            } else if (run.bossAttackT <= 0 && run.boss.hp > 0) {
+                run.bossAttackT = 4.2;
+                run.danger = { x: run.x < 0 ? -.5 : .5, t: 1.35 };
+                hint('BOSS SALDIRISI · Kırmızı hattan çık!', 1.35);
+            }
+        }
+        if (run.over) return;
 
         // Advance until the boss arena
         const arenaZ = run.L - 13;
@@ -797,12 +850,19 @@
     }
 
     function drawScene(time) {
+        if (battleView && !$('field-3d').hidden) { battleView.render(run, run?.paused ? run.t : time, startSoldiers()); return; }
         ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
         const camZ = run ? run.z : (time * 2) % 1000;
         let shakeX = 0, shakeY = 0;
         if (run && run.shake > 0 && !run.paused) { shakeX = (Math.random() - .5) * 10 * run.shake; shakeY = (Math.random() - .5) * 10 * run.shake; }
         ctx.save(); ctx.translate(shakeX, shakeY);
         drawWorld(camZ, time);
+        if (run?.danger) {
+            const x = run.danger.x;
+            ctx.fillStyle = `rgba(255,55,40,${.25 + Math.abs(Math.sin(time * 10)) * .25})`;
+            ctx.beginPath(); ctx.moveTo(sx(x - .45, -2), sy(-2)); ctx.lineTo(sx(x + .45, -2), sy(-2));
+            ctx.lineTo(sx(x + .45, 5), sy(5)); ctx.lineTo(sx(x - .45, 5), sy(5)); ctx.closePath(); ctx.fill();
+        }
         if (!run) {
             // Idle backdrop: a horde far ahead and the squad waiting.
             for (let i = 0; i < 40; i++) {
@@ -876,6 +936,7 @@
         hudT -= 1;
         if (hudT <= 0) {
             hudT = 6;
+            updateCombatHud();
             $('run-fill').style.width = `${Math.min(100, run.z / (run.L - 13) * 100)}%`;
             $('res-gold').textContent = fmt(save$.r[0] + run.coins * lootMult());
         }
@@ -1261,6 +1322,7 @@
     const keyMap = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
     window.addEventListener('keydown', e => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        if (e.code === 'Space' && mode === 'run') { e.preventDefault(); airstrike(); }
         if (keyMap[e.key] && mode === 'run') { keys.add(keyMap[e.key]); e.preventDefault(); }
         if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && mode === 'run') { run.paused ? resume() : pause(); e.preventDefault(); }
     });
@@ -1271,6 +1333,7 @@
     for (const b of document.querySelectorAll('#tabbar button')) b.addEventListener('click', () => showTab(b.dataset.tab));
     $('play-btn').addEventListener('click', () => startRun(playStage));
     $('pause-btn').addEventListener('click', pause);
+    $('airstrike-btn').addEventListener('click', airstrike);
     $('resume-btn').addEventListener('click', resume);
     $('quit-btn').addEventListener('click', () => {
         if (run && !run.over) { run.won = false; run.over = true; endRun(); return; }
@@ -1288,5 +1351,5 @@
     renderMenus();
     rafId = requestAnimationFrame(loop);
     // Exposed for automated checks; not part of gameplay.
-    window.__sonHat = { state: () => run, save: () => save$, start: startRun };
+    window.__sonHat = { state: () => run, save: () => save$, start: startRun, step, buildStage, airstrike };
 })();
