@@ -56,6 +56,19 @@
     let audio = null;
     let shownMode = '';
     let armTimer = 0;
+    let flightTime = 0;
+    let passMessage = '';
+    let passTimer = 0;
+    const flightPhases = [
+        { from: 0, name: 'Alacakaranlık', sky: ['#111d3f', '#424d79', '#bd8a83'] },
+        { from: 6, name: 'Ay ışığı', sky: ['#080f2a', '#273867', '#5b6a95'] },
+        { from: 12, name: 'Rüzgâr geçidi', sky: ['#102b3b', '#366377', '#8dada7'] },
+        { from: 24, name: 'Şafak', sky: ['#302344', '#8d5870', '#edb38e'] }
+    ];
+    function flightPhase(value = score) { return flightPhases.filter(phase => value >= phase.from).at(-1) || flightPhases[0]; }
+    function flightDifficulty(value) {
+        return { gap: Math.max(154, 206 - value * 1.45), speed: 165 + Math.min(80, value * 2.4), delta: value < 4 ? 105 : 165 };
+    }
 
     function cheats() { return window.CasualCheats; }
     function cheatOn(name) { const c = cheats(); return Boolean(c && typeof c[name] === 'function' && c[name]()); }
@@ -328,9 +341,10 @@
 
     function drawBackground() {
         const sky = ctx.createLinearGradient(0, 0, 0, GROUND);
-        sky.addColorStop(0, '#0b1030');
-        sky.addColorStop(.6, '#1d2556');
-        sky.addColorStop(1, '#3a3f78');
+        const phase = flightPhase();
+        sky.addColorStop(0, phase.sky[0]);
+        sky.addColorStop(.6, phase.sky[1]);
+        sky.addColorStop(1, phase.sky[2]);
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, W, GROUND);
 
@@ -447,6 +461,13 @@
         ctx.clearRect(0, 0, W, H);
         drawBackground();
         columns.forEach((col) => {
+            if (col.amp) {
+                ctx.strokeStyle = 'rgba(166,239,231,.55)';
+                ctx.lineWidth = 2; ctx.setLineDash([5, 7]);
+                ctx.beginPath(); ctx.moveTo(col.x + COLUMN_W / 2, col.baseY - col.amp); ctx.lineTo(col.x + COLUMN_W / 2, col.baseY + col.amp); ctx.stroke(); ctx.setLineDash([]);
+                ctx.fillStyle = '#a6efe7'; ctx.font = '700 20px Outfit, sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('↕', col.x + COLUMN_W / 2, col.gapY + 7);
+            }
             drawColumn(col.x, -10, col.gapY - col.gap / 2, true);
             drawColumn(col.x, col.gapY + col.gap / 2, GROUND, false);
         });
@@ -464,6 +485,12 @@
             ctx.fillText(formatScore(score), W / 2 + 3, 103);
             ctx.fillStyle = '#ffffff';
             ctx.fillText(formatScore(score), W / 2, 100);
+            ctx.font = '700 13px Outfit, sans-serif'; ctx.fillStyle = '#ecdfb9';
+            ctx.fillText(flightPhase().name.toLocaleUpperCase('tr'), W / 2, 126);
+            if (passTimer > 0) {
+                ctx.globalAlpha = Math.min(1, passTimer * 2); ctx.font = '800 24px Outfit, sans-serif';
+                ctx.fillStyle = '#fff3bf'; ctx.fillText(passMessage, W / 2, 174 - (1 - Math.min(1, passTimer)) * 12); ctx.globalAlpha = 1;
+            }
         }
         if (mode === 'paused') {
             ctx.fillStyle = 'rgba(8, 10, 30, .45)';
@@ -493,13 +520,16 @@
     }
 
     function spawnColumn(x) {
-        const gap = Math.max(150, 200 - score * 1.6);
-        const minY = 70 + gap / 2;
-        const maxY = GROUND - 70 - gap / 2;
+        const difficulty = flightDifficulty(score);
+        const amp = score >= 12 && Math.random() < .35 ? 26 : 0;
+        const gap = difficulty.gap + (amp ? 16 : 0);
+        const minY = 70 + gap / 2 + amp;
+        const maxY = GROUND - 70 - gap / 2 - amp;
         const previous = columns[columns.length - 1];
         let gapY = minY + Math.random() * (maxY - minY);
-        if (previous) gapY = Math.max(previous.gapY - 190, Math.min(previous.gapY + 190, gapY));
-        columns.push({ x, gapY, gap, passed: false });
+        if (previous) gapY = Math.max(previous.baseY - difficulty.delta, Math.min(previous.baseY + difficulty.delta, gapY));
+        gapY = Math.max(minY, Math.min(maxY, gapY));
+        columns.push({ x, gapY, baseY: gapY, amp, offset: Math.random() * TAU, gap, passed: false });
     }
 
     function emit(count, color, options = {}) {
@@ -525,6 +555,7 @@
         vy = 0;
         tilt = 0;
         score = 0;
+        flightTime = 0; passTimer = 0; passMessage = '';
         speed = 165;
         columns = [];
         particles = [];
@@ -679,10 +710,12 @@
             return;
         }
 
-        speed = 165 + Math.min(95, score * 3);
+        flightTime += dt;
+        passTimer = Math.max(0, passTimer - dt);
+        speed = flightDifficulty(score).speed;
         const move = speed * dt;
         scroll += move;
-        columns.forEach((col) => { col.x -= move; });
+        columns.forEach((col) => { col.x -= move; col.gapY = col.baseY + col.amp * Math.sin(flightTime * 1.8 + col.offset); });
         columns = columns.filter((col) => col.x + COLUMN_W > -20);
         const last = columns[columns.length - 1];
         if (!last || last.x < W - SPACING) spawnColumn((last ? last.x : W) + SPACING);
@@ -698,7 +731,12 @@
             if (!immortal && columnHit(col)) { crash('column'); return; }
             if (!col.passed && col.x + COLUMN_W < OWL_X - OWL_R) {
                 col.passed = true;
+                const oldPhase = flightPhase();
                 score = Number((score + 1).toFixed(3));
+                passMessage = flightPhase() !== oldPhase ? flightPhase().name : col.amp ? 'Rüzgârı aştın · +1' : '+1';
+                passTimer = 1.3;
+                if (flightPhase() !== oldPhase) toast(`${flightPhase().name}${score >= 12 ? ' · ↕ işaretli sütunlar hareket eder' : ' · Ritmi koru'}`);
+                if (typeof playHaptic === 'function') playHaptic('success');
                 sound(880, .07, 'sine', 220);
                 emit(5, '#86ad4c', { dx: 6, vx: -60, vy: -40, spread: 120, size: 2.4, leaf: true });
                 updateHud();

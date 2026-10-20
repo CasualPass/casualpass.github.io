@@ -687,3 +687,15 @@ body.theme-paper .game-modal { background: #fffaf2; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Workshop remaster: visible cutting speed, contact feedback and stage progress. */
+.tool-status { min-height: 30px; padding: 6px 14px; color: var(--muted); font-size: 12px; font-weight: 650; border-left: 3px solid var(--gold); background: var(--panel-2); }
+.precision-toggle { min-height: 48px; padding: 0 13px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font-weight: 750; font-size: 12px; }
+.precision-toggle[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+body:not([data-stage="carve"]) .precision-toggle { display: none; }
+.canvas-wrap { box-shadow: inset 0 0 0 1px #fff1, 0 12px 32px #0003; }
+.stage-track li.active { text-shadow: 0 0 18px #ffcf5a44; }
+.match-bar i, .sand-meter .meter i { transition: width .16s linear; }
+.next-button.ready { box-shadow: 0 0 0 2px var(--ok), 0 6px 20px #9be37a26; }
+.tip-button.active { box-shadow: inset 0 -3px 0 var(--gold); }
+@media (max-width: 400px) { .precision-toggle { padding: 0 8px; min-width: 62px; } .tool-status { font-size: 11px; } }

@@ -30,7 +30,7 @@ function fixture(options = {}) {
     click() { if (!this.disabled) this.dispatch('click'); }
     focus() { document.activeElement = this; }
   }
-  const ids = ['level', 'level-title', 'progress', 'moves', 'completed', 'undo', 'next', 'restart', 'board', 'message'];
+  const ids = ['hint', 'sorted', 'level', 'level-title', 'progress', 'moves', 'completed', 'undo', 'next', 'restart', 'board', 'message'];
   const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
   const document = new Element('document');
   document.getElementById = id => {
@@ -174,4 +174,13 @@ test('cheat activation prevents subsequent progress writes and win awards', () =
   assert.equal(cheatedStart.writes.length, 0);
   cheatedStart.move(...engine.legalMoves(cheatedStart.board())[0]);
   assert.equal(cheatedStart.writes.length, 0);
+});
+
+test('hint marks a legal next move without changing the saved game', () => {
+  const ui=fixture(), before=ui.cookie();ui.elements.hint.click();
+  assert.equal(ui.cookie(),before);assert.match(ui.elements.message.textContent,/İpucu:/);
+  const source=ui.elements.board.children.findIndex(b=>b.classList.contains('hint-source'));
+  const target=ui.elements.board.children.findIndex(b=>b.classList.contains('hint-target'));
+  assert.ok(engine.move(ui.board(),source,target));ui.move(source,target);
+  assert.equal(Number(ui.elements.moves.textContent),1);
 });

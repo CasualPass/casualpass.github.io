@@ -74,9 +74,16 @@ function playPopSound() {
 /** Named haptic patterns in milliseconds; games pass a name or a raw Vibration API pattern. */
 const CP_HAPTICS = { tap: 8, move: 12, success: [18, 40, 28], win: [30, 60, 30, 60, 60], fail: [70, 50, 110] };
 let cpHapticSwitch = null;
+let cpHapticTimers = [];
+function cancelHaptics() {
+    cpHapticTimers.forEach(timer => window.clearTimeout(timer));
+    cpHapticTimers = [];
+    if(typeof navigator.vibrate === 'function') { try { navigator.vibrate(0); } catch {} }
+}
 
 /** iOS Safari has no Vibration API but ticks the Taptic Engine when a switch checkbox toggles. */
 function tapIosSwitch() {
+    if (!cpSettings.vibration || document.hidden) return;
     if (!cpHapticSwitch) {
         if (!document.body) return;
         cpHapticSwitch = document.createElement('label');
@@ -95,7 +102,9 @@ function tapIosSwitch() {
 }
 
 function playHaptic(pattern = 'tap') {
-    if (!cpSettings.vibration) return;
+    if (!cpSettings.vibration || document.hidden) return;
+    cpHapticTimers.forEach(timer => window.clearTimeout(timer));
+    cpHapticTimers = [];
     const value = typeof pattern === 'string' ? CP_HAPTICS[pattern] ?? CP_HAPTICS.tap : pattern;
     if (typeof navigator.vibrate === 'function') {
         try { navigator.vibrate(value); } catch { /* vibration is optional */ }
@@ -106,7 +115,7 @@ function playHaptic(pattern = 'tap') {
     const steps = Array.isArray(value) ? value : [value];
     let delay = 0;
     for (let i = 0; i < steps.length; i += 2) {
-        if (delay === 0) tapIosSwitch(); else window.setTimeout(tapIosSwitch, delay);
+        if (delay === 0) tapIosSwitch(); else cpHapticTimers.push(window.setTimeout(tapIosSwitch, delay));
         delay += steps[i] + (steps[i + 1] || 0);
     }
 }
@@ -154,6 +163,7 @@ window.CasualSettings = Object.freeze({
     },
     update(patch) {
         cpSettings = { ...cpSettings, ...patch, theme: CP_THEME_IDS.has(patch?.theme) ? patch.theme : cpSettings.theme };
+        if (!cpSettings.vibration) cancelHaptics();
         saveSettings();
         applySettings();
     }
@@ -161,6 +171,7 @@ window.CasualSettings = Object.freeze({
 
 loadSettings();
 document.addEventListener('DOMContentLoaded', applySettings);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelHaptics();});
 
 // Çevrimdışı oyun ve güncelleme: sw.js tüm dosyaları önbelleğe alır. Yeni bir sürüm yayınlanınca
 // (version.json değişir) service worker güncellenir; sayfa yalnızca oyun ortasında değilse yenilenir:

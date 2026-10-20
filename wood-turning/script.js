@@ -1,6 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
 
+    let feedbackAt = -Infinity;
+    function toolFeedback(kind, cooldown = 160) {
+        const now = performance.now();
+        if (now - feedbackAt < cooldown) return;
+        feedbackAt = now;
+        if (typeof playHaptic === 'function') playHaptic(kind);
+    }
+    let precision = false;
+    let readyStage = '';
     const N = 200;
     const MIN_R = .06;
     const BASE_CUT_RATE = 3.4;
@@ -85,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const STAGES = {
         carve: { label: 'Şekillendir', next: 'Zımparaya geç', hint: 'Basılı tut, keskiyi kütüğe sür', chip: 'ŞEKİL' },
-        sand: { label: 'Zımparala', next: 'Boyaya geç', hint: 'Zımparayı parça boyunca gezdir', chip: 'ŞEKİL' },
+        sand: { label: 'Zımparala', next: 'Boyaya geç', hint: 'Zımparayı parça boyunca gezdir', chip: 'YÜZEY' },
         paint: { label: 'Boya', next: 'Teslim et', hint: 'Renk seç, bantları boya', chip: 'BOYA' }
     };
 
@@ -551,6 +560,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setStage(stage, quiet) {
         state.stage = stage;
+        readyStage = '';
+        $('tool-status').textContent = stage === 'carve' ? 'Hedef çizgiye yaklaş • İnce ayarla kontrollü kes' : stage === 'sand' ? 'Tüm yüzeyi eşitçe zımparala' : 'Renk kılavuzunu takip et';
         clearResetConfirm();
         document.body.dataset.stage = stage;
         const copy = STAGES[stage];
@@ -613,14 +624,20 @@ document.addEventListener('DOMContentLoaded', () => {
         metricsQueued = true;
         requestAnimationFrame(() => {
             metricsQueued = false;
-            const value = state.stage === 'paint' ? paintScore() : shapeScore();
+            const value = state.stage === 'paint' ? paintScore() : state.stage === 'sand' ? sandScore() : shapeScore();
             el.liveScore.textContent = `${value}%`;
             el.matchFill.style.width = `${value}%`;
             el.matchFill.dataset.good = value >= 85 ? 'yes' : 'no';
             const sand = sandScore();
             el.sandCoverage.textContent = `${sand}%`;
             el.sandFill.style.width = `${sand}%`;
-            el.next.classList.toggle('ready', (state.stage === 'carve' && value >= 88) || (state.stage === 'sand' && sand >= 90) || (state.stage === 'paint' && value >= 90));
+            const ready = state.stage === 'carve' ? value >= 88 : value >= 90;
+            el.next.classList.toggle('ready', ready);
+            if (ready && readyStage !== state.stage) {
+                readyStage = state.stage;
+                toolFeedback('success', 0);
+                $('tool-status').textContent = 'Hedefe ulaştın • Hazır olduğunda sonraki aşamaya geç';
+            }
         });
     }
 
@@ -657,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tool = TOOLS[state.tool];
         const tipR = Math.abs(state.tip.y - L.cy) / L.R;
         if (tipR >= 1.02) { state.cutLevel = 0; return; }
-        const rate = BASE_CUT_RATE * (CasualProfile.chisels[selectedChisel()]?.speed || 1) * dt;
+        const rate = BASE_CUT_RATE * (CasualProfile.chisels[selectedChisel()]?.speed || 1) * dt * (precision ? .28 : 1);
         const pxPerSample = L.len / (N - 1);
         const center = sampleAtX(state.tip.x);
         const reach = Math.ceil(tool.half / pxPerSample);
@@ -690,6 +707,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const px = removed * L.R;
         state.cutLevel = Math.min(1, px / (dt * 260));
         if (px > .05) {
+            const sample = clamp(Math.round(center), 0, N - 1);
+            const overcut = state.current[sample] < state.spec.profile[sample] - .025;
+            toolFeedback(overcut ? 'fail' : 'move', overcut ? 400 : 160);
+            const contactText = overcut ? 'Fazla kesildi • Kırmızı bölgeyi büyütmeden ilerle' : precision ? 'İnce ayar • Yavaş, kontrollü kesim' : 'Kesiliyor • Hedef çizgide dur';
+            if ($('tool-status').textContent !== contactText) $('tool-status').textContent = contactText;
             markGestureUsed();
             updateMetrics();
             const contactY = L.cy + state.tip.side * radiusAtX(state.tip.x) * L.R;
@@ -715,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             touched += w;
         }
         if (touched) {
+            toolFeedback('move', 220);
             markGestureUsed();
             updateMetrics();
             state.cutLevel = .5;
@@ -742,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         markGestureUsed();
         updateMetrics();
+        toolFeedback('move', 220);
         state.cutLevel = .4;
         const y = L.cy + radiusAtX(state.pointer.x) * L.R;
         if (Math.random() < dt * 50) emitDust(state.pointer.x, y + 4, CasualProfile.paints[paintIds[state.brush]].color, true);
@@ -1429,6 +1453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const shape = shapeScore(), sand = sandScore(), paint = paintScore();
         const overall = overallScore(shape, sand, paint);
         const stars = CasualProfile.turnStars(overall);
+        toolFeedback(stars > 0 ? 'win' : 'fail', 0);
         const p = profile();
         const office = CasualProfile.offices[(p?.officeLevel || 1) - 1];
         let reward = Math.round(CasualProfile.rewardForScore(overall, office.level) * (state.spec.free ? 1.5 : 1));
@@ -1574,6 +1599,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.pointer.id = null;
         if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
     };
+    window.addEventListener('blur', () => { state.pointer.down = false; state.pointer.id = null; });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { state.pointer.down = false; state.pointer.id = null; } });
+    $('precision-toggle').addEventListener('click', (event) => {
+        precision = !precision;
+        event.currentTarget.setAttribute('aria-pressed', String(precision));
+        toolFeedback('tap', 0);
+    });
+    canvas.addEventListener('lostpointercapture', release);
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
     canvas.addEventListener('pointerleave', () => { if (!state.pointer.down) state.pointer.inside = false; });

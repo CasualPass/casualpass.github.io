@@ -3,8 +3,8 @@
 CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak oyunları tek ekranda sunar:
 
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
-- **Maze Paint:** Kaydırarak topu duvara kadar yuvarla, tüm açık kareleri boya. Çözülebilir 24 bölüm, kaydırma/ok tuşları/WASD, geri alma ve kayıt desteği.
-- **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
+- **Maze Paint:** Kaydırarak topu duvara kadar yuvarla, tüm açık kareleri boya. Çözülebilir 36 bölüm (son 12 bölümde durak kareleri), ipucu, kaydırma/ok tuşları/WASD, geri alma ve kayıt desteği.
+- **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, çözüm arayan ipucu, geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
 - **Snake:** Yemi kapıp rekorunu uzat.
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
@@ -114,6 +114,26 @@ Kural araştırması: [Nut Sort yayıncı açıklaması](https://play.google.com
 
 ### Maze Paint
 
-`maze-paint/` içinde top her kaydırışta duvara veya sınıra kadar gider ve geçtiği açık kareleri boyar. Boyalı kareler yeniden geçilebilir. Tüm açık kareler boyanınca bölüm tamamlanır. 24 bölüm 5×5’ten 8×8’e büyür; sabit tohumlu düzenler durma noktası grafiği ve tam kaplama çözümüyle doğrulanır. Süre/hamle sınırı ve CM ödülü yoktur. `cp_maze_v1` tahta, bölüm ve tamamlanma bilgisini ortak yedeklere dahil eder; son 300 hamlelik geri alma geçmişi yalnızca bellektedir.
+`maze-paint/` içinde top her kaydırışta duvara veya sınıra kadar gider ve geçtiği açık kareleri boyar. Boyalı kareler yeniden geçilebilir. Tüm açık kareler boyanınca bölüm tamamlanır. 36 bölüm 5×5’ten 8×8’e büyür; sabit tohumlu düzenler durma noktası grafiği ve tam kaplama çözümüyle doğrulanır. Süre/hamle sınırı ve CM ödülü yoktur. `cp_maze_v1` tahta, bölüm ve tamamlanma bilgisini ortak yedeklere dahil eder; son 300 hamlelik geri alma geçmişi yalnızca bellektedir.
 
 Kural kaynağı: [Maze Paint: Roll & Fill yayıncı açıklaması](https://play.google.com/store/apps/details?id=com.willowcy.maze). Görseller ve bölümler bu proje için oluşturuldu. Test: `node --test tools/test-maze-paint.cjs tools/test-maze-ui.cjs`.
+
+
+## Oyun remaster sürümü
+
+Son Hat dışındaki 11 oyunun mevcut oyunları ve kayıtları üzerinde görsel/etkileşim yenilemesi yapıldı:
+
+- **2048:** Hedef göstergesi, boş kare ve birleşme geri bildirimi; sonuç kaydedilmeden önce son hamleyi düğme veya U ile geri al.
+- **XOX:** Son hamle ve kazanan çizgi vurgusu; devam eden turda geri al, bot cevabını ve Ultimate zorunlu tahta bilgisini de birlikte geri getir.
+- **Chess:** Tahtayı çevir, görünüşe uygun klavye yönleriyle oyna; alınan taşlar ve mevcut konumun taş değeri farkını izle.
+- **Snake:** Birbirine bağlı yuvarlak gövde, altın elma/kombo süre göstergesi ve sıraya alınan yön geri bildirimi.
+- **Minerva Owl:** Dört gökyüzü evresi; 12 puandan sonra ↕ ile işaretlenmiş bazı sütunlar hareket eder.
+- **Wood Blocks:** Oyun başına bir geri alma, bırakmadan önce puan/temizleme tahmini, atölye görünümü.
+- **Arena FPS / Vektör:** Dokunmatik ateş düğmesinde basılı tutarken sürükleyerek nişan al; yeniden doldurmada nişangâh solar. Arena çömelme doğruluğunu yansıtır; Vektör beyaz isabet/altın kafa vuruşu işareti gösterir.
+- **Wood Turning:** İnce ayar düğmesi kesme hızını %28’e indirir; yüzey aşamasında gerçek zımpara ilerlemesi gösterilir.
+- **Nuts & Bolts:** Tamamlanan renk sayısı ve çözüm arayan ipucu. İpucu araması sınırlıdır, her kullanıcı konumunda çözüm bulacağı garanti edilmez.
+- **Maze Paint:** Yeni kareye giden yön ipucu, toplam 36 bölüm ve 25–36’da topu yol ortasında durduran halkalı kareler. İlk 24 düzen değişmedi.
+
+Tema panelindeki Titreşim ayarı çerezde saklanır. Vibration API bulunan cihazlarda desenler kullanılır; iOS için switch yöntemi denenir. Gerçek cihazda titreşim garantisi yoktur. Kapama veya sekmeyi gizleme bekleyen darbeleri iptal eder. Yeni geri alma geçmişleri bellektedir, sayfa yenilemesinde korunmaz; sonuç kaydedildikten sonra 2048/XOX/Blocks geri alma kapalıdır. CM ödül tavanları ve mevcut kayıt anahtarları korunur.
+
+Doğrulama: `node --test tools/*.cjs`. VM testleri gerçek tarayıcı, cihaz titreşimi ve iki cihazlı multiplayer testinin yerine geçmez.

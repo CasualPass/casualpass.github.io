@@ -63,6 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let golden = false, foodUntil = Infinity;
     const modeNames = { classic: 'Klasik', rush: 'Hızlanan', maze: 'Engelli' };
     function say(message) { document.getElementById('sr-status').textContent = message; }
+    function updateRunStatus() {
+        const remaining = golden ? Math.max(0, (foodUntil - ticks) / fps) : Math.max(0, 5 - (ticks - lastMeal) / fps);
+        document.getElementById('run-target').textContent = golden ? `Altın elma · ${remaining.toFixed(1)} sn` : remaining > 0 ? `Sonraki +${10 * Math.min(5, combo + 1)} · ${remaining.toFixed(1)} sn` : 'Sonraki elma +10';
+        document.getElementById('run-fill').style.width = `${Math.min(100, remaining / (golden ? 7 : 5) * 100)}%`;
+        document.getElementById('run-length').textContent = `${snake.length} / ${tileCount * tileCount - rocks.length}`;
+    }
     function updateModeChip() {
         modeChip.textContent = `${modeNames[mode]} · ${tileCount}×${tileCount} · ${fps} adım/sn${combo > 1 ? ` · Kombo ×${combo}` : ''}`;
     }
@@ -137,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActions.classList.toggle("hidden", !on);
         mobileControls.classList.toggle("hidden", !on || !showPad.checked);
         modeChip.classList.toggle("hidden", !on);
+        document.getElementById("run-panel").classList.toggle("hidden", !on);
         modeChip.setAttribute("aria-hidden", String(!on));
         document.body.classList.toggle("is-playing", on);
     }
@@ -164,6 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         velocity = { x: 0, y: 0 };
         dirQueue = [];
+        document.getElementById('run-direction').textContent = '·';
+        document.querySelectorAll('.d-pad').forEach(button => button.classList.remove('queued'));
         scoreElem.textContent = score;
         isGameOver = false;
         gameStarted = false;
@@ -273,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render Graphics
     function draw() {
         if (!snake.length) return;
+        updateRunStatus();
         // Clear Canvas
         ctx.clearRect(0, 0, BOARD, BOARD);
         ctx.fillStyle = colors.bg;
@@ -293,6 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
 
+        // A narrow inset frame keeps the playfield readable against the cabinet.
+        ctx.strokeStyle = wallDeath ? colors.snakeHead : colors.grid;
+        ctx.globalAlpha = .24;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, BOARD - 2, BOARD - 2);
+        ctx.globalAlpha = 1;
         // Rocks have an inset and cross so they remain distinct from the snake.
         rocks.forEach(rock => {
             const x = rock.x * gridSize, y = rock.y * gridSize;
@@ -316,7 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.shadowBlur = 0;
             }
 
-            ctx.fillRect(segment.x * gridSize + inset, segment.y * gridSize + inset, gridSize - inset * 2, gridSize - inset * 2);
+            const x = segment.x * gridSize + inset, y = segment.y * gridSize + inset;
+            ctx.beginPath();
+            ctx.roundRect(x, y, gridSize - inset * 2, gridSize - inset * 2, gridSize * .26);
+            ctx.fill();
+            // Connect adjacent cells, but never draw across a wrapped boundary.
+            const previous = snake[index + 1];
+            if (previous && Math.abs(previous.x - segment.x) + Math.abs(previous.y - segment.y) === 1) {
+                const cx = (segment.x + .5) * gridSize, cy = (segment.y + .5) * gridSize;
+                const px = (previous.x + .5) * gridSize, py = (previous.y + .5) * gridSize;
+                ctx.fillRect(Math.min(cx, px) - gridSize * .28, Math.min(cy, py) - gridSize * .28, Math.abs(cx - px) + gridSize * .56, Math.abs(cy - py) + gridSize * .56);
+            }
         }
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
@@ -333,6 +359,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, Math.max(2, gridSize / 2 - 2), 0, 2 * Math.PI);
         ctx.fill();
 
+        // A highlight distinguishes food from body cells in every theme.
+        ctx.fillStyle = 'rgba(255,255,255,.7)';
+        ctx.beginPath();
+        ctx.arc((food.x + .36) * gridSize, (food.y + .34) * gridSize, Math.max(1, gridSize * .09), 0, Math.PI * 2);
+        ctx.fill();
+        if (golden) {
+            ctx.strokeStyle = '#ffcc70'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc((food.x + .5) * gridSize, (food.y + .5) * gridSize, gridSize * .46, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, (foodUntil - ticks) / (fps * 7)));
+            ctx.stroke();
+        }
         ctx.shadowBlur = 0; // cleanup
     }
 
@@ -463,7 +500,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : velocity;
         if (next.x === last.x && next.y === last.y) return;
         if (snake.length > 1 && next.x === -last.x && next.y === -last.y) return;
-        if (dirQueue.length < 2) dirQueue.push(next);
+        if (dirQueue.length < 2) {
+            dirQueue.push(next);
+            document.querySelectorAll('.d-pad').forEach(button => button.classList.toggle('queued', button.dataset.dir === dir));
+            document.getElementById('run-direction').textContent = { UP: '↑', DOWN: '↓', LEFT: '←', RIGHT: '→' }[dir];
+        }
     }
 
     const ARROW_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];

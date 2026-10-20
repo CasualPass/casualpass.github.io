@@ -266,3 +266,14 @@ body.touch-mode #hpbox, body.touch-mode #weaponbox { padding: 5px 8px; }
     .room-box { flex-wrap: wrap; gap: 8px; }
     .session-line { flex-wrap: wrap; }
 }
+
+/* Arena remaster: stronger instrument contrast and tactile controls. */
+#minimap { border: 2px solid rgba(125, 255, 154, .55); box-shadow: 0 8px 30px #0006, inset 0 0 0 4px #06130c66; }
+.match-pill { border-top: 3px solid #7dff9a; background: linear-gradient(145deg, #142e25e8, #07130fe8); box-shadow: 0 8px 24px #0005; }
+#hpbox, #weaponbox { border: 1px solid #bfffd02b; border-bottom: 3px solid #7dff9a77; box-shadow: 0 6px 20px #0004; }
+#crosshair::after { content: ''; position: absolute; width: 3px; height: 3px; left: -1.5px; top: -1.5px; border-radius: 50%; background: #eaffef; box-shadow: 0 0 2px #000; }
+#hitmarker { filter: drop-shadow(0 0 3px #000); }
+.tbtn { box-shadow: inset 0 2px 0 #ffffff30, 0 4px 12px #0005; }
+.tbtn.held { border-color: #e5fff0; background: #2e725bd9; transform: scale(.96); }
+.tbtn.fire.held { background: #bf493ee6; box-shadow: 0 0 0 5px #ff78662b; }
+.sheet { border-top: 3px solid var(--cp-accent); }

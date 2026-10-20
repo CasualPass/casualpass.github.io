@@ -15,6 +15,15 @@
 (() => {
     'use strict';
 
+    // Continuous actions share a short cooldown so a burst never floods the motor.
+    let feedbackAt = -Infinity;
+    function actionFeedback(kind, cooldown = 100) {
+        const now = performance.now();
+        if (now - feedbackAt < cooldown) return;
+        feedbackAt = now;
+        if (typeof playHaptic === 'function') playHaptic(kind);
+    }
+
     const $ = (id) => document.getElementById(id);
     if (!window.THREE) {
         $('boot-error').classList.remove('hidden');
@@ -2022,6 +2031,7 @@
         player.shieldUntil = 0;
         flashUntil = now + 55;
         vmKick = 1;
+        actionFeedback('tap', 110);
         muzzleLight.intensity = 2.2;
         shotSound(player.weapon, 1);
         const kick = w.kick * (player.ads ? 0.5 : 1) * (player.stance === 1 ? 0.75 : 1);
@@ -3013,6 +3023,7 @@
     }
 
     function hitmarker(kind) {
+        actionFeedback(kind === 'kill' ? 'success' : 'move', kind === 'kill' ? 0 : 75);
         const h = $('hitmarker');
         h.className = kind;
         h.style.opacity = '1';
@@ -3096,7 +3107,8 @@
         const w = WEAPONS[player.weapon];
         const moving = player.speedNow > 1 ? 1.6 : 1;
         const air = player.onGround ? 1 : 2.5;
-        const spread = w.spread * (player.ads ? 0.4 : 1) * moving * air * (1 + player.bloom * 0.6);
+        const spread = w.spread * (player.ads ? 0.4 : 1) * moving * air * (player.stance === 1 ? 0.8 : 1) * (1 + player.bloom * 0.6);
+        setStyle('crosshair', 'opacity', player.reloading ? '0.35' : '1');
         setStyle('crosshair', '--gap', `${Math.round(4 + spread * 420 + (w.pellets > 1 ? 4 : 0))}px`);
     }
 
@@ -3502,8 +3514,14 @@
 
     document.querySelectorAll('.tbtn').forEach((b) => {
         const act = b.dataset.act;
+        let heldPointer = null, aimX = 0, aimY = 0;
         b.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            if (heldPointer !== null || !canAct()) return;
+            heldPointer = e.pointerId;
+            aimX = e.clientX; aimY = e.clientY;
+            b.setPointerCapture(e.pointerId);
+            b.classList.add('held');
             const now = performance.now();
             if (act === 'fire') { touch.fire = true; if (!WEAPONS[player.weapon].auto) tryShoot(now); }
             else if (act === 'ads') { player.ads = !player.ads; b.classList.toggle('on', player.ads); }
@@ -3513,13 +3531,25 @@
             else if (act === 'swap') switchWeapon((player.weapon + 1) % 4);
             else if (act === 'nade') throwGrenade(now);
         });
-        const up = () => {
+        b.addEventListener('pointermove', (e) => {
+            if (heldPointer !== e.pointerId || act !== 'fire' || !canAct()) return;
+            const sens = 0.004 * prefs.sens * (player.ads ? 0.55 : 1);
+            player.yaw -= (e.clientX - aimX) * sens;
+            player.pitch = clamp(player.pitch - (e.clientY - aimY) * sens, -1.5, 1.5);
+            aimX = e.clientX; aimY = e.clientY;
+        });
+        const up = (e) => {
+            if (heldPointer !== e.pointerId) return;
+            heldPointer = null;
+            b.classList.remove('held');
+            if (b.hasPointerCapture(e.pointerId)) b.releasePointerCapture(e.pointerId);
             if (act === 'fire') touch.fire = false;
             if (act === 'crouch') touch.crouch = false;
         };
         b.addEventListener('pointerup', up);
         b.addEventListener('pointercancel', up);
-        b.addEventListener('pointerleave', up);
+        b.addEventListener('lostpointercapture', up);
+        window.addEventListener('blur', () => up({ pointerId: heldPointer }));
         b.addEventListener('contextmenu', (e) => e.preventDefault());
     });
 

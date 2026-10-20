@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     let mode = 'bot', variant = 'classic', difficulty = 'easy', first = 'x';
     let boards, claims, turn, active = false, forced = -1, timer, round = 1;
+    let snapshots = [], lastPlayed = null;
     let names = {}, scores = { X: 0, O: 0, draw: 0 }, results = [];
     const lines = size => {
         const all = [];
@@ -39,7 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cells.forEach(cell => {
             const bi = Number(cell.dataset.board), i = Number(cell.dataset.index), v = boards[bi][i];
             const unavailable = Boolean(claims[bi]) || (forced >= 0 && forced !== bi);
-            cell.className = `cell${v ? ` occupied ${v.toLowerCase()}` : ''}`;
+            const winning = winner(boards[bi], size());
+            cell.className = `cell${v ? ` occupied ${v.toLowerCase()}` : ''}${winning?.includes(i) ? ' winning-cell' : ''}${lastPlayed?.[0] === bi && lastPlayed?.[1] === i ? ' last-played' : ''}`;
+            cell.setAttribute('aria-selected', String(lastPlayed?.[0] === bi && lastPlayed?.[1] === i));
             cell.disabled = !active || botTurn || Boolean(v) || unavailable;
             cell.setAttribute('aria-label', `${variant === 'ultimate' ? `Tahta ${bi + 1}, ` : ''}satır ${Math.floor(i / size()) + 1}, sütun ${i % size() + 1}: ${v || 'boş'}`);
         });
@@ -49,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
             el.classList.toggle('claimed', Boolean(claims[bi]));
             el.setAttribute('aria-label', `Küçük tahta ${bi + 1}${claims[bi] ? `: ${claims[bi] === 'draw' ? 'berabere' : claims[bi] + ' kazandı'}` : ''}`);
         });
+        $('undo-btn').disabled = !active || !snapshots.length;
+        const count = boards.reduce((n, b) => n + b.filter(Boolean).length, 0);
+        $('match-context').textContent = `${variant === 'ultimate' ? 'Ultimate · Küçük tahtaları birleştir' : variant === 'four' ? '4 × 4 · Dört taşı sırala' : '3 × 3 · Üç taşı sırala'} · ${count} hamle`;
         $('board').classList.toggle('locked', !active || botTurn);
         $('board').setAttribute('aria-busy', String(active && botTurn));
         document.querySelector('.x-score').classList.toggle('active', active && turn === 'X');
@@ -57,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function finish(result, note) {
         active = false; clearTimeout(timer);
+        if (typeof playHaptic === 'function') playHaptic(result === 'draw' ? 'tap' : mode === 'bot' && result === 'O' ? 'fail' : 'win');
         scores[result]++; results.push(result);
         ['X', 'O'].forEach(p => $(`score-${p.toLowerCase()}`).textContent = scores[p]);
         $('score-draw').textContent = scores.draw;
@@ -89,7 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (legal().every(m => preview(...m, turn))) finish('draw', 'Ölümsüzlük: kazandıran kareler engellendi.');
             return;
         }
+        if (!fromBot) snapshots.push({ boards: boards.map(b => b.slice()), claims: claims.slice(), turn, forced, lastPlayed });
+        lastPlayed = [bi, i];
         boards[bi][i] = turn;
+        if (typeof playHaptic === 'function') playHaptic('move');
         if (typeof playClickSound === 'function') playClickSound();
         const line = winner(boards[bi], size());
         if (line) claims[bi] = turn;
@@ -148,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 350);
     }
     function startRound() {
-        clearTimeout(timer); forced = -1; active = true;
+        clearTimeout(timer); forced = -1; active = true; snapshots = []; lastPlayed = null;
         boards = Array.from({ length: variant === 'ultimate' ? 9 : 1 }, () => Array(size() ** 2).fill(''));
         claims = Array(boards.length).fill('');
         turn = first === 'o' || (first === 'alt' && round % 2 === 0) ? 'O' : 'X';
@@ -178,6 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ['X', 'O'].forEach(p => { $(`label-${p.toLowerCase()}`).textContent = names[p]; $(`score-${p.toLowerCase()}`).textContent = '0'; });
         $('score-draw').textContent = '0'; $('round-history').replaceChildren();
         $('config-menu').classList.add('hidden'); $('game-area').classList.remove('hidden'); startRound();
+    });
+    $('undo-btn').addEventListener('click', () => {
+        if (!active || !snapshots.length) return;
+        clearTimeout(timer);
+        const previous = snapshots.pop();
+        boards = previous.boards; claims = previous.claims; turn = previous.turn; forced = previous.forced; lastPlayed = previous.lastPlayed;
+        render(); scheduleBot();
+        $('board').querySelector('.cell:not(:disabled)')?.focus();
     });
     const next = () => { if (!active) round++; startRound(); };
     $('reset-btn').addEventListener('click', next); $('next-round-btn').addEventListener('click', next);

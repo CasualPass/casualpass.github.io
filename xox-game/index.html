@@ -34,7 +34,7 @@
     </a>
 
     <main class="game-container" id="game-container">
-        <header class="xo-header">
+        <header class="xo-header"><p class="edition-label">TAKTİK KULÜBÜ / 02</p>
             <h1 class="glow-text"><span class="title-x">X</span><span class="title-o">O</span><span class="title-x">X</span></h1>
         </header>
 
@@ -134,6 +134,7 @@
                 </div>
             </div>
 
+            <p class="match-context" id="match-context">Her kare bir karar.</p>
             <div class="status-display" id="status" role="status" aria-live="polite">Sıra: Oyuncu X</div>
 
             <div class="board-frame" id="board-frame">
@@ -156,7 +157,7 @@
 
             <ol class="round-history" id="round-history" aria-label="Raunt geçmişi"></ol>
 
-            <div class="game-actions">
+            <div class="game-actions"><button type="button" class="btn text-btn" id="undo-btn" disabled>↶ Hamleyi geri al</button>
                 <button type="button" class="btn text-btn" id="back-to-lobby-btn">Lobiye Dön</button>
                 <button type="button" class="btn reset-btn" id="reset-btn">
                     <span class="btn-text">Yeniden Başlat</span>

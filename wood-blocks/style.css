@@ -90,3 +90,28 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cp-accent); out
 body.theme-paper .primary, body.theme-paper .session-line button, body.theme-paper .wood-card.locked:not(.poor) button { color: #fff; }
 .stage-hint { max-width: 95%; white-space: normal; text-align: center; }
 @media (max-width: 420px) { .sheet-footer { bottom: -14px; margin: 0 -14px -14px; padding: 8px 14px 14px; } }
+
+/* Workshop: pale inlaid board, tactile wood and a practical tool rail. */
+.wb-app { gap: 10px; background: radial-gradient(ellipse at 50% 20%, #c9a36520, transparent 68%); }
+.stage { width: min(100%, calc((100dvh - 152px) * 9 / 13), 640px); border-radius: 20px; border-color: #c5a87877; box-shadow: 0 24px 60px #0006, 0 0 0 4px #c6a16e15; }
+.wb-hud, .workshop-tools { width: min(100%, calc((100dvh - 152px) * 9 / 13), 640px); min-width: min(100%, 288px); }
+.wb-stat { border-radius: 10px; }
+.wb-stat b { font-size: 21px; }
+.workshop-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.workshop-tools span { color: var(--cp-text-muted); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.workshop-tools button { min-height: 36px; padding: 0 12px; color: var(--cp-text); font-size: 12px; font-weight: 800; background: var(--cp-glass-base); border: 1px solid #c5a87877; border-radius: 9px; }
+.workshop-tools button:disabled { opacity: .45; cursor: default; }
+.sheet { border-color: #b9a27a77; border-radius: 16px; }
+body:not(.theme-paper) .sheet { background: linear-gradient(145deg, #35362df7, #20251ff7); color: #f3e8ce; }
+body:not(.theme-paper) .sheet .lead, body:not(.theme-paper) .sheet .over-note { color: #c8c4b4; }
+.eyebrow { color: #cdbb91; font-size: 9px; letter-spacing: .2em; }
+.sheet h1 { font-size: clamp(32px, 7vw, 40px); line-height: 1.05; }
+.sheet h1 em { font-family: Georgia, serif; font-weight: 400; color: #d9b77a; }
+.wood-card { border-radius: 10px; background: #ffffff06; }
+.wood-card.active { border-color: #e0bf85; box-shadow: inset 0 0 0 1px #e0bf8555; background: #d8bc7b12; }
+.wood-card canvas { filter: drop-shadow(0 4px 4px #0003); }
+.primary { color: #242b22; border: 1px solid #efd6a2; background: linear-gradient(135deg, #eed7a3, #c7a46a); border-radius: 11px; box-shadow: 0 6px 18px #0003; }
+body:not(.theme-paper) .sheet-footer { background: #20251ff5; }
+body.theme-paper .primary { color: #242b22; }
+body.theme-paper .sheet h1 em { color: #846437; }
+@media (max-width: 420px) { .workshop-tools span { font-size: 10px; } .sheet h1 { font-size: 29px; } }

@@ -482,7 +482,7 @@ Oyunlara dokunsal geri bildirim eklemek ve dashboard'dan açılıp kapatılabili
 - `shared-settings.js`: `cpSettings.vibration` (varsayılan açık, `casualpass_settings_v2` çerezinde), `playHaptic(desen)` ve `CasualSettings.vibrate` / `vibrationSupported` eklendi. Desenler: `tap`, `move`, `success`, `win`, `fail` veya ham Vibration API dizisi. `navigator.vibrate` yoksa (iOS Safari) dokunmatik cihazlarda gizli `<input type="checkbox" switch>` etiketine tıklanarak iOS 18+ Taptic tıkı tetiklenir; bu tıklama `stopPropagation` ile oyun dinleyicilerine ulaşmaz.
 - Oyunlar `typeof playHaptic === 'function'` korumasıyla çağırır: Snake (yem, oyun sonu), 2048 (hamle/birleşme, oyun sonu), Chess (oyuncu ve bot hamlesi, oyun sonu), Minerva Owl (kanat, çarpma), Wood Blocks (yerleştirme, silme/kombo, tıkanma), Wood Turning (`playSound` üzerinden; ses kapalıyken de titreşir).
 - `index.html`, `script.js`, `style.css`: Temalar panelinin başlığına, bakiye rozetinin yanına "Titreşim" düğmesi (`aria-pressed`); titreşimi desteklemeyen masaüstü tarayıcılarda gizli. Üst çubuk (Oyunlar, Hakkında, Hesabım, oturum) 375 px'te dolu olduğu için oraya konmadı.
-- XOX, main'de yeniden yazıldığı için bu çalışmada titreşim almadı; yeni oyunlar (Arena FPS, Vektör, Nuts & Bolts, Maze Paint) da henüz bağlı değil. `playHaptic` hepsinde kullanılabilir.
+- İlk titreşim çalışmasında XOX/Arena FPS/Vektör/Nuts & Bolts/Maze Paint bağlı değildi; aşağıdaki remaster çalışmasında bağlandı.
 - Sürümler: `style.css?v=25`, dashboard `script.js?v=16`, Owl `script.js?v=3`, Wood Blocks `script.js?v=2`, Wood Turning `script.js?v=12`. `shared-settings.js` adresi `?v=10` olarak kaldı; service worker kurulumda dosyaları `cache: 'reload'` ile tazelediği için `build-sw.py` yeterli.
 - `sw.js`, `version.json`: `python3 tools/build-sw.py` ile yeniden üretildi.
 
@@ -496,3 +496,34 @@ Oyunlara dokunsal geri bildirim eklemek ve dashboard'dan açılıp kapatılabili
 
 - iOS'ta switch hilesi yalnızca kullanıcı etkileşimi sırasında güvenilir çalışır; zamanlayıcıyla gelen olaylar (ör. Snake'in çarpması, botun hamlesi) iOS'ta titremeyebilir.
 - Sürümsüz sayfalar (Snake, 2048, Chess, XOX) yeni betiği GitHub Pages önbelleği dolunca alır.
+
+
+## 2026-10-20 — Claude remaster çalışmasını devralma
+
+### Amaç ve kapsam
+
+Claude’daki kullanıcının “görsel + his + oynanış” isteğini, Son Hat dışındaki 11 oyunda tamamlamak. Asıl repo ve Claude worktree’leri değiştirilmedi; `codex/games-remaster`, mevcut `feat/haptics` PR #28 tabanından açıldı. Ayrı oyun sahipliğiyle üç ajan çalıştı, ortak dosyalar tek yerde birleştirildi. Yeni kopya PR oluşturmak yerine #28 güncellendi.
+
+### Yapılanlar ve teknik kararlar
+
+- `2048-game/`: Sayı atölyesi görünümü, hedef/boşluk/hamle geri bildirimi, son hamleyi geri alma (U). Sonuç kaydedildikten sonra geri alma kapalı; rekor korunur.
+- `xox-game/`: Taktik kulübü görünümü, son/kazanan hamle vurgusu; bot zamanlayıcısını iptal eden, bot cevabını da geri alan devam eden tur undo. Ultimate zorunlu tahta durumu geri gelir.
+- `chess-game/`: Satranç masası, alınan taşlar/taş değeri özeti; FEN’i değiştirmeden çevirme ve buna uygun klavye yönleri.
+- `snake-game/`: Bağlı yuvarlak gövde, altın elma/kombo sayaçları ve sıradaki yön vurgusu; mevcut mod ve ödül davranışı korunur.
+- `owl-game/`: Dört gökyüzü evresi; skor 12’den sonra işaretli hareketli sütunlar, yumuşatılmış başlangıç geçişleri. Duraklatmada hareket/zaman donar.
+- `wood-blocks/`: Atölye görünümü, yerleşim puan tahmini, oyun başına bir undo (Z), sona erme penceresinde de geri alma. Tahta/tepsi/skor/seri beraber geri gelir, sonuç kaydedilince kilitlenir.
+- `fps-game/`, `vektor/`: Ateş düğmesinde pointer capture ile sürükleyerek nişan; iptal/blur temizliği, titreşim frekans sınırı ve HUD yenilemesi. Vektör isabet/kafa vuruşu işareti; FPS çömelme doğruluğuna uygun reticle. Ağ protokolü değiştirilmedi.
+- `wood-turning/`: %28 hızda ince kesim, temas/fazla kesim/evre hazır geri bildirimi, gerçek zımpara yüzdesi; odak kaybında alet durur.
+- `nuts-bolts/`: Claude’un yarım solver’ı gözden geçirilerek bağlandı; her kaynak için boş hedef simetrisi düzeltildi, 3000 düğüm sınırı ile ipucu ve tamamlanan renk özeti. İpucu optimal çözüm iddiasında bulunmaz ve zor kullanıcı konumlarında sonuçsuz kalabilir.
+- `maze-paint/`: Claude’un yarım durak bölümü motoru entegre edildi; ilk 24 düzen aynı, 12 yeni halkalı durak bölümü, toplam 36. Başka boyanmamış kareye yönlendiren sınırlı durma noktası araması ipucu verir.
+- `shared-settings.js`: Titreşim kapatıldığında/gizlenince bekleyen iOS deneme darbeleri iptal edilir; tekrar eden desenler birikmez. Gerçek iOS haptic başarısı garanti edilmez. Kayıt anahtarları, CM formülleri ve tavanlar korunur.
+- README, sayfa varlık sürümleri ve PWA listesi güncellendi. Yeni runtime bağımlılığı yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] 11 oyuna gerçek entrypoint entegrasyonu; kullanılmayan engine dosyaları eklenmedi.
+- [x] `node --test tools/*.cjs`: 66/66 başarılı (mevcut auth/yedek/update/Son Hat testleri dahil). Yeni VM testleri actual controller fonksiyonlarını çalıştırır; node test runner action test dosyasını tek başarılı test olarak sayar.
+- [x] 30 Nuts çözümü, 36 Maze çözümü ve tüm Maze ipuçları test edildi; yeni stop kareleri çalışıyor. İlk 24 düzen üretimi korunur.
+- [x] Değişen JS/CJS sözdizimi, 11 HTML’in yerel dosyaları/benzersiz ID’leri, `git diff --check`, PWA üretimi. `git diff main -- son-hat` boş.
+- [ ] Tarayıcı görsel/gerçek etkileşim kontrolü: Mac kilitli olduğundan çalıştırılamadı; kullanıcıya kilit açma isteği gönderildi. Fiziksel telefon, hissedilen titreşim ve iki cihazlı multiplayer test edilmedi.
+- Bu çalışma PR hazırlığıdır; main’e birleştirme/deploy yapılmadı. Claude’daki eski oturumlar arşivlenmedi veya yeniden başlatılmadı.

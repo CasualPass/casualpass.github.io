@@ -50,7 +50,7 @@
     <main class="game-container">
         <!-- Header -->
         <header>
-            <h1 class="glow-text">SATRANÇ</h1>
+            <p class="edition-label">SATRANÇ MASASI / 03</p><h1 class="glow-text">SATRANÇ<span class="title-dot">.</span></h1>
         </header>
 
         <!-- Pre-Game Lobby -->
@@ -93,6 +93,8 @@
             <p class="board-help">Taşı seç, ardından hedef kareye dokun. Taşları sürükleyebilir veya ok tuşları ve Enter ile oynayabilirsin.</p>
             <div id="match-info" class="match-info"></div>
 
+            <div class="board-toolbar"><p class="material-summary" id="material-summary" role="status">Taşlar dengede</p><button type="button" class="secondary-btn" id="flip-board-btn" aria-pressed="false">↕ Tahtayı çevir</button></div>
+            <div class="capture-tray" id="capture-black" aria-label="Beyazın aldığı taşlar"></div>
             <!-- The Chess Board Container -->
             <div class="board-wrapper">
                 <div id="chessboard" class="chessboard" role="grid" aria-label="Satranç tahtası. Ok tuşlarıyla gezin, Enter ile seçin.">
@@ -127,6 +129,7 @@
                 </div>
             </div>
 
+            <div class="capture-tray" id="capture-white" aria-label="Siyahın aldığı taşlar"></div>
             <section class="move-panel" aria-labelledby="move-list-title">
                 <h2 id="move-list-title">Hamleler <span id="move-count">0</span></h2>
                 <ol id="move-list" class="move-list" aria-label="Hamle geçmişi"></ol>
