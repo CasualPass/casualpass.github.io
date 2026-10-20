@@ -2,7 +2,7 @@
 
 ## Proje özeti
 
-CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game`, `vektor` ve `nuts-bolts` sayfalarına doğrudan bağlanır.
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game`, `vektor`, `nuts-bolts` ve `maze-paint` sayfalarına doğrudan bağlanır.
 
 ## 2026-08-31 — Çerez odaklı dashboard yenilemesi
 
@@ -448,3 +448,25 @@ Kullanıcının Last War Google Play bağlantısını referans alarak Son Hat’
 - [x] Brave’de gerçek oyun çizimi, somun seçimi, aynı renk üstüne taşıma (hamle 0→1) ve geri alma (1→0) doğrulandı.
 - [x] JS sözdizimi, yerel HTML dosya hedefleri ve `git diff --check`; `python3 tools/build-sw.py` başarılı.
 - Fiziksel telefon dokunma, native kabuk içi çalışma ve gerçek offline yeniden açılma bu görevde test edilmedi. UI VM testleri bu kontrollerin yerine geçmez.
+
+
+## 2026-10-20 — Maze Paint
+
+### Amaç ve kapsam
+
+Yayıncı kaynaklarından kaydırarak tüm kareleri boyama mekaniğini araştırıp yeni oyun eklemek. Diğer oyunların kuralları, hesaplar ve native kabuk kapsam dışı.
+
+### Yapılanlar ve teknik kararlar
+
+- `maze-paint/engine.js`: Bağımsız saf motor; tek yönde duvara/sınıra kadar kayma, yolun tamamını boyama, boyalı kareden tekrar geçme ve tüm açık karelerde kazanma. 24 sabit tohumlu 5×5–8×8 bölüm. Üretim durma noktalarının ulaşılabilirliğini ve açık karelerin kapsanmasını kontrol eder; yön dizisiyle tam çözüm üretir. Üretimde sınırlı 4000 aday, garanti çözülen kıvrımlı koridor yedeği vardır.
+- `maze-paint/index.html`, `style.css`, `script.js`: Özgün CSS labirent/top/renk izi, kaydırma, yön düğmeleri, oklar/WASD, ilerleme göstergesi, 300 hamlelik bellekte geri alma, çift basışla yeniden başlatma ve bölüm seçimi. Reduced-motion/efekt ayarına uyulur.
+- `cp_maze_v1`: Doğrulanmış konum/boyalı kareler/bölüm/hamle/tamamlanan bölümler. Mevcut dosya/bulut yedeği kapsar; bozuk kayıt başlangıca döner. İlk tamamlama istatistiği tek kez yazılır; hileli oturum kalıcı kayıt oluşturmaz. CM ödülü yok.
+- Dashboard zekâ kartı, README ve PWA listesi güncellendi. Native değişikliği veya deploy bu görevde yapılmadı.
+
+### Hedef durumu ve testler
+
+- [x] Araştırma ve temel mekanik, 24 çözülebilir bölüm, dashboard ve PWA entegrasyonu.
+- [x] `node --test tools/test-maze-paint.cjs tools/test-maze-ui.cjs`: 6 test başarılı; tüm çözüm dizileri, durma/boyama, bozuk kayıt, buton/kaydırma/klavye, kısa/iptal hareketler, geri alma/sıfırlama/devam, tek kazanma ve hile koruması.
+- [x] Brave: gerçek çizim ve sağ okla hareket; hamle 0→1, boyalı kare 1/18→2/18 doğrulandı.
+- [x] JS syntax, HTML yerel hedefleri, PWA üretimi ve `git diff --check`.
+- Fiziksel telefon kaydırma, native runtime ve gerçek offline açılış test edilmedi; VM testleri bu kontrollerin yerine geçmez.

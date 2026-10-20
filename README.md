@@ -3,6 +3,7 @@
 CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak oyunları tek ekranda sunar:
 
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
+- **Maze Paint:** Kaydırarak topu duvara kadar yuvarla, tüm açık kareleri boya. Çözülebilir 24 bölüm, kaydırma/ok tuşları/WASD, geri alma ve kayıt desteği.
 - **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
 - **Snake:** Yemi kapıp rekorunu uzat.
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
@@ -109,3 +110,10 @@ Son Hat, yerelde bulunan `fps-game/vendor/three.min.js` (Three.js r128) ile ger�
 `nuts-bolts/` süre sınırı olmayan renk ayırma bulmacasıdır. İlk beş bölüm üç renklidir, her beş bölümde bir renk eklenir (en fazla sekiz). Tüm bölümler sabit tohum ve ters hamle üretimiyle çözülebilir oluşturulur. Geri alma geçmişi son 500 hamleyi bellekte tutar; sayfa yenilenince yalnızca tahta, bölüm, hamle sayısı ve tamamlanan bölümler geri gelir. `cp_nuts_v1` mevcut dosya/bulut yedeğine dahildir; bölüm değişimi seçilen bölümü baştan açar. CM ödülü yoktur.
 
 Kural araştırması: [Nut Sort yayıncı açıklaması](https://play.google.com/store/apps/details?hl=en&id=com.zm.nuts), [Nuts & Bolts: Color Sort](https://play.google.com/store/apps/details?id=com.gsg.nutsandbolts). Dört somun kapasitesi ve 30 bölüm bu uygulamanın tasarım seçimidir; görseller ve bölüm düzenleri özgündür. Doğrulama: `node --test tools/test-nuts-bolts.cjs tools/test-nuts-ui.cjs`.
+
+
+### Maze Paint
+
+`maze-paint/` içinde top her kaydırışta duvara veya sınıra kadar gider ve geçtiği açık kareleri boyar. Boyalı kareler yeniden geçilebilir. Tüm açık kareler boyanınca bölüm tamamlanır. 24 bölüm 5×5’ten 8×8’e büyür; sabit tohumlu düzenler durma noktası grafiği ve tam kaplama çözümüyle doğrulanır. Süre/hamle sınırı ve CM ödülü yoktur. `cp_maze_v1` tahta, bölüm ve tamamlanma bilgisini ortak yedeklere dahil eder; son 300 hamlelik geri alma geçmişi yalnızca bellektedir.
+
+Kural kaynağı: [Maze Paint: Roll & Fill yayıncı açıklaması](https://play.google.com/store/apps/details?id=com.willowcy.maze). Görseller ve bölümler bu proje için oluşturuldu. Test: `node --test tools/test-maze-paint.cjs tools/test-maze-ui.cjs`.
