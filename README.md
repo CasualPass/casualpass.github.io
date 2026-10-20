@@ -137,3 +137,8 @@ Son Hat dışındaki 11 oyunun mevcut oyunları ve kayıtları üzerinde görsel
 Tema panelindeki Titreşim ayarı çerezde saklanır. Vibration API bulunan cihazlarda desenler kullanılır; iOS için switch yöntemi denenir. Gerçek cihazda titreşim garantisi yoktur. Kapama veya sekmeyi gizleme bekleyen darbeleri iptal eder. Yeni geri alma geçmişleri bellektedir, sayfa yenilemesinde korunmaz; sonuç kaydedildikten sonra 2048/XOX/Blocks geri alma kapalıdır. CM ödül tavanları ve mevcut kayıt anahtarları korunur.
 
 Doğrulama: `node --test tools/*.cjs`. VM testleri gerçek tarayıcı, cihaz titreşimi ve iki cihazlı multiplayer testinin yerine geçmez.
+
+
+## Android / iPhone / iPad uygulaması
+
+`native/android` ve `native/ios` canlı CasualPass web uygulamasını açan native kabuklardır. Oyun sürümleri webdeki `version.json` üzerinden güncellenir; kabuk sürümü ayrı tutulur. Android test APK derlemesi GitHub Actions’tadır; iOS projesi Xcode ile imzalanır. [Derleme, kurulum, veri taşıma ve gelecekte gamepad notları](native/README.md).

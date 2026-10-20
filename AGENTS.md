@@ -529,3 +529,27 @@ Claude’daki kullanıcının “görsel + his + oynanış” isteğini, Son Hat
 - Snake oyun içi HUD, Owl gözlemevi menüsü ve Wood Blocks oyun içi araç çubuğu açıldı. Arena FPS bot maçı gerçek 3B saha/HUD çizdi, Vektör bot maçı satın alma evresine geçti; her ikisi duraklatıldı. Wood Blocks gerçek parça yerleştirme/undo akışı bu geçişte doğrulanmadı (VM kapsamındadır).
 - Fiziksel telefon/mobil viewport düzeni, hissedilen titreşim, uzun Owl uçuşunda hareketli sütunlar, yeni Maze duraklarının gerçek oyunu ve iki cihazlı multiplayer bu geçişte test edilmedi. Bunlar otomatik test veya giriş ekranı yüklenmesiyle doğrulanmış sayılmaz.
 - Bu çalışma PR hazırlığıdır; main’e birleştirme/deploy yapılmadı. Claude’daki eski oturumlar arşivlenmedi veya yeniden başlatılmadı.
+
+
+## 2026-10-20 — Android ve iOS web uygulaması kabukları
+
+### Amaç ve kapsam
+
+Kullanıcı Android APK ve iPhone/iPad kabuğunu seçti; oyun sürümleri webden gelsin, gelecekte gamepad eklenebilsin. Bu çalışma gerçek gamepad eşlemesi veya mağazaya yayınlamayı kapsamaz.
+
+### Teknik kararlar
+
+- `native/android`: Java 17 / AGP 8.9.2 / SDK 35, Android 8+ WebView kabuğu. Canlı HTTPS kökü açılır, depolama ve çerezler korunur. Origin sınırlı gezinme, dış bağlantılar, sistem geri, hata/yeniden dene ekranı, JS onayları, kullanıcı dosya seçicisi ve origin/main-frame sınırlı AndroidX WebMessageListener kayıt paylaşımı. Geniş dosya izni yok.
+- `native/ios`: iOS/iPadOS 16+ SwiftUI/WKWebView Xcode projesi; kalıcı veri deposu, app-bound domain, safe area, yatay/dikey ekran, JS onayları ve sınırlı JSON paylaşım köprüsü. Gerçek cihaz dağıtımı için Apple imzası gerekir; kullanıcı hesabı/sertifikası eklenmedi.
+- Native sürüm 1.0.0(1), web sürümü `version.json` ile ayrı. Oyunlar pakete gömülmez. İlk yükleme internet gerektirir; offline önbellek ve yeni web sürümleri mevcut SW tarafından yönetilir. Native API değişimi yeni APK/IPA gerektirir. Gamepad desteği henüz uygulanmadı.
+- `casual-save.js`: Sınırlı native köprü varsa dosya dışa aktarmayı sistem seçicisine yönlendirir; iptal/hata sonucu beklenir. Köprü yoksa mevcut web paylaşımı kalır.
+- `.github/workflows/android-app.yml`: Android değişikliği pushunda test debug APK üretir. Üretim imzası yok; geçici CI debug anahtarı build’ler arasında değişebilir. `tools/build-sw.py` native kaynak/build ürünlerini web önbelleğine almaz.
+- `native/README.md`: Kurulum/derleme, iki sürüm katmanı, PWA/kabuk veri depolarının ayrı oluşu ve gelecekte gamepad sınırları.
+
+### Doğrulama
+
+- Xcode Debug iOS Simulator build: başarılı. Simülatör çalıştırma ilk ortam kontrolünde CoreSimulator bağlantı/izin hatası verdi; gerçek cihaz ve native runtime akışları henüz doğrulanmadı.
+- iOS Release cihaz hedefi `CODE_SIGNING_ALLOWED=NO`: başarılı; bu imzasız çıktı iPhone’a doğrudan kurulamaz. Simülatör/cihaz build başarısı runtime doğrulaması değildir.
+- GitHub Actions Android build (39461367812, commit 1cbd700): build ve APK imza doğrulaması başarılı. 1.2 MB debug APK indirildi, ZIP bütünlüğü/manifest/classes.dex kontrol edildi. Gradle 8.11.1 wrapper resmi kaynaktan alındı, JAR SHA-256 doğrulandı ve dağıtım checksum’u sabitlendi. Android/iOS kaynak paketleri, iOS unsigned cihaz/simülatör paketleri ve SHA-256 listesi sohbet outputs dizinine hazırlandı.
+- `node --test tools/test-native-save.cjs tools/test-cloud.cjs`: 23/23 başarılı; native dosya sonucu/iptal/hata, çifte dışa aktarma engeli, web fallback ve auth/yedek ayrımı. Sözdizimi/diff kontrolleri başarılı.
+- Gerçek Android/iPhone/iPad kurulumu, offline yeniden açılış, native giriş ve dosya seçicisi etkileşimleri çalıştırılmadı. iOS imzalama ve mağaza yayını yapılmadı.

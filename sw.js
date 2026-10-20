@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "11b914a90641";
+const VERSION = "5e6bd6144c7e";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -18,7 +18,7 @@ const PRECACHE = [
         "casual-profile.js",
         "casual-profile.js?v=16",
         "casual-save.js",
-        "casual-save.js?v=2",
+        "casual-save.js?v=3",
         "cloud-config.js",
         "cloud-config.js?v=3",
         "index.html",
@@ -62,9 +62,9 @@ const PRECACHE = [
         "maze-paint/engine.js?v=2",
         "maze-paint/index.html",
         "maze-paint/script.js",
-        "maze-paint/script.js?v=2",
+        "maze-paint/script.js?v=3",
         "maze-paint/style.css",
-        "maze-paint/style.css?v=2",
+        "maze-paint/style.css?v=3",
         "nuts-bolts/",
         "nuts-bolts/engine.js",
         "nuts-bolts/engine.js?v=2",

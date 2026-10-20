@@ -1,1 +1,11 @@
 .claude/
+
+# Native build products and signing material
+native/android/.gradle/
+native/android/local.properties
+native/android/**/build/
+native/ios/build/
+native/ios/**/xcuserdata/
+*.keystore
+*.jks
+*.mobileprovision
