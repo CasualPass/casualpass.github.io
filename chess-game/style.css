@@ -150,7 +150,7 @@ body.theme-paper .glow-text {
 
 .preset-buttons {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -732,4 +732,19 @@ body.theme-paper .status-display.in-check {
         height: 3rem;
         font-size: 2rem;
     }
+}
+
+.setting-note {
+    margin: 0;
+    color: var(--text-secondary, rgba(255, 255, 255, .7));
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.setting-note[hidden] {
+    display: none;
+}
+
+@media (max-width: 380px) {
+    .preset-buttons { grid-template-columns: 1fr; }
 }
