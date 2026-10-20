@@ -81,6 +81,9 @@
     let grid = emptyGrid();
     let tray = [null, null, null];
     let score = 0;
+    let undoSnapshot = null;
+    let undoUsed = false;
+    let moves = 0;
     let best = Number(getCookieValue(BEST_COOKIE)) || 0;
     let streak = 0;
     let grace = 0;
@@ -298,11 +301,12 @@
 
     function drawBoard() {
         roundRect(ctx, BX - 8, BY - 8, BOARD + 16, BOARD + 16, 16);
-        ctx.fillStyle = '#5a3a22';
-        ctx.fill();
+        ctx.fillStyle = '#201b16';
+        ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+        ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
         for (let br = 0; br < 3; br += 1) {
             for (let bc = 0; bc < 3; bc += 1) {
-                ctx.fillStyle = (br + bc) % 2 ? '#e9d3ab' : '#f3e3c3';
+                ctx.fillStyle = (br + bc) % 2 ? '#d8c4a1' : '#ecddbf';
                 ctx.fillRect(BX + bc * CELL * 3, BY + br * CELL * 3, CELL * 3, CELL * 3);
             }
         }
@@ -375,7 +379,12 @@
                 const [lr, lc] = key.split(',').map(Number);
                 ctx.fillRect(BX + lc * CELL, BY + lr * CELL, CELL, CELL);
             });
-            piece.cells.forEach(([dr, dc]) => drawBlock(ctx, BX + (c + dc) * CELL, BY + (r + dr) * CELL, CELL, currentWood, .45, cellSeed(r + dr, c + dc)));
+            piece.cells.forEach(([dr, dc]) => drawBlock(ctx, BX + (c + dc) * CELL, BY + (r + dr) * CELL, CELL, currentWood, .6, cellSeed(r + dr, c + dc)));
+            const base = CLEAR_POINTS * lines.count + 10 * lines.count * (lines.count - 1);
+            const projected = piece.cells.length + (lines.count ? Math.floor(base * (1 + streak * .5)) : 0);
+            ctx.fillStyle = '#fff0bc'; ctx.font = '800 19px Outfit, sans-serif'; ctx.textAlign = 'center';
+            roundRect(ctx, W / 2 - 98, BY + BOARD + 8, 196, 28, 10); ctx.fill();
+            ctx.fillStyle = '#51391e'; ctx.textBaseline = 'alphabetic'; ctx.fillText(`+${projected}${lines.count ? ` · ${lines.count} temizleme` : ' puan'}`, W / 2, BY + BOARD + 28);
         } else if (preview.keyboard) {
             piece.cells.forEach(([dr, dc]) => {
                 const rr = r + dr;
@@ -548,6 +557,8 @@
     function place(slot, r, c) {
         const piece = tray[slot];
         if (!canPlace(piece, r, c)) return false;
+        undoSnapshot = { grid: grid.map(row => row.slice()), tray: tray.slice(), score, streak, grace, moves };
+        moves += 1;
         const now = performance.now();
         const groups = completedGroups(piece, r, c);
         piece.cells.forEach(([dr, dc]) => {
@@ -575,14 +586,39 @@
             addScore(gained, centerX, centerY, `+${gained}`, '#ffe08a', 30);
             floaters.push({ text: streak > 1 ? `${label} · Seri ${streak}` : label, x: W / 2, y: BY + BOARD / 2, at: now, color: '#fff3d6', size: 34 });
             sound(520 + Math.min(groups.count, 4) * 90, .22, 'triangle', 380);
+            if (typeof playHaptic === 'function') playHaptic(groups.count > 1 ? 'win' : 'success');
         } else {
             if (grace > 0) grace -= 1;
             if (grace === 0) streak = 0;
             addScore(gained, centerX, centerY, `+${gained}`, '#fff3d6', 20);
             sound(300, .06, 'square', -60);
+            if (typeof playHaptic === 'function') playHaptic('tap');
         }
         if (tray.every((item) => !item)) dealTray();
         checkStuck();
+        updateTools();
+        return true;
+    }
+
+    function updateTools() {
+        const button = $('undo-btn');
+        button.disabled = undoUsed || !undoSnapshot || !['playing', 'ending'].includes(mode);
+        button.textContent = undoUsed ? '↶ Geri alma kullanıldı' : '↶ Geri al · 1';
+        $('move-count').textContent = `${moves} hamle · Seri ${streak || '—'}`;
+    }
+
+    function undoMove() {
+        if (undoUsed || !undoSnapshot || !['playing', 'ending'].includes(mode)) return false;
+        window.clearTimeout(overTimer);
+        ({ score, streak, grace, moves } = undoSnapshot);
+        grid = undoSnapshot.grid.map(row => row.slice());
+        tray = undoSnapshot.tray.slice();
+        undoUsed = true; undoSnapshot = null; mode = 'playing';
+        drag = null; keyPick = null; clearing = []; pops = []; floaters = [];
+        updateHud(); updateTools();
+        toast('Son hamle geri alındı · başka bir yer dene');
+        if (typeof playHaptic === 'function') playHaptic('tap');
+        stage.focus({ preventScroll: true });
         return true;
     }
 
@@ -596,8 +632,10 @@
         }
         mode = 'ending';
         keyPick = null;
+        if (typeof playHaptic === 'function') playHaptic('fail');
         window.clearTimeout(overTimer);
-        overTimer = window.setTimeout(finish, 700);
+        if (!undoUsed && undoSnapshot) toast('Yer kalmadı · son hamleni geri alabilirsin');
+        overTimer = window.setTimeout(finish, !undoUsed && undoSnapshot ? 2000 : 700);
     }
 
     /* ---------- Flow ---------- */
@@ -615,6 +653,7 @@
         window.clearTimeout(overTimer);
         grid = emptyGrid();
         score = 0;
+        moves = 0; undoUsed = false; undoSnapshot = null;
         streak = 0;
         grace = 0;
         drag = null;
@@ -628,6 +667,7 @@
 
     function showMenu() {
         mode = 'menu';
+        $('workshop-tools').classList.add('hidden');
         resetRun();
         $('over').classList.add('hidden');
         $('stage-hint').classList.add('hidden');
@@ -638,6 +678,8 @@
     function startRun() {
         resetRun();
         mode = 'playing';
+        $('workshop-tools').classList.remove('hidden');
+        updateTools();
         $('menu').classList.add('hidden');
         $('over').classList.add('hidden');
         const hint = $('stage-hint');
@@ -650,6 +692,8 @@
 
     function finish() {
         mode = 'over';
+        $('workshop-tools').classList.add('hidden');
+        updateTools();
         overAt = performance.now();
         const cheating = cheatOn('active');
         const finalScore = Math.floor(score);
@@ -789,6 +833,7 @@
             }
             return;
         }
+        if (event.code === 'KeyZ' && !event.repeat) { if (undoMove()) event.preventDefault(); return; }
         if (mode !== 'playing' || drag) return;
         if (/^Digit[123]$/.test(event.code) || /^Numpad[123]$/.test(event.code)) {
             event.preventDefault();
@@ -822,6 +867,7 @@
         }
     });
 
+    $('undo-btn').addEventListener('click', undoMove);
     $('start-btn').addEventListener('click', startRun);
     $('retry-btn').addEventListener('click', startRun);
     $('menu-btn').addEventListener('click', showMenu);

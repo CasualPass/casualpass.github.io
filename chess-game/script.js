@@ -25,6 +25,7 @@ const promotionOverlay = document.getElementById('promotion-overlay');
 const promotionCancel = document.getElementById('promotion-cancel');
 
 // State Variables
+let boardFlipped = false;
 let selectedSquare = null;      // "e2" etc.
 let isVersusBot = true;
 let botEngine = 'casual'; // 'casual' (CasualFish v2) or 'fail' (FailFish)
@@ -62,8 +63,8 @@ function createBoard() {
         for (let col = 0; col < 8; col++) {
             const squareDiv = document.createElement('div');
 
-            const rank = 8 - row;
-            const file = FILES[col];
+            const rank = boardFlipped ? row + 1 : 8 - row;
+            const file = FILES[boardFlipped ? 7 - col : col];
             const squareId = file + rank;
 
             squareDiv.id = squareId;
@@ -98,6 +99,7 @@ function makeCoord(className, text) {
  */
 function renderPieces() {
     renderMoveHistory();
+    renderMaterial();
     const boardState = gameEngine.board();
 
     document.querySelectorAll('.square').forEach(sq => {
@@ -160,6 +162,18 @@ function renderMoveHistory() {
     document.getElementById('move-count').textContent = `${history.length} yarım hamle`;
     document.getElementById('moves-empty').classList.toggle('hidden', history.length > 0);
     list.scrollTop = list.scrollHeight;
+}
+
+function renderMaterial() {
+    const captures = { w: [], b: [] };
+    const points = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+    gameEngine.history({ verbose: true }).forEach(move => { if (move.captured) captures[move.color].push(move.captured); });
+    for (const color of ['w', 'b']) {
+        const tray = document.getElementById(color === 'w' ? 'capture-black' : 'capture-white');
+        tray.textContent = `${color === 'w' ? 'Beyaz aldı' : 'Siyah aldı'}: ${captures[color].map(p => piecesMap[p]).join(' ') || '—'}`;
+    }
+    const balance = gameEngine.board().flat().reduce((sum, piece) => sum + (piece ? points[piece.type] * (piece.color === 'w' ? 1 : -1) : 0), 0);
+    document.getElementById('material-summary').textContent = balance ? `${balance > 0 ? 'Beyaz' : 'Siyah'} +${Math.abs(balance)} · Taş değeri` : 'Taşlar dengede';
 }
 
 function describeSquare(squareId, piece) {
@@ -345,6 +359,7 @@ function tryMove(from, to, animate = true, promotion = null) {
             return false;
         }
         if (typeof playClickSound === 'function') playClickSound();
+        if (typeof playHaptic === 'function') playHaptic('move');
         selectedSquare = null;
         clearSelectionMarks();
         lastMove = { from, to };
@@ -507,7 +522,8 @@ function handleSquareKey(e, squareId) {
 
     if (steps[e.key]) {
         e.preventDefault();
-        const [df, dr] = steps[e.key];
+        const [rawDf, rawDr] = steps[e.key];
+        const df = rawDf * (boardFlipped ? -1 : 1), dr = rawDr * (boardFlipped ? -1 : 1);
         const nf = Math.min(7, Math.max(0, fileIdx + df));
         const nr = Math.min(8, Math.max(1, rank + dr));
         focusSquareElement(FILES[nf] + nr);
@@ -625,6 +641,7 @@ function playCasualFishMove(bestMove, possibleMoves) {
 
         if (moveResult) {
             if (typeof playPopSound === 'function') playPopSound();
+            if (typeof playHaptic === 'function') playHaptic('tap');
             clearSelectionMarks();
             lastMove = { from: moveResult.from, to: moveResult.to };
 
@@ -811,6 +828,7 @@ function showGameOver(title, detail) {
     overlay.classList.remove('hidden');
     document.getElementById('show-result-btn').classList.remove('hidden');
     if (typeof playPopSound === 'function') playPopSound();
+    if (typeof playHaptic === 'function') playHaptic('success');
     rematchBtn.focus();
 }
 
@@ -957,4 +975,12 @@ document.getElementById('view-final-board-btn').addEventListener('click', () => 
 });
 document.getElementById('show-result-btn').addEventListener('click', () => {
     if (!gameActive) { overlay.classList.remove('hidden'); rematchBtn.focus(); }
+});
+
+// Rebuild coordinates and keyboard directions together when viewing from Black.
+document.getElementById('flip-board-btn').addEventListener('click', () => {
+    if (isAnimating || pendingPromotion || activePiece) return;
+    boardFlipped = !boardFlipped; selectedSquare = null;
+    document.getElementById('flip-board-btn').setAttribute('aria-pressed', String(boardFlipped));
+    createBoard(); renderPieces();
 });

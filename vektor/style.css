@@ -378,3 +378,15 @@ textarea { width: 100%; margin-bottom: 12px; padding: 8px 10px; color: var(--vk-
     body.touch-mode .hp-bar { width: 88px; }
     body.touch-mode #spike-carry { font-size: 10px; text-align: right; }
 }
+
+/* Tactical remaster: a distinct hit confirmation outside the accuracy reticle. */
+#hit-confirm { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px; opacity: 0; transition: opacity .1s; filter: drop-shadow(0 0 3px #000); }
+#hit-confirm::before, #hit-confirm::after { content: ''; position: absolute; left: 14px; top: 0; width: 2px; height: 30px; background: linear-gradient(#fff 0 30%, transparent 30% 70%, #fff 70%); transform: rotate(45deg); }
+#hit-confirm::after { transform: rotate(-45deg); }
+#hit-confirm.head::before, #hit-confirm.head::after { background: linear-gradient(#ffe15a 0 30%, transparent 30% 70%, #ffe15a 70%); }
+.clock { border-top: 2px solid var(--vk-ally); box-shadow: 0 8px 24px #0005; }
+.vitals, .weapon { padding: 8px 12px; border-bottom: 2px solid #5ff5e166; background: linear-gradient(135deg, #101e2bdc, #101e2b99); }
+.tbtn { box-shadow: inset 0 2px 0 #ffffff30, 0 4px 12px #0005; }
+.tbtn.held { border-color: #fff; background: #255f62e6; transform: scale(.96); }
+.tbtn.fire.held { background: #c13747eb; box-shadow: 0 0 0 5px #ff46552b; }
+.sheet { border-top: 3px solid var(--vk-red); }

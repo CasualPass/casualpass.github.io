@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=24">
+    <link rel="stylesheet" href="style.css?v=25">
     <script src="shared-settings.js?v=10"></script>
 </head>
 <body class="theme-liquid">
@@ -161,7 +161,13 @@
             <section class="panel themes-panel" aria-labelledby="themes-title">
                 <div class="section-heading compact">
                     <div><p class="eyebrow">CASUALMONEY MAĞAZASI</p><h2 id="themes-title">Temalar</h2></div>
-                    <span class="balance-badge"><b>C</b><span id="theme-balance-value">0</span></span>
+                    <div class="theme-tools">
+                        <button class="haptic-toggle" id="haptic-toggle" type="button" aria-pressed="true" hidden>
+                            <span class="haptic-icon" aria-hidden="true">∿</span>
+                            <span id="haptic-toggle-label">Titreşim</span>
+                        </button>
+                        <span class="balance-badge"><b>C</b><span id="theme-balance-value">0</span></span>
+                    </div>
                 </div>
                 <div class="theme-grid" id="theme-grid"></div>
             </section>
@@ -231,6 +237,6 @@
     <script src="cloud-config.js?v=3"></script>
     <script src="casual-cloud.js?v=5"></script>
     <script src="account-ui.js?v=3"></script>
-    <script src="script.js?v=15"></script>
+    <script src="script.js?v=16"></script>
 </body>
 </html>

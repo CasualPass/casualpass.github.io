@@ -17,6 +17,15 @@
 (() => {
     'use strict';
 
+    // Continuous actions share a short cooldown so a burst never floods the motor.
+    let feedbackAt = -Infinity;
+    function actionFeedback(kind, cooldown = 100) {
+        const now = performance.now();
+        if (now - feedbackAt < cooldown) return;
+        feedbackAt = now;
+        if (typeof playHaptic === 'function') playHaptic(kind);
+    }
+
     const $ = (id) => document.getElementById(id);
     if (!window.THREE) {
         $('boot-error').classList.remove('hidden');
@@ -3362,6 +3371,7 @@
         player.lastShotAt = now;
         flashUntil = now + 55;
         vmKick = 1;
+        actionFeedback('tap', 110);
         muzzleLight.intensity = w.silent ? 0.6 : 2.2;
         shotSound(w.id, 1);
         // The view climbs a little; most of the recoil only moves the bullets.
@@ -3400,6 +3410,7 @@
                 puff(h.point.x, h.point.y, h.point.z, 0xff3a4c);
             } else puff(h.point.x, h.point.y, h.point.z);
         }
+        if (Object.keys(dmgBy).length) confirmHit(Object.values(headBy).some(Boolean));
         for (const nid in dmgBy) {
             const target = Number(nid);
             const a = actors.get(target);
@@ -3409,6 +3420,16 @@
         }
         if (am[0] === 0 && w.reserve) window.setTimeout(startReload, 220);
         updateHud();
+    }
+
+    function confirmHit(head) {
+        const marker = $('hit-confirm');
+        marker.classList.toggle('head', head);
+        marker.style.opacity = '1';
+        clearTimeout(confirmHit.timer);
+        confirmHit.timer = setTimeout(() => { marker.style.opacity = '0'; }, head ? 240 : 140);
+        actionFeedback('move', 75);
+        if (!head) tone(1250, 0.04, 'triangle', 0.035);
     }
 
     function knifeAttack(now, heavy) {
@@ -3428,6 +3449,7 @@
             if (d < 2.4 && (dx * fx + dz * fz) / (d || 1) > 0.6 && (!best || d < best.d)) best = { f, d };
         }
         if (best) {
+            confirmHit(false);
             deliverHit(player.nid, best.f.nid, heavy ? w.heavy : w.dmg, W.knife, false, now);
             tone(160, 0.08, 'square', 0.06);
         }
@@ -5729,8 +5751,14 @@
     canvas.addEventListener('touchcancel', endTouch);
     document.querySelectorAll('.tbtn').forEach((b) => {
         const act = b.dataset.act;
+        let heldPointer = null, aimX = 0, aimY = 0;
         b.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            if (heldPointer !== null || !(act === 'buy' ? inMatch() && !match.paused && !overlayOpen() : canAct())) return;
+            heldPointer = e.pointerId;
+            aimX = e.clientX; aimY = e.clientY;
+            b.setPointerCapture(e.pointerId);
+            b.classList.add('held');
             const now = performance.now();
             if (act === 'fire') { touch.fire = true; if (!weaponOf().auto) tryShoot(now); }
             else if (act === 'ads') { player.ads = !player.ads; b.classList.toggle('on', player.ads); }
@@ -5742,14 +5770,26 @@
             else if (act === 'buy') toggleBuy(!buyOpen);
             else if (SLOTS.includes(act)) useAbility(act, now);
         });
-        const up = () => {
+        b.addEventListener('pointermove', (e) => {
+            if (heldPointer !== e.pointerId || act !== 'fire' || !canAct()) return;
+            const sens = 0.004 * prefs.sens * (player.ads ? 0.55 : 1);
+            player.yaw -= (e.clientX - aimX) * sens;
+            player.pitch = clamp(player.pitch - (e.clientY - aimY) * sens, -1.5, 1.5);
+            aimX = e.clientX; aimY = e.clientY;
+        });
+        const up = (e) => {
+            if (heldPointer !== e.pointerId) return;
+            heldPointer = null;
+            b.classList.remove('held');
+            if (b.hasPointerCapture(e.pointerId)) b.releasePointerCapture(e.pointerId);
             if (act === 'fire') touch.fire = false;
             if (act === 'crouch') touch.crouch = false;
             if (act === 'use') touch.use = false;
         };
         b.addEventListener('pointerup', up);
         b.addEventListener('pointercancel', up);
-        b.addEventListener('pointerleave', up);
+        b.addEventListener('lostpointercapture', up);
+        window.addEventListener('blur', () => up({ pointerId: heldPointer }));
         b.addEventListener('contextmenu', (e) => e.preventDefault());
     });
 
@@ -5990,6 +6030,7 @@
             setStyle('scope', 'display', scoped ? 'block' : 'none');
             setStyle('crosshair', 'display', scoped || !player.alive || !inMatch() ? 'none' : 'block');
             const spread = currentSpread(w);
+            setStyle('crosshair', 'opacity', player.reloading ? '0.35' : '1');
             setStyle('crosshair', '--gap', `${Math.round(3 + spread * 300)}px`);
             muzzleLight.position.copy(camera.position);
             let reloadP = 0;

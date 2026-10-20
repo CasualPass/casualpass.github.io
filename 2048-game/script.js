@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToMenuBtn = document.getElementById('back-to-menu-btn');
     const newGameBtn = document.getElementById('new-game-btn');
     const continueBtn = document.getElementById('continue-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    let undoState = null;
 
     const SIZE = 4;
     const ANIM_MS = 110;
@@ -116,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         runId += 1;
         moves = 0;
+        undoState = null;
+        document.getElementById('move-feedback').textContent = 'Bir köşe seç. Büyük taşını orada büyüt.';
         // A run continued after 2048 keeps its stats up to date when abandoned.
         if (won) recordResult(true);
 
@@ -150,7 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateProgress() {
         const values = cells.flat().map(t => t ? t.value : 0);
         const highest = Math.max(2, ...values);
-        document.getElementById('run-progress').textContent = `${won ? '2048 tamamlandı!' : 'Hedef 2048'} · En büyük taş ${highest} · ${moves} hamle`;
+        document.getElementById('run-progress').textContent = `${won ? '2048 tamamlandı!' : 'Hedef 2048'} · En büyük taş ${highest} · ${moves} hamle · ${values.filter(v => !v).length} boş`;
+        const level = Math.min(11, Math.log2(highest));
+        document.getElementById('goal-track').setAttribute('aria-valuenow', level);
+        document.getElementById('goal-fill').style.width = `${level / 11 * 100}%`;
+        undoBtn.disabled = !undoState || moving || gameOver || recorded;
         gridEl.setAttribute('aria-label', '2048 tahtası. ' + cells.map(row => row.map(t => t ? t.value : 'boş').join(', ')).join('; '));
     }
 
@@ -198,6 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!['left', 'right', 'up', 'down'].includes(dir)) return;
         if (gameOver) return;
         if (moving) { queuedDir = dir; return; }
+
+        const beforeMove = { grid: cells.map(row => row.map(t => t ? t.value : 0)), score, moves, won, keepPlaying, recorded, recordedScore };
 
         // traversal order: process tiles in the direction of movement first
         const rows = dir === 'down'  ? [3,2,1,0] : [0,1,2,3];
@@ -273,10 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!moved) {
+            document.getElementById('move-feedback').textContent = 'Bu yönde yer yok. Başka bir yön dene.';
             if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
             return;
         }
         moving = true;
+        undoState = recorded ? null : beforeMove;
+        undoBtn.disabled = true;
         moves += 1;
         const thisRun = runId;
 
@@ -286,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             scoreEl.textContent = score;
             if (gained) showScoreGain(gained);
+            document.getElementById('move-feedback').textContent = gained ? `+${gained} puan · Taşlar birleşti!` : 'Taşlar kaydı · Yeni fırsatları ara.';
             if (score > bestScore) {
                 bestScore = score;
                 // A cheat score is display only; the stored best stays untouched.
@@ -299,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (anyMerge && typeof playPopSound   === 'function') playPopSound();
             else if        (typeof playClickSound === 'function') playClickSound();
+            if (typeof playHaptic === 'function') playHaptic(anyMerge ? 'move' : 'tap');
 
             if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
             if (won && !keepPlaying && !cheatImmortal()) {
@@ -312,6 +327,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, ANIM_MS + 10);
     }
+
+    function undoMove() {
+        if (!undoState || moving || gameOver || recorded) return;
+        const previous = undoState;
+        undoState = null; queuedDir = null; runId += 1;
+        restoreRun(JSON.stringify(previous));
+        document.getElementById('move-feedback').textContent = 'Son hamle geri alındı. Yeni bir yön dene.';
+        if (typeof playHaptic === 'function') playHaptic('tap');
+    }
+    undoBtn.addEventListener('click', undoMove);
 
     function recordResult(didWin) {
         if (recorded) {
@@ -343,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function endGame(didWin) {
         gameOver = true;
         queuedDir = null;
+        if (typeof playHaptic === 'function') playHaptic(didWin ? 'win' : 'fail');
         // The win is stored right away; playing on only raises its score later.
         recordResult(won);
         const thisRun = runId;
@@ -385,6 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Leave typing fields (e.g. the cheat code box) and browser shortcuts alone.
         if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+        if (e.key.toLowerCase() === 'u') { e.preventDefault(); undoMove(); return; }
         const map = {
             ArrowLeft: 'left', a: 'left', A: 'left',
             ArrowRight:'right',d: 'right',D: 'right',

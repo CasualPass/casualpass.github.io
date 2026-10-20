@@ -283,6 +283,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const hapticToggle = document.getElementById('haptic-toggle');
+    function renderHapticToggle() {
+        const on = CasualSettings.get().vibration;
+        hapticToggle.setAttribute('aria-pressed', String(on));
+        hapticToggle.classList.toggle('is-off', !on);
+        hapticToggle.title = on ? 'Titreşim açık' : 'Titreşim kapalı';
+    }
+    // Desktop browsers without a vibration motor never see the toggle.
+    hapticToggle.hidden = !CasualSettings.vibrationSupported();
+    hapticToggle.addEventListener('click', () => {
+        const on = !CasualSettings.get().vibration;
+        CasualSettings.update({ vibration: on });
+        if (on) CasualSettings.vibrate('success');
+        renderHapticToggle();
+        showToast(on ? 'Titreşim açıldı.' : 'Titreşim kapatıldı.');
+    });
+    renderHapticToggle();
+
     document.getElementById('clear-activity-button').addEventListener('click', () => {
         if (CasualCheats.active()) { showToast('Hile açıkken ilerleme kaydedilmez.'); return; }
         if (!CasualProfile.current()?.activities?.length) return;

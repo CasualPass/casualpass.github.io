@@ -470,3 +470,62 @@ Yayıncı kaynaklarından kaydırarak tüm kareleri boyama mekaniğini araştır
 - [x] Brave: gerçek çizim ve sağ okla hareket; hamle 0→1, boyalı kare 1/18→2/18 doğrulandı.
 - [x] JS syntax, HTML yerel hedefleri, PWA üretimi ve `git diff --check`.
 - Fiziksel telefon kaydırma, native runtime ve gerçek offline açılış test edilmedi; VM testleri bu kontrollerin yerine geçmez.
+
+## 2026-10-20 — Titreşim (haptic) geri bildirimi
+
+### Amaç
+
+Oyunlara dokunsal geri bildirim eklemek ve dashboard'dan açılıp kapatılabilir yapmak. Son Hat, aynı anda başka bir agent tarafından düzenlendiği için kapsam dışı bırakıldı.
+
+### Yapılanlar
+
+- `shared-settings.js`: `cpSettings.vibration` (varsayılan açık, `casualpass_settings_v2` çerezinde), `playHaptic(desen)` ve `CasualSettings.vibrate` / `vibrationSupported` eklendi. Desenler: `tap`, `move`, `success`, `win`, `fail` veya ham Vibration API dizisi. `navigator.vibrate` yoksa (iOS Safari) dokunmatik cihazlarda gizli `<input type="checkbox" switch>` etiketine tıklanarak iOS 18+ Taptic tıkı tetiklenir; bu tıklama `stopPropagation` ile oyun dinleyicilerine ulaşmaz.
+- Oyunlar `typeof playHaptic === 'function'` korumasıyla çağırır: Snake (yem, oyun sonu), 2048 (hamle/birleşme, oyun sonu), Chess (oyuncu ve bot hamlesi, oyun sonu), Minerva Owl (kanat, çarpma), Wood Blocks (yerleştirme, silme/kombo, tıkanma), Wood Turning (`playSound` üzerinden; ses kapalıyken de titreşir).
+- `index.html`, `script.js`, `style.css`: Temalar panelinin başlığına, bakiye rozetinin yanına "Titreşim" düğmesi (`aria-pressed`); titreşimi desteklemeyen masaüstü tarayıcılarda gizli. Üst çubuk (Oyunlar, Hakkında, Hesabım, oturum) 375 px'te dolu olduğu için oraya konmadı.
+- İlk titreşim çalışmasında XOX/Arena FPS/Vektör/Nuts & Bolts/Maze Paint bağlı değildi; aşağıdaki remaster çalışmasında bağlandı.
+- Sürümler: `style.css?v=25`, dashboard `script.js?v=16`, Owl `script.js?v=3`, Wood Blocks `script.js?v=2`, Wood Turning `script.js?v=12`. `shared-settings.js` adresi `?v=10` olarak kaldı; service worker kurulumda dosyaları `cache: 'reload'` ile tazelediği için `build-sw.py` yeterli.
+- `sw.js`, `version.json`: `python3 tools/build-sw.py` ile yeniden üretildi.
+
+### Testler
+
+- `node --check` değişen betiklerde başarılı; `git diff --check` temiz.
+- Tarayıcı (375 px, `navigator.vibrate` kaydedici ile): düğme kapatınca titreşim durur, açınca `success` deseni çalar ve ayar çereze yazılır; 2048 hamleleri `tap`/`move`, Owl kanat `tap` ve çarpma `fail` üretti; konsol hatası yok, yatay taşma yok.
+- iOS yolu Vibration API kaldırılarak simüle edildi: switch toggle sayısı desen darbeleriyle eşleşti, tıklama `document`'a ulaşmadı. Gerçek iPhone/Android cihazda hissedilen titreşim: Doğrulanması gerekiyor.
+
+### Bilinen sorunlar
+
+- iOS'ta switch hilesi yalnızca kullanıcı etkileşimi sırasında güvenilir çalışır; zamanlayıcıyla gelen olaylar (ör. Snake'in çarpması, botun hamlesi) iOS'ta titremeyebilir.
+- Sürümsüz sayfalar (Snake, 2048, Chess, XOX) yeni betiği GitHub Pages önbelleği dolunca alır.
+
+
+## 2026-10-20 — Claude remaster çalışmasını devralma
+
+### Amaç ve kapsam
+
+Claude’daki kullanıcının “görsel + his + oynanış” isteğini, Son Hat dışındaki 11 oyunda tamamlamak. Asıl repo ve Claude worktree’leri değiştirilmedi; `codex/games-remaster`, mevcut `feat/haptics` PR #28 tabanından açıldı. Ayrı oyun sahipliğiyle üç ajan çalıştı, ortak dosyalar tek yerde birleştirildi. Yeni kopya PR oluşturmak yerine #28 güncellendi.
+
+### Yapılanlar ve teknik kararlar
+
+- `2048-game/`: Sayı atölyesi görünümü, hedef/boşluk/hamle geri bildirimi, son hamleyi geri alma (U). Sonuç kaydedildikten sonra geri alma kapalı; rekor korunur.
+- `xox-game/`: Taktik kulübü görünümü, son/kazanan hamle vurgusu; bot zamanlayıcısını iptal eden, bot cevabını da geri alan devam eden tur undo. Ultimate zorunlu tahta durumu geri gelir.
+- `chess-game/`: Satranç masası, alınan taşlar/taş değeri özeti; FEN’i değiştirmeden çevirme ve buna uygun klavye yönleri.
+- `snake-game/`: Bağlı yuvarlak gövde, altın elma/kombo sayaçları ve sıradaki yön vurgusu; mevcut mod ve ödül davranışı korunur.
+- `owl-game/`: Dört gökyüzü evresi; skor 12’den sonra işaretli hareketli sütunlar, yumuşatılmış başlangıç geçişleri. Duraklatmada hareket/zaman donar.
+- `wood-blocks/`: Atölye görünümü, yerleşim puan tahmini, oyun başına bir undo (Z), sona erme penceresinde de geri alma. Tahta/tepsi/skor/seri beraber geri gelir, sonuç kaydedilince kilitlenir.
+- `fps-game/`, `vektor/`: Ateş düğmesinde pointer capture ile sürükleyerek nişan; iptal/blur temizliği, titreşim frekans sınırı ve HUD yenilemesi. Vektör isabet/kafa vuruşu işareti; FPS çömelme doğruluğuna uygun reticle. Ağ protokolü değiştirilmedi.
+- `wood-turning/`: %28 hızda ince kesim, temas/fazla kesim/evre hazır geri bildirimi, gerçek zımpara yüzdesi; odak kaybında alet durur.
+- `nuts-bolts/`: Claude’un yarım solver’ı gözden geçirilerek bağlandı; her kaynak için boş hedef simetrisi düzeltildi, 3000 düğüm sınırı ile ipucu ve tamamlanan renk özeti. İpucu optimal çözüm iddiasında bulunmaz ve zor kullanıcı konumlarında sonuçsuz kalabilir.
+- `maze-paint/`: Claude’un yarım durak bölümü motoru entegre edildi; ilk 24 düzen aynı, 12 yeni halkalı durak bölümü, toplam 36. Başka boyanmamış kareye yönlendiren sınırlı durma noktası araması ipucu verir.
+- `shared-settings.js`: Titreşim kapatıldığında/gizlenince bekleyen iOS deneme darbeleri iptal edilir; tekrar eden desenler birikmez. Gerçek iOS haptic başarısı garanti edilmez. Kayıt anahtarları, CM formülleri ve tavanlar korunur.
+- README, sayfa varlık sürümleri ve PWA listesi güncellendi. Yeni runtime bağımlılığı yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] 11 oyuna gerçek entrypoint entegrasyonu; kullanılmayan engine dosyaları eklenmedi.
+- [x] `node --test tools/*.cjs`: 66/66 başarılı (mevcut auth/yedek/update/Son Hat testleri dahil). Yeni VM testleri actual controller fonksiyonlarını çalıştırır; node test runner action test dosyasını tek başarılı test olarak sayar.
+- [x] 30 Nuts çözümü, 36 Maze çözümü ve tüm Maze ipuçları test edildi; yeni stop kareleri çalışıyor. İlk 24 düzen üretimi korunur.
+- [x] Değişen JS/CJS sözdizimi, 11 HTML’in yerel dosyaları/benzersiz ID’leri, `git diff --check`, PWA üretimi. `git diff main -- son-hat` boş.
+- [x] Kilit açıldıktan sonra Brave’de 11 giriş ekranı yüklendi. Maze/Nuts ipuçları gerçek düğmeyle hamle/yön önerdi; 2048’de 2+2 birleşmesi (skor 4) ve U ile eski tahta/skor 0’a dönüş, XOX’ta oyuncu+bot hamlesinin birlikte geri alınması, satrançta başlangıç tahtasının koordinatlarla çevrilmesi ve Wood Turning ince ayar toggle doğrulandı.
+- Snake oyun içi HUD, Owl gözlemevi menüsü ve Wood Blocks oyun içi araç çubuğu açıldı. Arena FPS bot maçı gerçek 3B saha/HUD çizdi, Vektör bot maçı satın alma evresine geçti; her ikisi duraklatıldı. Wood Blocks gerçek parça yerleştirme/undo akışı bu geçişte doğrulanmadı (VM kapsamındadır).
+- Fiziksel telefon/mobil viewport düzeni, hissedilen titreşim, uzun Owl uçuşunda hareketli sütunlar, yeni Maze duraklarının gerçek oyunu ve iki cihazlı multiplayer bu geçişte test edilmedi. Bunlar otomatik test veya giriş ekranı yüklenmesiyle doğrulanmış sayılmaz.
+- Bu çalışma PR hazırlığıdır; main’e birleştirme/deploy yapılmadı. Claude’daki eski oturumlar arşivlenmedi veya yeniden başlatılmadı.

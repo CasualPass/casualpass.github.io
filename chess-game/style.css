@@ -761,3 +761,21 @@ body.theme-paper .status-display.in-check {
 .move-panel .board-help { text-align:left; }
 .overlay-actions { flex-wrap:wrap; }
 @media (max-width:480px) { .move-panel { padding:10px 12px; }.board-help { font-size:12px; } }
+
+/* Remaster: a tournament desk with a readable material ledger. */
+.edition-label { margin:0 0 8px; font-size:10px; font-weight:800; letter-spacing:.18em; color:var(--cp-text-muted); text-align:center; }
+.title-dot { color:var(--cp-accent); }
+.game-container { border-radius:24px; border-top:3px solid var(--cp-accent); }
+.game-container::before { pointer-events:none; }
+.glow-text { text-shadow:none; letter-spacing:-.04em; }
+body { --white-square:#e8e0cf; --black-square:#708b7b; }
+.chessboard { border-radius:4px; box-shadow:0 16px 40px rgba(0,0,0,.2); }
+.board-wrapper { padding:8px; border-radius:12px; border:1px solid var(--glass-border); background:var(--glass-bg); box-sizing:border-box; }
+.board-toolbar { display:flex; width:min(100%,512px); align-items:center; justify-content:space-between; gap:12px; }
+.material-summary { margin:0; font-size:12px; color:var(--text-muted); }
+#flip-board-btn { min-height:44px; padding:8px 12px; font-size:12px; }
+#flip-board-btn[aria-pressed="true"] { border-color:var(--cp-accent); }
+.capture-tray { width:min(100%,512px); min-height:28px; padding:4px 12px; font-size:17px; line-height:1.5; color:var(--text-muted); border-left:2px solid var(--glass-border); box-sizing:border-box; }
+.move-panel { border-radius:12px; }
+.move-list li:last-child { color:var(--cp-accent); }
+@media (max-width:480px) { .capture-tray { font-size:14px; }.board-wrapper { padding:4px; }.board-toolbar { gap:6px; } }

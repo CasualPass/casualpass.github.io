@@ -13,7 +13,7 @@
     <meta name="theme-color" content="#3b2618">
     <title>Wood Blocks — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=1">
+    <link rel="stylesheet" href="style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js?v=10"></script>
     <script src="../casual-profile.js?v=16"></script>
@@ -35,15 +35,16 @@
             </div>
         </header>
 
+        <div class="workshop-tools hidden" id="workshop-tools"><span id="move-count" role="status">0 hamle · Seri —</span><button id="undo-btn" type="button" title="Son hamleyi geri al (Z)">↶ Geri al · 1</button></div>
         <section class="stage" id="stage" tabindex="-1" aria-label="Wood Blocks">
             <canvas id="board" width="540" height="780" role="img" aria-label="9x9 ahşap tahta ve altında yerleştirilecek üç parça"></canvas>
             <p class="stage-hint hidden" id="stage-hint">Sürükle veya parçaya, sonra tahtaya dokun<span class="kbd-only"> · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> seç, oklarla taşı, <kbd>Enter</kbd> bırak</span></p>
 
             <div class="sheet-overlay" id="menu">
                 <div class="sheet">
-                    <p class="eyebrow">AHŞAP BULMACA</p>
-                    <h1>Wood Blocks</h1>
-                    <p class="lead">Parçaları 9×9 tahtaya yerleştir. Dolu satır, sütun ve 3×3 kareler silinir. Her 50 puan 1 CM.</p>
+                    <p class="eyebrow">THE DAILY WORKSHOP</p>
+                    <h1>Wood <em>Blocks</em></h1>
+                    <p class="lead">Parçaları 9×9 tahtaya yerleştir. Dolu satır, sütun ve 3×3 kareler silinir. Bırakmadan önce puanını gör. Her oyunda bir kez geri al (Z). Her 50 puan 1 CM.</p>
                     <div class="session-line" id="session-line"></div>
                     <div class="sheet-heading">
                         <h2>Ahşaplar</h2>
@@ -74,6 +75,6 @@
     </main>
 
     <div class="wb-toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="script.js?v=1"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

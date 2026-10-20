@@ -123,3 +123,26 @@ body.theme-paper .primary, body.theme-paper .session-line button, body.theme-pap
 
 #pause-panel { z-index: 3; background: rgba(8, 10, 30, .65); }
 #pause-panel .over-note { margin-top: 14px; }
+
+/* Observatory: warm brass, ink and a sky that changes during the flight. */
+.owl-app { background: radial-gradient(ellipse at 50% 20%, #6f648023, transparent 65%); }
+.stage { border: 1px solid #cab78a66; border-radius: 26px; box-shadow: 0 28px 70px #0006, 0 0 0 5px #d7bd8410; }
+.owl-stat { border-radius: 10px; background: var(--cp-glass-base); min-width: 62px; }
+.owl-stat small { font-size: 10px; }
+.owl-stat b { font-size: 21px; }
+.sheet { border-radius: 18px; border-color: #c8b58866; box-shadow: 0 22px 60px #0007; }
+body:not(.theme-paper) .sheet { background: linear-gradient(155deg, #242b44f5, #11182df5); color: #f7edd2; }
+body:not(.theme-paper) .sheet .lead, body:not(.theme-paper) .sheet .over-note { color: #bdc6d8; }
+.sheet h1 { font-size: clamp(32px, 7vw, 43px); letter-spacing: -.055em; line-height: 1.02; }
+.sheet h1 em { font-family: Georgia, serif; font-weight: 400; color: #ddc592; }
+.eyebrow { color: #d6be8d; font-size: 9px; letter-spacing: .2em; }
+.owl-card { border-radius: 12px; padding-top: 6px; background: #9da8c00c; }
+.owl-card canvas { width: 70px; height: 70px; filter: drop-shadow(0 5px 6px #0003); }
+.owl-card.active { border-color: #d8c08c; box-shadow: inset 0 0 0 1px #d8c08c66; background: #d8c08c15; }
+.owl-card button { min-height: 36px; }
+.primary { background: linear-gradient(135deg, #f0dcab, #c8a970); color: #20283b; border: 1px solid #f4e2bd; border-radius: 11px; box-shadow: 0 6px 18px #0003; }
+body:not(.theme-paper) .sheet-footer { background: linear-gradient(transparent, #11182df5 12px); }
+body.theme-paper .sheet h1 em { color: #826632; }
+body.theme-paper .primary { color: #20283b; }
+@media (max-width: 420px) { .owl-card canvas { width: 48px; height: 48px; } .sheet h1 { font-size: 31px; } }
+@media (max-height: 700px) and (max-width: 420px) { .owl-card canvas { width: 38px; height: 38px; } .owl-card button { min-height: 32px; } }

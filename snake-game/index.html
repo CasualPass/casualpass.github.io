@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#0f111a">
     <title>Snake — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="../shared-settings.js?v=10"></script>
     <script src="../casual-profile.js"></script>
@@ -36,7 +36,7 @@
 
     <main class="game-container">
         <header>
-            <h1 class="glow-text">Snake</h1>
+            <p class="arcade-kicker">CASUALPASS · ARCADE 01</p><h1 class="glow-text">Snake<span>GARDEN CIRCUIT</span></h1>
             <div class="score-row">
                 <div class="scores" id="scores" role="status" aria-live="polite">
                     <div class="score-card">
@@ -124,6 +124,7 @@
             </button>
         </div>
 
+        <div class="run-panel hidden" id="run-panel" aria-label="Oyun bilgisi"><div><small>HEDEF</small><strong id="run-target">Sonraki elma +10</strong><span class="run-meter"><i id="run-fill"></i></span></div><div><small>UZUNLUK</small><strong id="run-length">1 / 400</strong></div><div class="direction-display"><small>YÖN</small><strong id="run-direction">→</strong></div></div>
         <div class="board-wrapper hidden" id="board-wrapper">
             <canvas id="game-canv" width="400" height="400" tabindex="-1" role="img" aria-label="Yılan oyun alanı"></canvas>
 
@@ -172,7 +173,7 @@
         <p class="sr-only" id="sr-status" role="status" aria-live="assertive"></p>
     </main>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 
     <!-- Audio assets to be used globally -->
     <audio id="global-click-sound" src="https://cdn.freesound.org/previews/415/415096_7413867-lq.mp3"

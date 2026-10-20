@@ -137,6 +137,108 @@
     return best;
   }
 
+
+  // Admissible estimate: every nut above a bolt's bottom run must move, and
+  // all bottom runs of one colour except the largest must move as well.
+  function estimate(bolts) {
+    let cost = 0;
+    const runTotal = {};
+    const runMax = {};
+    for (const bolt of bolts) {
+      if (!bolt.length) continue;
+      let run = 1;
+      while (run < bolt.length && bolt[run] === bolt[0]) run += 1;
+      cost += bolt.length - run;
+      const color = bolt[0];
+      runTotal[color] = (runTotal[color] || 0) + run;
+      runMax[color] = Math.max(runMax[color] || 0, run);
+    }
+    for (const color in runTotal) cost += runTotal[color] - runMax[color];
+    return cost;
+  }
+
+  function stateKey(bolts) {
+    return bolts.map(function (bolt) { return bolt.join(''); }).sort().join('|');
+  }
+
+  // Weighted A* over bolt-order-independent states. Returns a list of
+  // [from, to] moves, [] for a solved board, or null when no solution was
+  // found within the node limit (a dead end or a very deep position).
+  function solve(bolts, limit) {
+    if (!hasShape(bolts)) return null;
+    if (isSolved(bolts)) return [];
+    const maxNodes = limit || 40000;
+    const heap = [];
+    function push(node) {
+      heap.push(node);
+      let i = heap.length - 1;
+      while (i > 0) {
+        const parent = (i - 1) >> 1;
+        if (heap[parent].f <= node.f) break;
+        heap[i] = heap[parent]; i = parent;
+      }
+      heap[i] = node;
+    }
+    function pop() {
+      const top = heap[0];
+      const last = heap.pop();
+      if (heap.length) {
+        let i = 0;
+        for (;;) {
+          let child = 2 * i + 1;
+          if (child >= heap.length) break;
+          if (child + 1 < heap.length && heap[child + 1].f < heap[child].f) child += 1;
+          if (heap[child].f >= last.f) break;
+          heap[i] = heap[child]; i = child;
+        }
+        heap[i] = last;
+      }
+      return top;
+    }
+    const start = bolts.map(function (bolt) { return bolt.slice(); });
+    const best = new Map([[stateKey(start), 0]]);
+    push({ bolts: start, g: 0, f: 2 * estimate(start), parent: null, move: null });
+    let expanded = 0;
+    while (heap.length && expanded < maxNodes) {
+      const node = pop();
+      if (best.get(stateKey(node.bolts)) < node.g) continue;
+      if (isSolved(node.bolts)) {
+        const path = [];
+        for (let at = node; at.parent; at = at.parent) path.push(at.move);
+        return path.reverse();
+      }
+      expanded += 1;
+      const current = node.bolts;
+      for (let from = 0; from < current.length; from += 1) {
+        let emptyTried = false;
+        const source = current[from];
+        if (!source.length) continue;
+        const top = source[source.length - 1];
+        const mono = source.every(function (color) { return color === top; });
+        if (mono && source.length === capacity) continue;
+        for (let to = 0; to < current.length; to += 1) {
+          if (to === from) continue;
+          const target = current[to];
+          if (target.length === capacity) continue;
+          if (!target.length) {
+            // Moving a pure stack onto an empty bolt only relabels it, and
+            // all empty bolts are interchangeable.
+            if (mono || emptyTried) continue;
+          } else if (target[target.length - 1] !== top) continue;
+          if (!target.length) emptyTried = true;
+          const next = current.map(function (bolt) { return bolt.slice(); });
+          next[to].push(next[from].pop());
+          const key = stateKey(next);
+          const g = node.g + 1;
+          if (best.has(key) && best.get(key) <= g) continue;
+          best.set(key, g);
+          push({ bolts: next, g: g, f: g + 2 * estimate(next), parent: node, move: [from, to] });
+        }
+      }
+    }
+    return null;
+  }
+
   return { capacity: capacity, colorsForLevel: colorsForLevel, createLevel: createLevel,
-    move: move, legalMoves: legalMoves, isSolved: isSolved, validateBoard: validateBoard };
+    move: move, legalMoves: legalMoves, isSolved: isSolved, validateBoard: validateBoard, solve: solve };
 }));

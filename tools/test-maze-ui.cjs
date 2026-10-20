@@ -3,12 +3,12 @@ const E=require('../maze-paint/engine');
 function fixture(cookie='',cheating=false){
  const elements={},writes=[],results=[];
  class Element{
-  constructor(){this.listeners={};this.children=[];this.style={setProperty:(k,v)=>this.style[k]=v};this.classList={add:n=>this.className+=' '+n,contains:n=>(this.className||'').split(' ').includes(n)};}
+  constructor(){this.listeners={};this.children=[];this.style={setProperty:(k,v)=>this.style[k]=v};this.classList={toggle:(n,on)=>{},add:n=>this.className+=' '+n,contains:n=>(this.className||'').split(' ').includes(n)};}
   append(child){this.children.push(child);}replaceChildren(){this.children=[];}setAttribute(k,v){this[k]=v;}
   addEventListener(k,f){(this.listeners[k]||=[]).push(f);}emit(k,e={}){for(const f of this.listeners[k]||[])f({target:this,...e});}
   click(){if(!this.disabled)this.emit('click');}focus(){}closest(){return null;}setPointerCapture(){}
  }
- for(const id of ['board','coverage','fill','level-title','progress','moves','completed','level','undo','next','restart','message'])elements[id]=new Element();
+ for(const id of ['hint','board','coverage','fill','level-title','progress','moves','completed','level','undo','next','restart','message'])elements[id]=new Element();
  const buttons=Object.keys(E.directions).map(dir=>{const b=new Element();b.dataset={dir};return b;});
  const document=new Element(),window=new Element();document.body=new Element();document.createElement=()=>new Element();document.getElementById=id=>{assert.ok(elements[id],id);return elements[id];};document.querySelectorAll=()=>buttons;
  const context=vm.createContext({window,document,matchMedia:()=>({matches:false}),cheatsActive:()=>cheating,getCookieValue:()=>cookie,setCookieValue:(n,v)=>{assert.equal(n,'cp_maze_v1');cookie=v;writes.push(v);},recordGameResult:(name,result)=>results.push({name,...result})});
@@ -37,4 +37,12 @@ test('completion recorded once, next advances, cheats block progress writes',()=
  ui.elements.restart.click();for(const dir of E.createLevel(1).solution)ui.press(dir);assert.equal(ui.results.length,1);
  ui.elements.next.click();assert.equal(JSON.parse(ui.cookie()).number,2);
  const cheated=fixture(),before=cheated.cookie();cheated.cheat();for(const dir of E.createLevel(1).solution)cheated.press(dir);assert.equal(cheated.cookie(),before);assert.equal(cheated.results.length,0);
+});
+
+test('hint does not move the ball and the new stop chapter renders a valid saved state',()=>{
+ const ui=fixture(),before=ui.cookie();ui.elements.hint.click();assert.equal(ui.cookie(),before);assert.match(ui.elements.message.textContent,/Sıradaki yön:/);
+ ui.elements.level.value='25';ui.elements.level.emit('change');assert.equal(JSON.parse(ui.cookie()).number,25);
+ assert.ok(ui.elements.board.children.some(tile=>(tile.className||'').includes('stop-pad')));
+ for(const dir of E.createLevel(25).solution)ui.press(dir);
+ assert.ok(E.isSolved(E.createLevel(25),JSON.parse(ui.cookie()).state));
 });
