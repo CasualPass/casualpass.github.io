@@ -142,3 +142,10 @@ Doğrulama: `node --test tools/*.cjs`. VM testleri gerçek tarayıcı, cihaz tit
 ## Android / iPhone / iPad uygulaması
 
 `native/android` ve `native/ios` canlı CasualPass web uygulamasını açan native kabuklardır. Oyun sürümleri webdeki `version.json` üzerinden güncellenir; kabuk sürümü ayrı tutulur. Android test APK derlemesi GitHub Actions’tadır; iOS projesi Xcode ile imzalanır. [Derleme, kurulum, veri taşıma ve gelecekte gamepad notları](native/README.md).
+
+
+### Maze Paint animasyonu ve native titreşim 1.0.1
+
+Maze Paint, her hamlede tahtayı yeniden kurmak yerine mevcut kareleri ve topu kullanır. Tek `requestAnimationFrame` saati, topun konumunu ve yalnızca ulaştığı karelerin boyanmasını birlikte ilerletir. Hızlı yön girişlerinde son yön sıraya alınır; bölüm bitişi top ulaşınca görünür. Azaltılmış hareket/efekt kapalı ayarı anlık geçiş kullanır.
+
+Native kabuk 1.0.1 (2), iOS UIKit ve Android Vibrator köprülerini ekler. Gerçek native titreşim için uygulamayı bu sürüme bir kez güncellemek gerekir; sonraki web oyun güncellemeleri için tekrar derleme gerekmez. Eski kabuklarda web fallback kalır. [Native kurulum ve köprü ayrıntıları](native/README.md).

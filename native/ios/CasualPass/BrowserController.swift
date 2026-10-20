@@ -6,6 +6,8 @@ final class BrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
     private var web: WKWebView!
     private let errorPanel = UIStackView()
     private var saveHandler: SaveHandler!
+    private var hapticHandler: HapticHandler!
+    private var lastHaptic = -Double.infinity
     private var navigationFailed = false
 
     static func trusted(_ url: URL?) -> Bool {
@@ -23,7 +25,9 @@ final class BrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
         configuration.limitsNavigationsToAppBoundDomains = true
         saveHandler = SaveHandler(owner: self)
         configuration.userContentController.addScriptMessageHandler(saveHandler, contentWorld: .page, name: "casualpassSave")
-        configuration.applicationNameForUserAgent = "CasualPassiOS/1.0.0"
+        hapticHandler = HapticHandler(owner: self)
+        configuration.userContentController.add(hapticHandler, name: "casualpassHaptic")
+        configuration.applicationNameForUserAgent = "CasualPassiOS/1.0.1"
         web = WKWebView(frame: .zero, configuration: configuration)
         web.navigationDelegate = self
         web.uiDelegate = self
@@ -93,6 +97,21 @@ final class BrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
         alert.addAction(UIAlertAction(title: "Tamam", style: .default) { _ in completionHandler() }); present(alert, animated: true)
     }
 
+    fileprivate func haptic(_ pattern: String) {
+        guard Self.trusted(web.url), view.window != nil, UIApplication.shared.applicationState == .active else { return }
+        if pattern == "cancel" { return } // UIKit feedback here is immediate; no delayed jobs.
+        let now = ProcessInfo.processInfo.systemUptime
+        if (pattern == "tap" || pattern == "move") && now - lastHaptic < 0.035 { return }
+        lastHaptic = now
+        switch pattern {
+        case "tap": UISelectionFeedbackGenerator().selectionChanged()
+        case "move": UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case "success", "win": UINotificationFeedbackGenerator().notificationOccurred(.success)
+        case "fail": UINotificationFeedbackGenerator().notificationOccurred(.error)
+        default: break
+        }
+    }
+
     fileprivate func exportSave(_ text: String, reply: @escaping (Any?, String?) -> Void) {
         guard Self.trusted(web.url), text.utf8.count <= 131072, let data = text.data(using: .utf8),
               let save = try? JSONSerialization.jsonObject(with: data) as? [String: Any], save["format"] as? String == "casualpass-save", presentedViewController == nil else {
@@ -121,5 +140,16 @@ final class SaveHandler: NSObject, WKScriptMessageHandlerWithReply {
         guard message.frameInfo.isMainFrame, origin.protocol == "https", origin.host == "casualpass.github.io", origin.port == 0 || origin.port == 443,
               let text = message.body as? String, let owner else { replyHandler(nil, "İzin verilmeyen kaynak."); return }
         owner.exportSave(text, reply: replyHandler)
+    }
+}
+
+final class HapticHandler: NSObject, WKScriptMessageHandler {
+    weak var owner: BrowserController?
+    init(owner: BrowserController) { self.owner = owner }
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        let origin = message.frameInfo.securityOrigin
+        guard message.frameInfo.isMainFrame, origin.protocol == "https", origin.host == "casualpass.github.io", origin.port == 0 || origin.port == 443,
+              let pattern = message.body as? String, ["tap", "move", "success", "win", "fail", "cancel"].contains(pattern) else { return }
+        DispatchQueue.main.async { [weak self] in self?.owner?.haptic(pattern) }
     }
 }

@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
+import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
@@ -41,6 +44,8 @@ public final class MainActivity extends Activity {
     private boolean navigationFailed;
     private String pendingSave;
     private JavaScriptReplyProxy saveReply;
+    private boolean hapticsActive;
+    private long lastHaptic = -1000;
 
     static boolean trusted(Uri url) {
         return url != null && "https".equals(url.getScheme()) && "casualpass.github.io".equals(url.getHost())
@@ -108,6 +113,12 @@ public final class MainActivity extends Activity {
         });
         // Origin- and main-frame-scoped bridge; no unrestricted addJavascriptInterface.
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            WebViewCompat.addWebMessageListener(web, "CasualPassHaptics", Collections.singleton("https://casualpass.github.io"), (view, message, origin, mainFrame, reply) -> {
+                if (!mainFrame || !trusted(origin)) return;
+                String pattern = message.getData();
+                if (pattern == null || !java.util.Arrays.asList("tap", "move", "success", "win", "fail", "cancel").contains(pattern)) return;
+                runOnUiThread(() -> haptic(pattern));
+            });
             WebViewCompat.addWebMessageListener(web, "CasualPassNative", Collections.singleton("https://casualpass.github.io"), (view, message, origin, mainFrame, reply) -> {
                 if (!mainFrame || !trusted(origin) || pendingSave != null) { reply.postMessage("{\"error\":\"Dosya işlemi başlatılamadı.\"}"); return; }
                 try {
@@ -131,14 +142,34 @@ public final class MainActivity extends Activity {
         if (savedState == null || web.restoreState(savedState) == null || !trusted(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) web.loadUrl(HOME);
     }
 
+    private void haptic(String pattern) {
+        Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        if (vibrator == null || !vibrator.hasVibrator()) return;
+        if ("cancel".equals(pattern)) { vibrator.cancel(); return; }
+        if (!hapticsActive || !hasWindowFocus() || !trusted(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) return;
+        long now = SystemClock.uptimeMillis();
+        if (("tap".equals(pattern) || "move".equals(pattern)) && now - lastHaptic < 35) return;
+        lastHaptic = now;
+        long[] timings;
+        switch (pattern) {
+            case "tap": timings = new long[]{0, 8}; break;
+            case "move": timings = new long[]{0, 12}; break;
+            case "success": timings = new long[]{0, 18, 40, 28}; break;
+            case "win": timings = new long[]{0, 30, 60, 30, 60, 60}; break;
+            case "fail": timings = new long[]{0, 70, 50, 110}; break;
+            default: return;
+        }
+        vibrator.vibrate(VibrationEffect.createWaveform(timings, -1));
+    }
+
     private void openExternal(Uri url) {
         if (!"https".equals(url.getScheme()) && !"mailto".equals(url.getScheme())) return;
         try { startActivity(new Intent(Intent.ACTION_VIEW, url)); } catch (Exception e) { Toast.makeText(this, "Bağlantı açılamadı.", Toast.LENGTH_SHORT).show(); }
     }
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
     @Override protected void onSaveInstanceState(Bundle outState) { web.saveState(outState); super.onSaveInstanceState(outState); }
-    @Override protected void onPause() { web.onPause(); CookieManager.getInstance().flush(); super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
+    @Override protected void onPause() { hapticsActive = false; haptic("cancel"); web.onPause(); CookieManager.getInstance().flush(); super.onPause(); }
+    @Override protected void onResume() { super.onResume(); hapticsActive = true; if (web != null) web.onResume(); }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
         if (request == PICK_FILE && fileCallback != null) { fileCallback.onReceiveValue(result == RESULT_OK && data != null && data.getData() != null ? new Uri[]{data.getData()} : null); fileCallback = null; }

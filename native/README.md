@@ -35,3 +35,10 @@ Android WebView ve iOS/iPadOS WKWebView aynı `https://casualpass.github.io/` uy
 ## Gelecekte gamepad
 
 Gamepad henüz eklenmedi. Oyunlar webde kaldığı için ortak web giriş katmanına `navigator.getGamepads()` ve bağlantı olayları eklenebilir; standart tarayıcı API’siyle çalışan eşleme webden güncellenir. Hangi kontrolcünün Android WebView/WKWebView’e aktarıldığı gerçek cihazlarda test edilmelidir. Native `GameController`/Android input köprüsü gerekirse bu kabuk değişikliği olur ve yeni uygulama paketi ister. Mevcut kabuklar gamepad olaylarını elle tüketmez.
+
+
+## 1.0.1 — Native titreşim
+
+Kabuk sürümü 1.0.1 (build 2), web sürümünden ayrıdır. iOS ana frame ve yalnızca `https://casualpass.github.io` kaynağından gelen `casualpassHaptic` mesajlarını UIKit selection/impact/notification feedback’e yönlendirir. Android aynı origin/frame kısıtlı `CasualPassHaptics` WebMessageListener ve VIBRATE izni ile sabit desenleri çalar. Yalnızca tap/move/success/win/fail/cancel adları kabul edilir, rastgele API veya süre çalıştırılmaz. Uygulama arka plandayken çalmaz; kısa darbeler frekans sınırlıdır.
+
+Web helper köprü varsa onu tercih eder; eski kabuklarda mevcut web fallback sürer. Native köprüyü almak için 1.0.0’dan 1.0.1’e bir kez yeniden kurulum/güncelleme gerekir. Sonraki oyun ve animasyon değişiklikleri webden gelir. Cihazda titreşim motoru ve sistem izinleri/ayarları sonucu etkiler; build başarısı hissedilen titreşim testi değildir.

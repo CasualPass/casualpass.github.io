@@ -16,3 +16,15 @@ test('iOS attempt is optional and queued ticks are cancelled when disabled or hi
  f.window.CasualSettings.update({vibration:false});assert.equal(f.timers.size,0);
  f.window.CasualSettings.update({vibration:true});f.window.CasualSettings.vibrate('win');f.document.hidden=true;f.handlers.visibilitychange();assert.equal(f.timers.size,0);
 });
+
+test('iOS native bridge takes precedence and receives cancellation when disabled',()=>{
+ const f=fixture(),native=[];f.window.webkit={messageHandlers:{casualpassHaptic:{postMessage:p=>native.push(p)}}};
+ f.window.CasualSettings.vibrate('win');assert.deepEqual(native,['win']);assert.equal(f.calls.length,0);
+ f.window.CasualSettings.update({vibration:false});assert.deepEqual(native,['win','cancel']);
+ f.window.CasualSettings.vibrate('move');assert.equal(native.length,2);
+});
+test('Android native bridge receives names; bridge errors fall back to web vibration',()=>{
+ const f=fixture(),native=[];f.window.CasualPassHaptics={postMessage:p=>native.push(p)};
+ f.window.CasualSettings.vibrate('success');assert.deepEqual(native,['success']);assert.equal(f.calls.length,0);
+ f.window.CasualPassHaptics.postMessage=()=>{throw Error('unavailable')};f.window.CasualSettings.vibrate('move');assert.equal(f.calls.at(-1),12);
+});

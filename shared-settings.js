@@ -75,7 +75,17 @@ function playPopSound() {
 const CP_HAPTICS = { tap: 8, move: 12, success: [18, 40, 28], win: [30, 60, 30, 60, 60], fail: [70, 50, 110] };
 let cpHapticSwitch = null;
 let cpHapticTimers = [];
+// Shell 1.0.1+ exposes only named feedback; old shells keep the web fallback.
+function nativeHaptic(pattern) {
+    try {
+        const ios = window.webkit?.messageHandlers?.casualpassHaptic;
+        if (typeof ios?.postMessage === 'function') { ios.postMessage(pattern); return true; }
+        if (typeof window.CasualPassHaptics?.postMessage === 'function') { window.CasualPassHaptics.postMessage(pattern); return true; }
+    } catch { /* Fall back to the web implementation if a bridge is unavailable. */ }
+    return false;
+}
 function cancelHaptics() {
+    nativeHaptic('cancel');
     cpHapticTimers.forEach(timer => window.clearTimeout(timer));
     cpHapticTimers = [];
     if(typeof navigator.vibrate === 'function') { try { navigator.vibrate(0); } catch {} }
@@ -105,6 +115,8 @@ function playHaptic(pattern = 'tap') {
     if (!cpSettings.vibration || document.hidden) return;
     cpHapticTimers.forEach(timer => window.clearTimeout(timer));
     cpHapticTimers = [];
+    const name = typeof pattern === 'string' && Object.hasOwn(CP_HAPTICS, pattern) ? pattern : 'tap';
+    if(nativeHaptic(name))return;
     const value = typeof pattern === 'string' ? CP_HAPTICS[pattern] ?? CP_HAPTICS.tap : pattern;
     if (typeof navigator.vibrate === 'function') {
         try { navigator.vibrate(value); } catch { /* vibration is optional */ }
@@ -153,7 +165,7 @@ function getHighScore(gameName) {
 
 window.CasualSettings = Object.freeze({
     get: () => ({ ...cpSettings }),
-    vibrationSupported: () => typeof navigator.vibrate === 'function' || Boolean(window.matchMedia?.('(pointer: coarse)').matches),
+    vibrationSupported: () => Boolean(window.webkit?.messageHandlers?.casualpassHaptic || window.CasualPassHaptics?.postMessage) || typeof navigator.vibrate === 'function' || Boolean(window.matchMedia?.('(pointer: coarse)').matches),
     vibrate: (pattern) => playHaptic(pattern),
     setTheme(theme) {
         if (!CP_THEME_IDS.has(theme)) return;
