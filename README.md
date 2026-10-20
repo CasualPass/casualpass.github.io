@@ -89,3 +89,8 @@ Giriş yerel ilerlemeyi otomatik yüklemez veya başka hesaba geçince silmez. O
 Doğrulama: `node --test tools/test-cloud.cjs`. Testler taklit HTTP ile parola girişi/kayıt, eski hesaptan ayrı yeni hesap oluşturma ve hata halinde eski oturumun korunması, şifrenin saklanmaması, doğrulama, token yenileme, çıkış ve yedek/token ayrımını kapsar. Canlı kullanıcı adı/şifre testi ayrıca yapılmalıdır.
 
 Kaynaklar: [Supabase password security](https://supabase.com/docs/guides/auth/password-security), [password-based Auth](https://supabase.com/docs/guides/auth/passwords).
+
+
+## Otomatik güncelleme
+
+Yeni sürüm yayınlandığında uygulama açılışta, sekmeye dönünce, bağlantı geri gelince ve görünür sekmede dakikada bir güncellemeyi kontrol eder. Yeni dosyalar hazır olduğunda dashboard/Hakkında yenilenir; hesap formu dolduruluyorsa veya hesap işlemi sürüyorsa bekler. Oyun sayfaları açılıştan 6 saniye sonra otomatik yenilenmez; yeni sürüm sonraki sayfa açılışında kullanılır. Yayın öncesi `python3 tools/build-sw.py` çalıştırılarak sürüm ve çevrimdışı önbellek listesi üretilmelidir. Bir PR dalına push yapmak canlı GitHub Pages sitesini güncellemez; yayınlanan dala alınması gerekir.

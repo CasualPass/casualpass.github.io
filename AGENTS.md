@@ -397,3 +397,12 @@ Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı
 - [ ] Gerçek kullanıcı adı/şifre ile yeni hesap oluşturma ve yeniden giriş: henüz doğrulanmadı. Eski hesabı dönüştürme denemesi canlı loglarda başarısız; bu yol kaldırıldı.
 
 Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.
+
+
+## 2026-10-20 — Açık sekmelerde otomatik güncelleme
+
+- Kullanıcı isteği: GitHub push durumunu doğrulamak ve otomatik güncellemeyi güçlendirmek. `18b4bc1` uzak PR dalında doğrulandı; PR #23 taslak ve main’e birleştirilmedi.
+- `shared-settings.js`: Görünür sekmede dakikada bir, çevrimiçi olunca ve sekmeye dönünce sürüm kontrolü. Worker kaydı beklenir, HTTP cache kullanılmadan worker güncellemesi denenir; sürüm çerezi daha önce yazılmış olsa da başarısız worker güncellemesi sonraki kontrolde yeniden denenir.
+- Hesap formunda odak/değer veya bekleyen hesap işlemi varsa hub yenilemesi ertelenir; uygun olduğunda 5 saniyelik kontrol uygular. Oyun ortasında otomatik yenileme yapılmaz. HTML betik sürümleri ve PWA varlıkları güncellendi.
+- `johnappleseed` kullanıcı adıyla gerçek kayıt ve oturum açılması Brave’de görüldü; yerel Snake rekoru 10 ve Liquid teması korundu. Yeni hesapla çıkış/yeniden giriş henüz test edilmedi.
+- Doğrulama: `node --test tools/test-updates.cjs` 5/5; periyodik kontrol/bağlantı dönüşü, başarısız güncellemeyi tekrar deneme, form sırasında erteleme, oyun ortasında yenilememe ve worker olmadan güncelleme. `node --check shared-settings.js` ve `git diff --check` başarılı. Gerçek tarayıcıda yeni bir uzak sürüm yayınlanarak güncelleme testi yapılmadı.

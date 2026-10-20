@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "75797fea7c76";
+const VERSION = "dcfa6bf69bba";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -29,7 +29,7 @@ const PRECACHE = [
         "shared-settings.css?v=5",
         "shared-settings.css?v=6",
         "shared-settings.js",
-        "shared-settings.js?v=9",
+        "shared-settings.js?v=10",
         "style.css",
         "style.css?v=22",
         "./",
