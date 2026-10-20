@@ -111,5 +111,5 @@
 
     const unverified = () => document.cookie.split('; ').some((c) => c.startsWith(`${UNVERIFIED_COOKIE}=`) && c.length > UNVERIFIED_COOKIE.length + 1);
 
-    window.CasualSave = { exportSave, inspect, apply, unverified, digit731 };
+    window.CasualSave = { build, exportSave, inspect, apply, unverified, digit731 };
 })();

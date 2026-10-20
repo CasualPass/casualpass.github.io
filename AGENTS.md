@@ -343,3 +343,32 @@ Claude oturumundaki UI ve oyun geliştirme isteğini `3d16f73` kontrol kaydında
 - Node VM: XOX klasik/4×4/Ultimate kazanma ve yönlendirme, bot/başlangıç/raunt/hile korumaları; gerçek chess.js ile hamle geçmişi; Snake yem/engel/hız/kombo/duraklatma; 2048 birleştirme/eski callback/yükleme/iki yenileme; Owl duraklatma ve Blocks dokunma/sürükleme/iptal: başarılı.
 - 12 HTML sayfasında benzersiz ID, yerel dosya bağlantıları ve ARIA hedefleri: başarılı.
 - Yerel Brave erişilebilirlik ağacında dashboard ödül/filtre/10 oyun ve Hakkında içeriği yüklendi. Ekran yakalama ScreenCaptureKit hatası verdi; sonraki tıklama/klavye etkileşimleri güvenilir çalışmadı. Görsel yerleşim ve gerçek dokunma davranışı doğrulanamadı. VM testleri gerçek DOM/CSS render doğrulaması değildir.
+
+
+## 2026-10-20 — Supabase hesabı ve isteğe bağlı bulut kaydı
+
+### Amaç ve kapsam
+
+E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından başlatılan cihazlar arası ilerleme aktarımı. Yerel/çevrimdışı oyunlar korunur; otomatik birleştirme ve sunucuda hesaplanan ekonomi kapsam dışıdır.
+
+### Yapılanlar ve teknik kararlar
+
+- `cloud-config.js`: Yeni bağımsız `casualpass` projesinin açık URL/publishable anahtarı; secret/service_role yok. Varsayılan `loginMode: 'magiclink'`.
+- `casual-cloud.js`: Supabase Auth HTTP API’siyle e-posta bağlantısı/isteğe bağlı OTP, URL’den token temizleme ve `/user` doğrulaması, token yenileme, çıkış, oturum değişimi korumaları ve PostgREST kayıt aktarımı. npm metadata okuma izni verilmediğinden SDK indirilmedi; ek paket yok.
+- Kimlik doğrulama token’ları `sb-casualpass-…` localStorage anahtarında tutulur. Bu, eski yalnızca-çerez kuralına auth için sınırlı istisnadır; token’lar oyun yedeğine/buluta alınmaz. Depolama kapalıysa oturum sayfa ömrüyle sınırlıdır. Web Locks desteklendiğinde sekmeler arası yenileme sıraya alınır.
+- `account-ui.js`, `index.html`, `style.css`: E-posta girişi, hata/bekleme durumları, yeniden gönderim beklemesi, hesap bilgisi/çıkış ve açık kullanıcı eylemiyle bulut yükleme/indirme/önizleme. Üstteki eski yerel oturum düğmesi `Oyuncuyu başlat` olarak ayrıştırıldı.
+- `casual-save.js`: Mevcut tam oyun yedeği `build()` API’siyle yeniden kullanılır. Buluttan getirme mevcut dosya doğrulamasını kullanır; geçersiz kayıt otomatik uygulanmaz.
+- `supabase/schema.sql`: Mevcut RLS şeması kullanıldı. Kullanıcı yeni projeyi kendisi oluşturup şemayı çalıştırdı; canlı anonim SELECT isteği 401/42501 (permission denied) döndü. Canlı iki kullanıcı arasında RLS izolasyonu henüz test edilmedi.
+- `supabase/email-otp.html`: SMTP ile isteğe bağlı sayısal kod şablonu. Ücretsiz varsayılan e-posta hizmeti özel şablon düzenlemeyi engellediğinden varsayılan bağlantı akışı seçildi. Genel alıcılar için SMTP gerekir; bu bir yayın öncesi kurulum gereksinimidir.
+- `README.md`, `about.html`: Hesap/bulut/yerel kayıt farkı, ortak cihaz davranışı ve kurulum belgelendi. Bulut kaydı son yükleyen tarafından değiştirilir; otomatik birleştirme yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] Hesap arayüzü, auth yaşam döngüsü ve elle bulut aktarımı uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 12 test başarılı (auth, yenileme, çıkış, yarışlar, çevrimdışı, kayıt/token ayrımı, bağlantı dönüşü).
+- [x] Değişen JS dosyalarında `node --check`, HTML ID/ARIA/form bağları ve `git diff --check`: başarılı.
+- [x] Canlı `/auth/v1/settings`: e-posta giriş/yeni kayıt açık, e-posta doğrulaması gerekli. Anonim tablo okuma engellendi.
+- [ ] Gerçek e-posta bağlantısıyla giriş, iki kullanıcıyla RLS ve cihazlar arası yükle/geri al kabul testi: doğrulanması gerekiyor.
+- [ ] Site URL ve localhost dönüş adresi panelde girilip kaydetme denendi; son durum CUA/ScreenCaptureKit hatası nedeniyle tekrar okunamadı. Kaydedilmiş kabul edilmemeli; doğrulanması gerekiyor.
+
+Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.

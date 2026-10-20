@@ -15,7 +15,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 
 ## Çerez tabanlı profil ve CasualMoney
 
-CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullanılmaz. Oturum, kullanıcı profili, CasualMoney, Wood Turning ilerlemesi, satın alınan temalar, oyun istatistikleri ve yüksek skorlar yalnızca birinci taraf tarayıcı çerezlerinde saklanır.
+Hesapsız oynanabilir. Oyun profili, CasualMoney, ilerleme ve rekorlar birinci taraf tarayıcı çerezlerinde tutulur. İsteğe bağlı Supabase hesabıyla e-postaya gelen bağlantı üzerinden giriş/kayıt yapılır; dashboard’daki **Buluta kaydet / Buluttan getir** ile ilerleme cihazlar arasında aktarılır. Otomatik birleştirme/senkronizasyon yapılmaz.
 
 - Oturumu başlatmak günde bir kez **15 CM** verir.
 - Günlük ödül günde bir kez **20 CM** verir.
@@ -26,7 +26,7 @@ CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullan
 - Arena FPS'te her öldürme 2 CM, maç birinciliği +6 CM kazandırır (maç başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). `Standart` varsayılan silah kaplamasıdır; `Çöl` (100 CM), `Orman` (180 CM), `Kutup` (260 CM), `Kızıl` (420 CM) ve `Altın` (800 CM) CasualMoney ile açılır.
 - Vektör'de her öldürme ve kazanılan her raunt 1 CM, maç zaferi +10 CM kazandırır (maç başına en fazla 40 CM). Silahlarda Arena FPS'te açılan kaplamalar kullanılır.
 - `Liquid` varsayılan temadır; `Paper` (30 CM), `Neon` (180 CM) ve `Retro` (300 CM) temaları CasualMoney ile açılır.
-- Çerezleri silmek profil, bakiye ve ilerlemeyi de siler. Bu bilerek seçilmiş, yalnızca-çerez tasarımının sonucudur.
+- Çerezleri silmek yerel profil, bakiye ve ilerlemeyi siler. Önceden buluta veya dosyaya yedeklediğin kaydı geri yükleyebilirsin.
 
 Çerezlerdeki veriler kullanıcı tarafından değiştirilebilir. Bu nedenle CasualMoney gerçek para, rekabetçi skor veya güvenlik gerektiren satın alma akışları için uygun değildir.
 
@@ -66,3 +66,17 @@ Site ana ekrana eklenebilen bir PWA'dır; ilk açılışta tüm oyunlar telefona
 Bu proje büyük ölçüde AI araçlarıyla geliştirilmiştir.
 
 <p><img src="ai-generated.svg" height="64" alt="AI Generated"></p>
+
+## Supabase hesabı ve kurulum
+
+1. `cloud-config.js` içinde `enabled`, HTTPS `url` ve açık `publishableKey` alanlarını ayarla. Varsayılan `loginMode: 'magiclink'` e-posta bağlantısı kullanır. Tarayıcıya yalnızca `sb_publishable_…` veya eski `anon` anahtarı koy; secret/service_role kullanma.
+2. Yeni projenin SQL Editor’ünde `supabase/schema.sql` çalıştır. `casual_profiles` tablosunda RLS ve `auth.uid() = user_id` okuma/ekleme/güncelleme politikaları bulunur; anonim role tablo yetkisi verilmez. Yeni tablolara otomatik yetki açma kapalı tutulmalıdır.
+3. Authentication → URL Configuration içinde Site URL’yi `https://casualpass.github.io/` yap. Yerel test için `http://127.0.0.1:4173/` adresini Redirect URLs listesine ekle. Bağlantı dönüşünde token parçaları URL’den hemen temizlenir ve `/user` ile doğrulanır. E-posta sağlayıcısı ve yeni kullanıcı kaydı açık olmalıdır. Genel kullanıma açarken kendi SMTP sağlayıcını yapılandır; Supabase’in varsayılan e-posta hizmetinin alıcı ve hız sınırları vardır.
+   İsteğe bağlı sayısal kod: SMTP yapılandırıldıktan sonra Confirm signup ve Magic Link şablonlarına `supabase/email-otp.html` içeriğini uygula (`{{ .Token }}`) ve `loginMode: 'otp'` seç. Ücretsiz varsayılan e-posta hizmeti panelinde özel şablon düzenleme kapalıdır; varsayılan bağlantı akışı şablon değişikliği istemez.
+4. `python3 tools/build-sw.py` çalıştırıp siteyi yayınla. Giriş ve bulut işlemleri internet ister; yerel oyunlar çevrimdışı devam eder.
+
+`casual-cloud.js`, Supabase Auth HTTP API’sini (`otp`, `verify`, `token`, `user`, `logout`) ve PostgREST’i kullanır. Ek paket/CDN bağımlılığı yoktur. Access/refresh token’ları `sb-casualpass-…` localStorage anahtarında saklanır; oyun çerezlerine, dışa aktarılan dosyaya veya bulut kaydına girmez. Bu, eski yalnızca-çerez kuralına kimlik doğrulama için sınırlı bir istisnadır. Kalıcı depolama kapalıysa oturum yalnızca açık sayfada sürer. Süresi yaklaşan token, yetkili bulut işlemi öncesinde yenilenir; Web Locks aynı cihazdaki yenilemeleri sıraya alır.
+
+Giriş yapmak yerel ilerlemeyi hesaba otomatik taşımaz veya başka hesaba geçince silmez. Ortak cihazda yerel kayıt paylaşılır; arayüz bunu belirtir. Buluta yükleme mevcut bulut kaydının üzerine yazar ve onay ister. Getirme önce kaydı doğrular ve önizler; yükleme açık kullanıcı eylemiyle yerel çerezleri değiştirir. En son kullanıcı tarafından yüklenen bulut kaydı geçerlidir; eşzamanlı düzenlemeler birleştirilmez. CM istemcide hesaplandığı için bulut kaydı hileye dayanıklı bir ekonomi sağlamaz.
+
+Doğrulama: `node --test tools/test-cloud.cjs` (taklit HTTP ile auth, token yenileme, çıkış, kayıt izolasyonu ve yedekte token bulunmaması). Canlı e-posta/cihazlar arası kabul testi ayrıca yapılmalıdır.

@@ -135,9 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const balance = profile?.balance || 0;
         sessionAvatar.textContent = profile ? initials(profile.displayName) : '?';
         const sessionRewardReady = !profile || profile.sessionRewardDate !== CasualProfile.todayKey();
-        sessionLabel.textContent = !profile ? 'Oturumu başlat' : sessionRewardReady ? 'Ödülü al' : 'Oturum açık';
+        sessionLabel.textContent = !profile ? 'Oyuncuyu başlat' : sessionRewardReady ? 'Ödülü al' : 'Oyuncu açık';
         sessionButton.classList.toggle('is-open', !sessionRewardReady);
-        sessionButton.setAttribute('aria-label', !sessionRewardReady ? `Oturum açık: ${profile.displayName}` : sessionLabel.textContent);
+        sessionButton.setAttribute('aria-label', !sessionRewardReady ? `Yerel oyuncu: ${profile.displayName}` : sessionLabel.textContent);
         balanceValue.textContent = CasualProfile.formatMoney(balance);
         themeBalanceValue.textContent = CasualProfile.formatMoney(balance);
         const rebirth = CasualProfile.rebirthStatus(profile);
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionButton.addEventListener('click', () => {
         if (CasualCheats.active()) { showToast('CM kazanmak için önce tüm hileleri kapat.'); return; }
         const result = CasualProfile.startSession();
-        showToast(result.granted ? `Oturum açıldı, +${result.reward} CM kazandın.` : 'Oturumun zaten açık.');
+        showToast(result.granted ? `Yerel oyuncu hazır, +${result.reward} CM kazandın.` : 'Yerel oyuncun zaten hazır.');
     });
 
     document.getElementById('rebirth-button').addEventListener('click', () => {

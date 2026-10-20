@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="style.css?v=21">
     <script src="shared-settings.js?v=9"></script>
 </head>
 <body class="theme-liquid">
@@ -35,10 +35,10 @@
             <a href="about.html">Hakkında</a>
         </nav>
         <div class="topbar-actions">
-            <span class="cookie-state"><i aria-hidden="true"></i> Yalnızca bu tarayıcı</span>
+            <a class="account-link" href="#account-title">Hesabım</a>
             <button class="session-button" id="session-button" type="button">
                 <span class="session-avatar" id="session-avatar">?</span>
-                <span id="session-button-label">Oturumu başlat</span>
+                <span id="session-button-label">Oyuncuyu başlat</span>
             </button>
         </div>
     </header>
@@ -95,6 +95,34 @@
                 <a class="game-card vektor-card" href="vektor/index.html" data-game="Vektör" data-tags="aksiyon coklu"><span class="game-index">10</span><span class="game-art vektor-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>TAKTİK 5v5</small><span class="title-row"><strong>Vektör</strong><b class="new-badge">Yeni</b></span><em>Çekirdeği kur ya da çöz</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
             </div>
             <p class="filter-status" id="filter-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel account-panel" aria-labelledby="account-title">
+            <div class="section-heading compact"><div><p class="eyebrow">HESAP VE BULUT KAYDI</p><h2 id="account-title">Giriş yap / Kayıt ol</h2></div><span class="account-badge" id="account-badge">Misafir</span></div>
+            <p class="account-note">E-postana gelen tek kullanımlık bağlantıyla giriş yap. İlk girişinde hesabın oluşturulur. Hesapsız da oynayabilirsin.</p>
+            <p id="account-status" role="status" aria-live="polite">Hesap bağlantısı hazırlanıyor…</p>
+            <div id="account-guest">
+                <form id="account-email-form" class="account-form">
+                    <label for="account-email">E-posta adresin</label>
+                    <div class="account-input-row"><input id="account-email" type="email" autocomplete="email" maxlength="254" required placeholder="sen@ornek.com"><button class="save-button primary" id="account-send" type="submit">Giriş bağlantısı gönder</button></div>
+                    <small>Giriş için e-posta adresin Supabase’e gönderilir.</small>
+                </form>
+                <form id="account-code-form" class="account-form" hidden>
+                    <label for="account-code">E-postandaki doğrulama kodu</label>
+                    <div class="account-input-row"><input id="account-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required><button class="save-button primary" id="account-verify" type="submit">Doğrula ve giriş yap</button></div>
+                    <button class="account-text-button" id="account-change-email" type="button">E-posta adresini değiştir</button>
+                </form>
+            </div>
+            <div id="account-member" hidden>
+                <p>Giriş yapılan hesap: <strong id="account-identity"></strong></p>
+                <p class="account-note">Oyunlar bu tarayıcıda kaydedilir. “Buluta kaydet” mevcut ilerlemeyi hesabına yükler; başka cihazda “Buluttan getir” ile geri alabilirsin. Aktarım otomatik değildir. Ortak cihazda yerel ilerleme sonraki oyuncuya görünür; hesaptan çıkmak bu ilerlemeyi silmez.</p>
+                <div class="save-actions"><button class="save-button primary" id="account-upload" type="button">Buluta kaydet</button><button class="save-button" id="account-download" type="button">Buluttan getir</button><button class="save-button" id="account-signout" type="button">Hesaptan çıkış yap</button></div>
+            </div>
+            <div id="account-restore" class="account-restore" hidden>
+                <p id="account-restore-detail"></p>
+                <p>Yüklemek bu tarayıcıdaki ilerlemenin yerine geçer. İstersen önce aşağıdan dosya yedeği al.</p>
+                <div class="save-actions"><button class="save-button primary" id="account-apply" type="button">Bu kaydı yükle</button><button class="save-button" id="account-cancel-restore" type="button">Vazgeç</button></div>
+            </div>
         </section>
 
         <section class="metric-grid" aria-label="Oyuncu durumu">
@@ -163,7 +191,7 @@
         </section>
     </main>
 
-    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>İlerleme yalnızca bu tarayıcının çerezlerinde saklanır.</small></footer>
+    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>Oyunlar yerelde saklanır; hesabınla buluta yedekleyebilirsin.</small></footer>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <dialog class="save-dialog" id="save-dialog" aria-labelledby="save-dialog-title">
@@ -189,7 +217,10 @@
 
     <script src="casual-profile.js?v=16"></script>
     <script src="casual-cheats.js?v=8"></script>
-    <script src="casual-save.js?v=1"></script>
-    <script src="script.js?v=14"></script>
+    <script src="casual-save.js?v=2"></script>
+    <script src="cloud-config.js?v=2"></script>
+    <script src="casual-cloud.js?v=2"></script>
+    <script src="account-ui.js?v=1"></script>
+    <script src="script.js?v=15"></script>
 </body>
 </html>
