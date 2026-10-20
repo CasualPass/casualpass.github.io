@@ -826,6 +826,7 @@
     });
 
     document.addEventListener('focusin', (event) => {
+        if(event.target?.closest?.('[aria-hidden="true"]'))return;
         if (mode === 'playing' && !stage.contains(event.target)) mode = 'paused';
     });
     document.addEventListener('visibilitychange', () => {

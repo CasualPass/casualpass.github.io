@@ -286,6 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const hapticToggle = document.getElementById('haptic-toggle');
     function renderHapticToggle() {
         const on = CasualSettings.get().vibration;
+        const native = ['ios','android'].includes(CasualSettings.hapticBackend?.());
+        document.getElementById('haptic-toggle-label').textContent = native ? 'Titreşim · Uygulama' : 'Titreşim';
         hapticToggle.setAttribute('aria-pressed', String(on));
         hapticToggle.classList.toggle('is-off', !on);
         hapticToggle.title = on ? 'Titreşim açık' : 'Titreşim kapalı';

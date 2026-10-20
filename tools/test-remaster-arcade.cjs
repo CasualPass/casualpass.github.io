@@ -141,3 +141,12 @@ test('Owl and Wood preserve final reward payloads and suppress cheat rewards', (
         assert.equal(p.rewards.length, 1); assert.equal(p.cookies.get(cookie), '2100');
     }
 });
+
+
+test('Owl ignores hidden helper focus but still pauses for real focus leaving the stage',()=>{
+    const p=page('owl-game',`startRun, flap, state:()=>({mode})`);
+    p.get('stage').contains=()=>false;
+    p.sandbox.playHaptic=()=>p.sandbox.document.emit('focusin',{target:{closest:()=>({})}});
+    p.api.startRun();p.api.flap();assert.equal(p.api.state().mode,'playing','helper focus must not interrupt flight');
+    p.sandbox.document.emit('focusin',{target:{closest:()=>null}});assert.equal(p.api.state().mode,'paused','real focus loss must retain pause protection');
+});

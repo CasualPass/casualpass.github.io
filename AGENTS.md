@@ -576,3 +576,12 @@ Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone tit
 - [x] Android Actions 39488669389 (76dd1db): assembleDebug ve APK imza kontrolü başarılı; 1.0.1 APK indirildi, ZIP bütünlüğü doğrulandı.
 - [x] `devicectl device install app`: kullanıcının bağladığı iPhone 16e’ye io.github.casualpass.app başarıyla kuruldu. Fiziksel olarak hissedilen titreşim henüz doğrulanmadı.
 - Yerel Brave’de yeni animasyon kodlu sayfa ve 4. bölüm açıldı; hamle kontrolü kullanıcı pencere değişimiyle kesildi. Tek kare zamanlaması otomatik RAF testinde doğrulandı, gerçek telefonda akıcılık henüz doğrulanmadı.
+
+
+## 2026-10-20 — iOS titreşim fallback odağı ve Owl duraklama
+
+- Kullanıcı 1.0.1 kurulumundan sonra titreşim hissetmediğini ve Owl’da “Uçuş duraklatıldı” gördüğünü bildirdi; fiziksel haptic başarısı doğrulanmış sayılmaz.
+- `shared-settings.js`: Gizli label/checkbox tıklaması tamamen kaldırıldı; iOS’ta native köprü veya desteklenen Vibration API dışında odak değiştiren fallback yok. `hapticBackend()` eklendi; destek algısı artık dokunmatik ekranı titreşim desteği sanmaz.
+- `owl-game/script.js`: Gizli yardımcıdan gelen odak olayı uçuşu durdurmaz; gerçek odak/sekme kaybında duraklama korunur. Regresyon testi bu iki durumu ayırır.
+- `script.js`: Dashboard native köprü algıladığında “Titreşim · Uygulama” gösterir. Tüm HTML ortak helper referansları `v=11`, Owl script `v=5`, dashboard script `v=17`; eski v10 dosyasının cache’den gelmesi engellenir. Son Hat’ta yalnızca ortak helper URL’si değişti, oyun kodu değişmedi.
+- `node --test tools/test-remaster-haptics.cjs tools/test-remaster-arcade.cjs`: 10/10 başarılı. Native önceliği, kapatma, gizli kontrol oluşturmama ve Owl gerçek/yardımcı odak ayrımı doğrulandı. Gerçek telefonda his ve uçuş kullanıcıyla yeniden doğrulanmalıdır. Native paket 1.0.1 değişmedi; bu düzeltme webden gelir.

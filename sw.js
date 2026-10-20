@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "4daa29dca41d";
+const VERSION = "ab0d82af1b94";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -24,12 +24,12 @@ const PRECACHE = [
         "index.html",
         "manifest.webmanifest",
         "script.js",
-        "script.js?v=16",
+        "script.js?v=17",
         "shared-settings.css",
         "shared-settings.css?v=5",
         "shared-settings.css?v=6",
         "shared-settings.js",
-        "shared-settings.js?v=10",
+        "shared-settings.js?v=11",
         "style.css",
         "style.css?v=22",
         "style.css?v=25",
@@ -76,7 +76,7 @@ const PRECACHE = [
         "owl-game/",
         "owl-game/index.html",
         "owl-game/script.js",
-        "owl-game/script.js?v=4",
+        "owl-game/script.js?v=5",
         "owl-game/style.css",
         "owl-game/style.css?v=3",
         "snake-game/",

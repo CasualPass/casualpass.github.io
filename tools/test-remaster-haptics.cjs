@@ -11,10 +11,9 @@ test('native haptics use patterns and disabling cancels subsequent vibration',()
  const f=fixture();f.window.CasualSettings.vibrate('success');assert.deepEqual(Array.from(f.calls[0]),[18,40,28]);
  f.window.CasualSettings.update({vibration:false});assert.equal(f.calls.at(-1),0);const n=f.calls.length;f.window.CasualSettings.vibrate('win');assert.equal(f.calls.length,n);assert.match(f.document.cookie,/vibration/);
 });
-test('iOS attempt is optional and queued ticks are cancelled when disabled or hidden',()=>{
- const f=fixture(true);f.window.CasualSettings.vibrate('win');assert.equal(f.ticks(),1);assert.equal(f.timers.size,2);
- f.window.CasualSettings.update({vibration:false});assert.equal(f.timers.size,0);
- f.window.CasualSettings.update({vibration:true});f.window.CasualSettings.vibrate('win');f.document.hidden=true;f.handlers.visibilitychange();assert.equal(f.timers.size,0);
+test('unsupported iOS web haptics never create or click a focus-stealing element',()=>{
+ const f=fixture(true);f.document.createElement=()=>{throw Error('must not create hidden controls')};
+ f.window.CasualSettings.vibrate('win');assert.equal(f.ticks(),0);assert.equal(f.timers.size,0);assert.equal(f.window.CasualSettings.vibrationSupported(),false);assert.equal(f.window.CasualSettings.hapticBackend(),'none');
 });
 
 test('iOS native bridge takes precedence and receives cancellation when disabled',()=>{
