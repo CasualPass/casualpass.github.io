@@ -134,7 +134,7 @@ Son Hat dışındaki 11 oyunun mevcut oyunları ve kayıtları üzerinde görsel
 - **Nuts & Bolts:** Tamamlanan renk sayısı ve çözüm arayan ipucu. İpucu araması sınırlıdır, her kullanıcı konumunda çözüm bulacağı garanti edilmez.
 - **Maze Paint:** Yeni kareye giden yön ipucu, toplam 36 bölüm ve 25–36’da topu yol ortasında durduran halkalı kareler. İlk 24 düzen değişmedi.
 
-Tema panelindeki Titreşim ayarı çerezde saklanır. Vibration API bulunan cihazlarda desenler kullanılır; iOS için switch yöntemi denenir. Gerçek cihazda titreşim garantisi yoktur. Kapama veya sekmeyi gizleme bekleyen darbeleri iptal eder. Yeni geri alma geçmişleri bellektedir, sayfa yenilemesinde korunmaz; sonuç kaydedildikten sonra 2048/XOX/Blocks geri alma kapalıdır. CM ödül tavanları ve mevcut kayıt anahtarları korunur.
+Tema panelindeki Titreşim ayarı çerezde saklanır. Vibration API bulunan cihazlarda desenler kullanılır; iOS uygulaması native köprüyü kullanır. iOS tarayıcısında gizli switch tıklaması kaldırıldı; destek yoksa titreşim denenmez. Kapama veya sekmeyi gizleme bekleyen darbeleri iptal eder. Yeni geri alma geçmişleri bellektedir, sayfa yenilemesinde korunmaz; sonuç kaydedildikten sonra 2048/XOX/Blocks geri alma kapalıdır. CM ödül tavanları ve mevcut kayıt anahtarları korunur.
 
 Doğrulama: `node --test tools/*.cjs`. VM testleri gerçek tarayıcı, cihaz titreşimi ve iki cihazlı multiplayer testinin yerine geçmez.
 
@@ -149,3 +149,8 @@ Doğrulama: `node --test tools/*.cjs`. VM testleri gerçek tarayıcı, cihaz tit
 Maze Paint, her hamlede tahtayı yeniden kurmak yerine mevcut kareleri ve topu kullanır. Tek `requestAnimationFrame` saati, topun konumunu ve yalnızca ulaştığı karelerin boyanmasını birlikte ilerletir. Hızlı yön girişlerinde son yön sıraya alınır; bölüm bitişi top ulaşınca görünür. Azaltılmış hareket/efekt kapalı ayarı anlık geçiş kullanır.
 
 Native kabuk 1.0.1 (2), iOS UIKit ve Android Vibrator köprülerini ekler. Gerçek native titreşim için uygulamayı bu sürüme bir kez güncellemek gerekir; sonraki web oyun güncellemeleri için tekrar derleme gerekmez. Eski kabuklarda web fallback kalır. [Native kurulum ve köprü ayrıntıları](native/README.md).
+
+
+### Minerva Owl odak düzeltmesi
+
+Gizli iOS switch tıklaması oyundan odağı alıp “Uçuş duraklatıldı” durumuna yol açabildiği için kaldırıldı. Native köprü veya gerçek Vibration API dışında titreşim yolu yoktur. Titreşim düğmesinde “Uygulama” yazıyorsa native köprü algılanmıştır. Ortak helper `v=11` ile yüklenir; bu, eski önbellekteki focus-stealing kodun kullanımını önler.

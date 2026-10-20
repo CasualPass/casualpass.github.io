@@ -73,8 +73,6 @@ function playPopSound() {
 
 /** Named haptic patterns in milliseconds; games pass a name or a raw Vibration API pattern. */
 const CP_HAPTICS = { tap: 8, move: 12, success: [18, 40, 28], win: [30, 60, 30, 60, 60], fail: [70, 50, 110] };
-let cpHapticSwitch = null;
-let cpHapticTimers = [];
 // Shell 1.0.1+ exposes only named feedback; old shells keep the web fallback.
 function nativeHaptic(pattern) {
     try {
@@ -86,35 +84,11 @@ function nativeHaptic(pattern) {
 }
 function cancelHaptics() {
     nativeHaptic('cancel');
-    cpHapticTimers.forEach(timer => window.clearTimeout(timer));
-    cpHapticTimers = [];
     if(typeof navigator.vibrate === 'function') { try { navigator.vibrate(0); } catch {} }
-}
-
-/** iOS Safari has no Vibration API but ticks the Taptic Engine when a switch checkbox toggles. */
-function tapIosSwitch() {
-    if (!cpSettings.vibration || document.hidden) return;
-    if (!cpHapticSwitch) {
-        if (!document.body) return;
-        cpHapticSwitch = document.createElement('label');
-        cpHapticSwitch.setAttribute('aria-hidden', 'true');
-        cpHapticSwitch.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.tabIndex = -1;
-        input.setAttribute('switch', '');
-        cpHapticSwitch.append(input);
-        // The synthetic click must not reach game listeners (e.g. tap-to-flap).
-        cpHapticSwitch.addEventListener('click', (event) => event.stopPropagation());
-        document.body.append(cpHapticSwitch);
-    }
-    cpHapticSwitch.click();
 }
 
 function playHaptic(pattern = 'tap') {
     if (!cpSettings.vibration || document.hidden) return;
-    cpHapticTimers.forEach(timer => window.clearTimeout(timer));
-    cpHapticTimers = [];
     const name = typeof pattern === 'string' && Object.hasOwn(CP_HAPTICS, pattern) ? pattern : 'tap';
     if(nativeHaptic(name))return;
     const value = typeof pattern === 'string' ? CP_HAPTICS[pattern] ?? CP_HAPTICS.tap : pattern;
@@ -122,14 +96,7 @@ function playHaptic(pattern = 'tap') {
         try { navigator.vibrate(value); } catch { /* vibration is optional */ }
         return;
     }
-    if (!window.matchMedia?.('(pointer: coarse)').matches) return;
-    // One tick per pulse; pauses in the pattern become gaps between ticks.
-    const steps = Array.isArray(value) ? value : [value];
-    let delay = 0;
-    for (let i = 0; i < steps.length; i += 2) {
-        if (delay === 0) tapIosSwitch(); else cpHapticTimers.push(window.setTimeout(tapIosSwitch, delay));
-        delay += steps[i] + (steps[i + 1] || 0);
-    }
+    // No DOM-click fallback: it can steal game focus and pause gameplay.
 }
 
 function getGameStats() {
@@ -165,7 +132,8 @@ function getHighScore(gameName) {
 
 window.CasualSettings = Object.freeze({
     get: () => ({ ...cpSettings }),
-    vibrationSupported: () => Boolean(window.webkit?.messageHandlers?.casualpassHaptic || window.CasualPassHaptics?.postMessage) || typeof navigator.vibrate === 'function' || Boolean(window.matchMedia?.('(pointer: coarse)').matches),
+    hapticBackend: () => typeof window.webkit?.messageHandlers?.casualpassHaptic?.postMessage === 'function' ? 'ios' : typeof window.CasualPassHaptics?.postMessage === 'function' ? 'android' : typeof navigator.vibrate === 'function' ? 'web' : 'none',
+    vibrationSupported: () => Boolean(window.webkit?.messageHandlers?.casualpassHaptic || window.CasualPassHaptics?.postMessage) || typeof navigator.vibrate === 'function',
     vibrate: (pattern) => playHaptic(pattern),
     setTheme(theme) {
         if (!CP_THEME_IDS.has(theme)) return;
