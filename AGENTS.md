@@ -573,5 +573,6 @@ Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone tit
 
 - [x] `node --test tools/*.cjs`: 77/77 başarılı. Yeni RAF testleri boya/top sırası, DOM korunması, hızlı yön kuyruğu, iptal ve varışta bitişi doğrular; native dispatch/fallback/ayar kapatma testleri eklendi.
 - [x] iOS cihaz hedefi imzasız build ve mevcut Apple Development kimliğiyle imzalı build başarılı. `codesign --verify --deep --strict` başarılı; 1.0.1 development IPA outputs’a hazırlandı.
-- [ ] Android build ve gerçek cihazdaki hissedilen titreşim: doğrulama sürüyor.
+- [x] Android Actions 39488669389 (76dd1db): assembleDebug ve APK imza kontrolü başarılı; 1.0.1 APK indirildi, ZIP bütünlüğü doğrulandı.
+- [x] `devicectl device install app`: kullanıcının bağladığı iPhone 16e’ye io.github.casualpass.app başarıyla kuruldu. Fiziksel olarak hissedilen titreşim henüz doğrulanmadı.
 - Yerel Brave’de yeni animasyon kodlu sayfa ve 4. bölüm açıldı; hamle kontrolü kullanıcı pencere değişimiyle kesildi. Tek kare zamanlaması otomatik RAF testinde doğrulandı, gerçek telefonda akıcılık henüz doğrulanmadı.
