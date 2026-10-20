@@ -16,11 +16,12 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
       - name: Build installable test APK
         working-directory: native/android
-        run: gradle :app:assembleDebug --no-daemon
+        run: ./gradlew :app:assembleDebug --no-daemon
+      - name: Verify APK signature
+        working-directory: native/android
+        run: ${ANDROID_HOME}/build-tools/35.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: CasualPass-Android-debug

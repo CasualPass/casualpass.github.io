@@ -11,7 +11,7 @@ Android WebView ve iOS/iPadOS WKWebView aynı `https://casualpass.github.io/` uy
 ## Android
 
 - Android 8+ (API 26), compile/target SDK 35; Java 17, Gradle 8.11.1, Android Gradle Plugin 8.9.2.
-- `android/` klasörünü Android Studio ile aç veya SDK/JDK hazır ortamda `gradle -p native/android :app:assembleDebug` çalıştır.
+- `android/` klasörünü Android Studio ile aç veya SDK/JDK hazır ortamda `cd native/android && ./gradlew :app:assembleDebug` çalıştır.
 - `.github/workflows/android-app.yml` native Android dosyaları pushlandığında test APK’sını derler. Actions → Android app → `CasualPass-Android-debug` artifact’i içindeki `app-debug.apk` telefona kurulabilir.
 - Bu **debug imzalı test APK’sıdır**; Google Play’e yüklenmek üzere üretim anahtarıyla imzalanmış paket değildir. CI’ın geçici debug anahtarı yeni build’de değişebilir; iki farklı debug APK arasında yerinde yükseltme garantisi yoktur. Uygulamayı kaldırmak yerel veriyi siler, önce yedek al. Normal web güncellemeleri APK kurulumunu gerektirmez.
 - Üretim dağıtımı için sabit ve özel imzalama anahtarı ile release/AAB hazırlanmalıdır. Anahtarlar repoya konmaz. Telefonun USB/debug bilgileri bu projede saklanmaz.

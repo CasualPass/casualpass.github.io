@@ -62,7 +62,13 @@
         return save;
     }
 
+    let exporting = false;
     async function exportSave() {
+        if (exporting) throw new Error('Bir kayıt dosyası işlemi zaten açık.');
+        exporting = true;
+        try { return await exportOnce(); } finally { exporting = false; }
+    }
+    async function exportOnce() {
         const save = await build();
         const blob = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
         const name = `casualpass-kayit-${save.created.slice(0, 10)}.json`;
