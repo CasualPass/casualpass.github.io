@@ -447,6 +447,6 @@ Kullanıcı Android APK ve iPhone/iPad kabuğunu seçti; oyun sürümleri webden
 
 - Xcode Debug iOS Simulator build: başarılı. Simülatör çalıştırma ilk ortam kontrolünde CoreSimulator bağlantı/izin hatası verdi; gerçek cihaz ve native runtime akışları henüz doğrulanmadı.
 - iOS Release cihaz hedefi `CODE_SIGNING_ALLOWED=NO`: başarılı; bu imzasız çıktı iPhone’a doğrudan kurulamaz. Simülatör/cihaz build başarısı runtime doğrulaması değildir.
-- GitHub Actions Android build (39460748399): başarılı, 1.1 MB debug APK indirildi. Son Gradle wrapper ve imza doğrulaması iş akışı ayrıca kontrol edilecek. Gradle 8.11.1 wrapper resmi kaynaktan alındı, JAR SHA-256 doğrulandı ve dağıtım checksum’u sabitlendi.
+- GitHub Actions Android build (39461367812, commit 1cbd700): build ve APK imza doğrulaması başarılı. 1.2 MB debug APK indirildi, ZIP bütünlüğü/manifest/classes.dex kontrol edildi. Gradle 8.11.1 wrapper resmi kaynaktan alındı, JAR SHA-256 doğrulandı ve dağıtım checksum’u sabitlendi. Android/iOS kaynak paketleri, iOS unsigned cihaz/simülatör paketleri ve SHA-256 listesi sohbet outputs dizinine hazırlandı.
 - `node --test tools/test-native-save.cjs tools/test-cloud.cjs`: 23/23 başarılı; native dosya sonucu/iptal/hata, çifte dışa aktarma engeli, web fallback ve auth/yedek ayrımı. Sözdizimi/diff kontrolleri başarılı.
 - Gerçek Android/iPhone/iPad kurulumu, offline yeniden açılış, native giriş ve dosya seçicisi etkileşimleri çalıştırılmadı. iOS imzalama ve mağaza yayını yapılmadı.
