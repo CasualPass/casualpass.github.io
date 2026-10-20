@@ -27,6 +27,7 @@ const promotionCancel = document.getElementById('promotion-cancel');
 // State Variables
 let selectedSquare = null;      // "e2" etc.
 let isVersusBot = true;
+let botEngine = 'casual'; // 'casual' (CasualFish v2) or 'fail' (FailFish)
 let botDifficulty = 2; // 1: Kolay, 2: Orta, 3: Zor, 4: Usta
 let gameActive = false;
 let isAnimating = false;
@@ -38,6 +39,7 @@ let resignConfirmTimer = null;
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const DIFFICULTY_NAMES = { 1: 'Kolay', 2: 'Orta', 3: 'Zor', 4: 'Usta' };
+const botName = () => (botEngine === 'fail' ? 'FailFish' : 'CasualFish v2');
 const PIECE_NAMES = { p: 'piyon', n: 'at', b: 'fil', r: 'kale', q: 'vezir', k: 'şah' };
 
 // Filled glyphs for both colors (colored via CSS) so white pieces stay readable on light squares.
@@ -424,7 +426,7 @@ function animateMoveAndRender(from, to, onComplete) {
 function triggerBotMove() {
     if (isVersusBot && gameEngine.turn() === 'b' && gameActive && !gameEngine.game_over()) {
         statusDisplay.className = 'status-display turn-black thinking';
-        statusDisplay.textContent = 'CasualFish düşünüyor…';
+        statusDisplay.textContent = `${botName()} düşünüyor…`;
         clearTimeout(botTimer);
         // Short delay lets the "thinking" status paint before the search blocks the thread
         botTimer = setTimeout(makeCasualFishMove, 450);
@@ -554,13 +556,18 @@ function makeCasualFishMove() {
             id,
             // The full move list lets CasualFish see repetitions; it starts from the standard position.
             moves: gameEngine.history({ verbose: true }).map(text),
-            level: botDifficulty,
+            level: botEngine === 'fail' ? 'fail' : botDifficulty,
             allowed: isImmortalEnabled() ? possibleMoves.map(text) : null
         });
         return;
     }
 
-    if (botDifficulty === 1) {
+    if (botEngine === 'fail') {
+        // Without the worker FailFish still never wins: any move that does not mate or stalemate.
+        const safe = possibleMoves.filter((m) => { gameEngine.move(m); const over = gameEngine.game_over(); gameEngine.undo(); return !over; });
+        const list = safe.length ? safe : possibleMoves;
+        bestMove = list[Math.floor(Math.random() * list.length)];
+    } else if (botDifficulty === 1) {
         bestMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
     } else {
         const depth = botDifficulty === 2 ? 2 : 3; // fallback search when workers are unavailable
@@ -729,7 +736,7 @@ function updateStatus() {
 
     statusDisplay.className = `status-display ${isWhiteTurn ? 'turn-white' : 'turn-black'}`;
     if (isVersusBot) {
-        statusDisplay.textContent = isWhiteTurn ? 'Sıra sende (Beyaz)' : 'Sıra: CasualFish (Siyah)';
+        statusDisplay.textContent = isWhiteTurn ? 'Sıra sende (Beyaz)' : `Sıra: ${botName()} (Siyah)`;
     } else {
         statusDisplay.textContent = isWhiteTurn ? 'Sıra: Beyaz' : 'Sıra: Siyah';
     }
@@ -748,7 +755,7 @@ function checkGameOver() {
         if (gameEngine.in_checkmate()) {
             const winner = gameEngine.turn() === 'w' ? 'Siyah' : 'Beyaz';
             const detail = isVersusBot
-                ? (winner === 'Beyaz' ? 'Tebrikler, CasualFish\'i yendin!' : 'CasualFish bu sefer kazandı.')
+                ? (winner === 'Beyaz' ? `Tebrikler, ${botEngine === 'fail' ? 'FailFish\'i' : 'CasualFish v2\'yi'} yendin!` : `${botName()} bu sefer kazandı.`)
                 : `${winner} kazandı.`;
             showGameOver('ŞAH MAT', detail);
         } else if (gameEngine.in_stalemate()) {
@@ -850,7 +857,7 @@ function resignGame() {
     // Against the bot the human (White) always resigns; locally the side to move resigns
     const loser = isVersusBot ? 'Beyaz' : (gameEngine.turn() === 'w' ? 'Beyaz' : 'Siyah');
     const winner = loser === 'Beyaz' ? 'Siyah' : 'Beyaz';
-    showGameOver('ÇEKİLDİ', isVersusBot ? 'CasualFish kazandı.' : `${loser} çekildi, ${winner} kazandı.`);
+    showGameOver('ÇEKİLDİ', isVersusBot ? `${botName()} kazandı.` : `${loser} çekildi, ${winner} kazandı.`);
 
     if (typeof recordGameResult === 'function') {
         recordGameResult('Chess', { won: false, score: 0 });
@@ -897,8 +904,11 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
         });
         btn.classList.add('active');
         btn.setAttribute('aria-pressed', 'true');
-        isVersusBot = btn.getAttribute('data-opponent') === 'ai';
-        diffWrapper.style.display = isVersusBot ? 'flex' : 'none';
+        const opponent = btn.getAttribute('data-opponent');
+        isVersusBot = opponent !== 'local';
+        botEngine = opponent === 'fail' ? 'fail' : 'casual';
+        diffWrapper.style.display = opponent === 'ai' ? 'flex' : 'none';
+        document.getElementById('failfish-note').hidden = opponent !== 'fail';
     });
 });
 

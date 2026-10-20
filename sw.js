@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "8d0c111a05f2";
+const VERSION = "b2dca9f069e4";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -39,8 +39,9 @@ const PRECACHE = [
         "chess-game/casualfish.js",
         "chess-game/index.html",
         "chess-game/script.js",
-        "chess-game/script.js?v=2",
+        "chess-game/script.js?v=3",
         "chess-game/style.css",
+        "chess-game/style.css?v=2",
         "fps-game/",
         "fps-game/index.html",
         "fps-game/script.js",

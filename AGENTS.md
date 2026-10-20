@@ -300,3 +300,14 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 - Tek hamlede mat (Rd8#) ve asılı vezir alma bulundu.
 - Node'da eski motora karşı 10'ar oyun: yeni Orta–eski Orta 10/10, yeni Orta–eski Zor 10/10, yeni Zor–eski Zor 10/10. Kolay yeni başlayanlara göre ayarlandı: eski Kolay'a (rastgele) 10/10, eski Orta'ya 1,5/10, eski Zor'a 0/10.
 - Playwright: Usta'ya karşı 4 hamle; her yanıt geldi, düşünürken ana iş parçacığı gecikmesi 0–11 ms, sayfa hatası yok.
+
+## 2026-10-20 — CasualFish v2 ve FailFish
+
+- Bot adı arayüzde "CasualFish v2". Lobide üç rakip: CasualFish v2, FailFish, Yerel (1'e 1); zorluk seçici yalnızca CasualFish v2'de.
+- `chess-game/casualfish.js` `failSearch` (`LEVELS.fail`, 0,9 sn, en çok 4 yarım hamle): her kök hamle normal aranır (rakibin iyi oynadığı varsayılır) ve FailFish için **en kötü** sonucu veren seçilir; mata yürür, taş verir. Rakibi mat eden ya da pat yapan hamleler hiç oynanmaz (başka hamle varsa), tekrar ve 50 hamle beraberliğinden de kaçınır. Worker yoksa yedek: oyunu bitirmeyen rastgele bir hamle.
+- `script.js?v=3`, `style.css?v=2` (üç sütunlu rakip seçici, FailFish notu), `about.html`.
+
+### Testler
+
+- Node: FailFish (siyah) CasualFish v2 Kolay'a 10/10, Orta'ya 10/10, Zor'a 6/6 kaybetti (Zor'a karşı 7 yarım hamlede mat); rastgele oynayan rakibe karşı 10 oyunda hiç kazanmadı (6 kayıp, 1 beraberlik, 3'ü 300 yarım hamlede bitmedi; rastgele rakip mat etmeye çalışmıyor).
+- Playwright 1280 px: e4, Qh5, Bc4, Qxf7# ile 4 hamlede kazanıldı, "Tebrikler, FailFish'i yendin!"; 390 px lobi ve taşma kontrolü, sayfa hatası yok.

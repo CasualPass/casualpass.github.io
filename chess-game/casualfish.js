@@ -498,6 +498,7 @@
             const text = moveText(root[Math.floor(Math.random() * root.length)]);
             return { move: text, from: text.slice(0, 2), to: text.slice(2, 4), promotion: text[4], score: 0, depth: 0, nodes: 0 };
         }
+        if (opts.mode === 'fail') return failSearch(b, root, opts);
         const s = new Search(b, opts);
         const noise = opts.noise || 0;
         const jitter = new Map(root.map((m) => [m, noise ? Math.round((Math.random() * 2 - 1) * noise) : 0]));
@@ -538,6 +539,53 @@
         return { move: text, from: text.slice(0, 2), to: text.slice(2, 4), promotion: text[4], score: bestScore, depth: reached, nodes: s.nodes };
     }
 
+    /*
+     * FailFish: plays to lose. Each root move is searched normally (the opponent is assumed to play
+     * well) and the move with the WORST outcome for FailFish is chosen, so it walks into mates and
+     * hands over material. It never mates or stalemates the opponent and avoids repetition and
+     * 50-move draws whenever another move exists.
+     */
+    function failSearch(b, root, opts) {
+        const s = new Search(b, opts);
+        const penalty = new Map();
+        for (const m of root) {
+            b.make(m);
+            const replies = b.legalMoves().length;
+            let p = 0;
+            if (!replies) p = b.inCheck() ? 4 * MATE : 3 * MATE; // would win or stalemate: never
+            else if (b.half >= 100 || b.repeated()) p = 2 * MATE;
+            b.unmake();
+            penalty.set(m, p);
+        }
+        let best = root[0];
+        let reached = 0;
+        let bestScore = INF;
+        for (let depth = 1; depth <= opts.maxDepth; depth++) {
+            try {
+                let iterBest = 0;
+                let iterScore = INF;
+                for (const m of s.order(root, best, 0)) {
+                    let score = penalty.get(m);
+                    if (score < MATE) {
+                        b.make(m);
+                        try { score = -s.negamax(depth - 1, -INF, INF, 1, true); } finally { b.unmake(); }
+                        score += Math.round(Math.random() * 6); // a little variety between equally bad moves
+                    }
+                    if (score < iterScore) { iterScore = score; iterBest = m; }
+                }
+                best = iterBest;
+                bestScore = iterScore;
+                reached = depth;
+                if (bestScore < -MATE + 1000) break; // found a way to get mated
+            } catch (e) {
+                if (e !== ABORT) throw e;
+                break;
+            }
+        }
+        const text = moveText(best);
+        return { move: text, from: text.slice(0, 2), to: text.slice(2, 4), promotion: text[4], score: bestScore, depth: reached, nodes: s.nodes };
+    }
+
     function perft(fen, depth) {
         const b = new Board(fen);
         const go = (d) => {
@@ -553,7 +601,8 @@
         1: { timeMs: 300, maxDepth: 1, noise: 220, qLimit: 0, blunder: 0.3 },
         2: { timeMs: 600, maxDepth: 3, noise: 35, qLimit: 6 },
         3: { timeMs: 1500, maxDepth: 64, noise: 0 },
-        4: { timeMs: 3000, maxDepth: 64, noise: 0 }
+        4: { timeMs: 3000, maxDepth: 64, noise: 0 },
+        fail: { timeMs: 900, maxDepth: 4, noise: 0, mode: 'fail' }
     };
 
     const api = { search, perft, LEVELS, Board };

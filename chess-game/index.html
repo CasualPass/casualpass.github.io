@@ -21,7 +21,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Local Game Styling -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 
     <!-- Load chess.js Logic Engine -->
     <script src="vendor/chess.js"></script>
@@ -61,13 +61,14 @@
                 <div class="setting-row">
                     <span class="setting-label" id="opponent-label">Rakip</span>
                     <div class="preset-buttons" id="opponent-selector" role="group" aria-labelledby="opponent-label">
-                        <button type="button" class="preset-btn active" data-opponent="ai" aria-pressed="true">CasualFish (Yapay zekâ)</button>
+                        <button type="button" class="preset-btn active" data-opponent="ai" aria-pressed="true">CasualFish v2</button>
+                        <button type="button" class="preset-btn" data-opponent="fail" aria-pressed="false">FailFish</button>
                         <button type="button" class="preset-btn" data-opponent="local" aria-pressed="false">Yerel (1'e 1)</button>
                     </div>
                 </div>
 
                 <div class="setting-row" id="difficulty-wrapper">
-                    <label class="setting-label" for="bot-difficulty">CasualFish zorluğu</label>
+                    <label class="setting-label" for="bot-difficulty">CasualFish v2 zorluğu</label>
                     <input type="range" id="bot-difficulty" min="1" max="4" value="2" step="1" aria-valuetext="Orta">
                     <div class="range-labels" aria-hidden="true">
                         <span>Kolay</span>
@@ -76,6 +77,7 @@
                         <span>Usta</span>
                     </div>
                 </div>
+                <p class="setting-note" id="failfish-note" hidden>FailFish kaybetmek için oynar: seni asla mat etmez, taşlarını verir ve mat olmanın yolunu arar.</p>
             </div>
 
             <button type="button" id="start-game-btn" class="btn">OYUNA BAŞLA</button>
@@ -129,7 +131,7 @@
     </main>
 
     <!-- Game Logic -->
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 </body>
 
 </html>
