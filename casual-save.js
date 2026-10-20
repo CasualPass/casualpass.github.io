@@ -62,10 +62,37 @@
         return save;
     }
 
+    let exporting = false;
     async function exportSave() {
+        if (exporting) throw new Error('Bir kayıt dosyası işlemi zaten açık.');
+        exporting = true;
+        try { return await exportOnce(); } finally { exporting = false; }
+    }
+    async function exportOnce() {
         const save = await build();
         const blob = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
         const name = `casualpass-kayit-${save.created.slice(0, 10)}.json`;
+        // Native shells expose only an origin-scoped, user-confirmed save-file picker.
+        const iosSave = window.webkit?.messageHandlers?.casualpassSave;
+        if (iosSave) {
+            const result = await iosSave.postMessage(JSON.stringify(save));
+            return { name, native: true, cancelled: Boolean(result?.cancelled) };
+        }
+        const androidSave = window.CasualPassNative;
+        if (androidSave?.postMessage) {
+            const result = await new Promise((resolve, reject) => {
+                const previous = androidSave.onmessage;
+                const cleanup = () => { clearTimeout(timer); androidSave.onmessage = previous; };
+                const timer = setTimeout(() => { cleanup(); reject(new Error('Dosya kaydetme işlemi zaman aşımına uğradı.')); }, 300000);
+                androidSave.onmessage = event => {
+                    cleanup();
+                    try { const result = JSON.parse(event.data); if (result.error) reject(new Error(result.error)); else resolve(result); }
+                    catch (error) { reject(error); }
+                };
+                try { androidSave.postMessage(JSON.stringify(save)); } catch (error) { cleanup(); reject(error); }
+            });
+            return { name, native: true, cancelled: Boolean(result?.cancelled) };
+        }
         const file = new File([blob], name, { type: 'application/json' });
         // On phones the share sheet is the natural "save to Files"; elsewhere a download.
         if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia('(pointer: coarse)').matches) {

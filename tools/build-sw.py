@@ -9,7 +9,7 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SKIP_DIRS = {'.git', 'supabase', 'shots', 'tools', 'node_modules'}
+SKIP_DIRS = {'.git', 'native', 'supabase', 'shots', 'tools', 'node_modules'}
 SKIP_FILES = {'sw.js', 'version.json', 'LICENSE', '.DS_Store'}
 SHIP_EXT = {'.html', '.js', '.css', '.png', '.svg', '.json', '.webmanifest', '.txt', '.mp3', '.woff2'}
 
