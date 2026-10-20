@@ -72,7 +72,7 @@ Bu proje büyük ölçüde AI araçlarıyla geliştirilmiştir.
 Giriş/kayıt için e-posta veya SMTP gerekmez. Kullanıcı adı 3–24 karakterdir (`a-z`, `0-9`, `_`); baş/son boşluklar temizlenir ve küçük harfe çevrilir. Supabase’in e-posta tabanlı Auth kimliği, `<kullanıcı-adı>@accounts.casualpass.invalid` biçiminde dahili bir tanımlayıcıya eşlenir. Bu posta almayan bir kimliktir; e-posta sahipliği iddiası veya e-postayla şifre sıfırlama yoktur. Kullanıcı adını ve şifreni güvenli yerde sakla.
 
 - Parolalar HTTPS üzerinden Supabase Auth’a gider; Supabase bunları **bcrypt hash** olarak saklar. Uygulama şifreyi veya hash’ini kendi tablolarına, çerezlerine, localStorage’a veya oyun yedeklerine yazmaz. Hash’i istemcide üretip parola yerine göndermeyiz.
-- Uygulama en az 12 karakter ve bcrypt sınırı nedeniyle en fazla 72 UTF-8 bayt kabul eder. Supabase Email sağlayıcısının Minimum password length ayarını da 12 yap.
+- Uygulama en az 6 karakter ve bcrypt sınırı nedeniyle en fazla 72 UTF-8 bayt kabul eder. Supabase Email sağlayıcısının Minimum password length ayarını 6 olarak tut.
 - Dashboard’da giriş ve yeni hesap oluşturma vardır. E-postayla açılmış mevcut hesapta **Bu hesaba tanımla** formu, oturumu açık kullanıcının aynı Auth kullanıcı ID’sine kullanıcı adı/şifre atar; bulut kaydı korunur. Hesap tanımlandıktan sonra giriş için kullanıcı adı kullanılır. Yeni şifreyi kullanıcı kendisi formda girer.
 
 ### Sunucu kurulumu

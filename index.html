@@ -107,9 +107,9 @@
                     <input id="account-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,24}" minlength="3" maxlength="24" required aria-describedby="account-username-hint">
                     <small id="account-username-hint">3–24 karakter: a–z, 0–9, alt çizgi. Büyük/küçük harf fark etmez.</small>
                     <label for="account-password">Şifre</label>
-                    <input id="account-password" type="password" autocomplete="current-password" minlength="12" required aria-describedby="account-password-hint">
-                    <small id="account-password-hint">En az 12 karakter. Şifreni güvenli yerde sakla; e-postayla şifre sıfırlama kullanılmaz.</small>
-                    <div id="account-confirm-row" hidden><label for="account-password-confirm">Şifre tekrar</label><input id="account-password-confirm" type="password" autocomplete="new-password" minlength="12"></div>
+                    <input id="account-password" type="password" autocomplete="current-password" minlength="6" required aria-describedby="account-password-hint">
+                    <small id="account-password-hint">En az 6 karakter. Şifreni güvenli yerde sakla; e-postayla şifre sıfırlama kullanılmaz.</small>
+                    <div id="account-confirm-row" hidden><label for="account-password-confirm">Şifre tekrar</label><input id="account-password-confirm" type="password" autocomplete="new-password" minlength="6"></div>
                     <div class="save-actions"><button class="save-button primary" id="account-login" type="submit">Giriş yap</button><button class="account-text-button" id="account-register-toggle" type="button">Yeni hesap oluştur</button></div>
                 </form>
             </div>
@@ -118,8 +118,8 @@
                     <h3>Mevcut hesabına kullanıcı adı ve şifre ekle</h3>
                     <p class="account-note">Bu işlem mevcut hesabını ve bulut kaydını korur. Sonraki girişinde bu kullanıcı adını kullanırsın. E-postayla giriş yerini kullanıcı adına bırakır; e-postayla şifre sıfırlama kullanılmaz.</p>
                     <label for="account-setup-username">Yeni kullanıcı adı</label><input id="account-setup-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,24}" minlength="3" maxlength="24" required>
-                    <label for="account-setup-password">Yeni şifre</label><input id="account-setup-password" type="password" autocomplete="new-password" minlength="12" required>
-                    <label for="account-setup-confirm">Yeni şifre tekrar</label><input id="account-setup-confirm" type="password" autocomplete="new-password" minlength="12" required>
+                    <label for="account-setup-password">Yeni şifre</label><input id="account-setup-password" type="password" autocomplete="new-password" minlength="6" required>
+                    <label for="account-setup-confirm">Yeni şifre tekrar</label><input id="account-setup-confirm" type="password" autocomplete="new-password" minlength="6" required>
                     <button class="save-button primary" id="account-setup-submit" type="submit">Bu hesaba tanımla</button>
                 </form>
                 <p>Giriş yapılan hesap: <strong id="account-identity"></strong></p>
@@ -227,7 +227,7 @@
     <script src="casual-cheats.js?v=8"></script>
     <script src="casual-save.js?v=2"></script>
     <script src="cloud-config.js?v=3"></script>
-    <script src="casual-cloud.js?v=3"></script>
+    <script src="casual-cloud.js?v=4"></script>
     <script src="account-ui.js?v=2"></script>
     <script src="script.js?v=15"></script>
 </body>

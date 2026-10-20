@@ -114,7 +114,7 @@ test('invalid or expired callback never persists a session', async () => {
     assert.equal(expired.calls.length, 0); assert.equal(expired.cloud.getState().error.includes('untrusted'), false);
 });
 test('username/password signup and login normalize identifiers and never persist password', async () => {
-    const password = 'test-only-long-password';
+    const password = 'six-ok';
     const response = { ...makeSession(), user: { id: 'user-a', email: 'player_1@accounts.casualpass.invalid' } };
     const b = boot({ handler: async () => response }); await b.cloud.ready;
     await b.cloud.signUp(' Player_1 ', password);
@@ -134,7 +134,7 @@ test('username and bcrypt byte-limit validation happens before network calls', a
 test('legacy account credential setup preserves authenticated user ID and cloud-save ownership', async () => {
     const user = { id: 'user-a', email: 'player_1@accounts.casualpass.invalid' };
     const b = boot({ initial: makeSession(), handler: async c => c.method === 'PUT' ? user : c.url.includes('/auth/') ? makeSession().user : ({ raw: '' }) }); await b.cloud.ready;
-    await b.cloud.setupCredentials('player_1','test-only-long-password');
+    await b.cloud.setupCredentials('player_1','six-ok');
     assert.equal(b.calls[1].method, 'PUT'); assert.equal(b.calls[1].headers.Authorization,'Bearer access-private');
     assert.equal(b.cloud.getState().username,'player_1');
     assert.equal(JSON.parse(b.storage.get(storedKey)).user.id,'user-a');
@@ -146,6 +146,6 @@ test('confirmation-required signup and pending legacy change are not reported as
     await assert.rejects(b.cloud.signUp('player_1','test-only-long-password'),/Kayıt tamamlanamadı/);
     assert.equal(b.cloud.getState().authenticated,false);
     const c=boot({initial:makeSession(),handler:async()=>makeSession().user});await c.cloud.ready;
-    await assert.rejects(c.cloud.setupCredentials('player_1','test-only-long-password'), /geçiş tamamlanmadı/);
+    await assert.rejects(c.cloud.setupCredentials('player_1','six-ok'), /geçiş tamamlanmadı/);
     assert.equal(c.cloud.getState().username,'');assert.equal(c.cloud.getState().authenticated,true);
 });

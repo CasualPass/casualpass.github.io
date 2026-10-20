@@ -381,7 +381,7 @@ Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQ
 
 Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı adı + şifre akışına geçildi. Bu kayıt, yukarıdaki e-posta girişinin güncel ürün davranışı olarak değerlendirilmesini geçersiz kılar.
 
-- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ve mevcut hesaba kimlik bilgisi tanımlama (`PUT /user`). Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Uygulama en az 12 karakter, en fazla 72 UTF-8 bayt kabul eder.
+- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ve mevcut hesaba kimlik bilgisi tanımlama (`PUT /user`). Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Kullanıcının son düzeltmesiyle uygulama en az 6 karakter, en fazla 72 UTF-8 bayt kabul eder.
 - Mevcut e-posta hesabına kullanıcı adı/şifre tanımlanırken Auth kullanıcı ID’sinin aynı kalması doğrulanır; bulut kaydı aynı ID’ye bağlı kalır. İşlem tam uygulanmazsa başarılı gösterilmez ve oturum kapatılmaz. Parola yalnızca form/istek sırasında kullanılır, formdan temizlenir; oyun yedeğine ve localStorage’a yazılmaz.
 - `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve mevcut hesaba kullanıcı adı/şifre tanımlama formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
 - `cloud-config.js`: `loginMode: 'password'`. Eski e-posta/OTP fonksiyonları yalnızca kod uyumluluğu için kaldı; yeni arayüzde sunulmaz.
@@ -396,4 +396,4 @@ Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı
 - [x] E-posta onayının kapandığı canlı API’den doğrulandı.
 - [ ] Gerçek kullanıcı adı/şifre ile mevcut hesabın geçişi ve yeniden giriş: kullanıcının yeni parolayı kendisi girmesi bekleniyor; henüz doğrulanmadı.
 
-Bilinen sınır: Supabase parola uzunluğu sunucu ayarı ayrıca 12 olarak yapılandırılmalıdır; bu çalışmada sunucu varsayılanı henüz değiştirilmedi. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.
+Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş ve mevcut hesaba tanımlamada kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.

@@ -33,7 +33,7 @@
     function credentials(username, password) {
         username = String(username).trim().toLowerCase();
         if (!/^[a-z0-9_]{3,24}$/.test(username)) throw new Error('Kullanıcı adı 3–24 karakter olmalı; a–z, 0–9 ve alt çizgi kullan.');
-        if (typeof password !== 'string' || password.length < 12 || new TextEncoder().encode(password).length > 72) throw new Error('Şifre en az 12 karakter, en fazla 72 bayt olmalı.');
+        if (typeof password !== 'string' || password.length < 6 || new TextEncoder().encode(password).length > 72) throw new Error('Şifre en az 6 karakter, en fazla 72 bayt olmalı.');
         return { username, email: username + '@' + USER_DOMAIN, password };
     }
     function setSession(s) {
