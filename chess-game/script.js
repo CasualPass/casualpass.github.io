@@ -27,7 +27,7 @@ const promotionCancel = document.getElementById('promotion-cancel');
 // State Variables
 let selectedSquare = null;      // "e2" etc.
 let isVersusBot = true;
-let botDifficulty = 2; // 1: Kolay, 2: Orta, 3: Zor
+let botDifficulty = 2; // 1: Kolay, 2: Orta, 3: Zor, 4: Usta
 let gameActive = false;
 let isAnimating = false;
 let botTimer = null;
@@ -37,7 +37,7 @@ let focusedSquare = 'e2';       // roving tabindex target for keyboard play
 let resignConfirmTimer = null;
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const DIFFICULTY_NAMES = { 1: 'Kolay', 2: 'Orta', 3: 'Zor' };
+const DIFFICULTY_NAMES = { 1: 'Kolay', 2: 'Orta', 3: 'Zor', 4: 'Usta' };
 const PIECE_NAMES = { p: 'piyon', n: 'at', b: 'fil', r: 'kale', q: 'vezir', k: 'şah' };
 
 // Filled glyphs for both colors (colored via CSS) so white pieces stay readable on light squares.
@@ -539,21 +539,62 @@ function makeCasualFishMove() {
         return;
     }
 
+    // The search runs in a worker so the board stays responsive; the old in-page search is the fallback.
+    const worker = casualFishWorker();
+    if (worker) {
+        const id = ++casualFishRequest;
+        const text = (m) => m.from + m.to + (m.promotion || '');
+        worker.onmessage = (event) => {
+            const d = event.data;
+            if (d.id !== casualFishRequest || !gameActive || gameEngine.turn() !== 'b') return;
+            const pick = d.move && possibleMoves.find((m) => text(m) === d.move);
+            playCasualFishMove(pick || possibleMoves[0], possibleMoves);
+        };
+        worker.postMessage({
+            id,
+            // The full move list lets CasualFish see repetitions; it starts from the standard position.
+            moves: gameEngine.history({ verbose: true }).map(text),
+            level: botDifficulty,
+            allowed: isImmortalEnabled() ? possibleMoves.map(text) : null
+        });
+        return;
+    }
+
     if (botDifficulty === 1) {
         bestMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
     } else {
-        const depth = botDifficulty === 2 ? 2 : 3;
+        const depth = botDifficulty === 2 ? 2 : 3; // fallback search when workers are unavailable
         bestMove = minimaxRoot(depth, gameEngine, true);
     }
+    playCasualFishMove(bestMove, possibleMoves);
+}
 
+let casualFishWorkerInstance;
+let casualFishRequest = 0;
+function casualFishWorker() {
+    if (casualFishWorkerInstance !== undefined) return casualFishWorkerInstance;
+    try {
+        casualFishWorkerInstance = new Worker('casualfish-worker.js');
+        casualFishWorkerInstance.onerror = () => {
+            // A broken worker falls back to the in-page search for the rest of the session.
+            casualFishWorkerInstance.terminate();
+            casualFishWorkerInstance = null;
+            if (gameActive && gameEngine.turn() === 'b') makeCasualFishMove();
+        };
+    } catch {
+        casualFishWorkerInstance = null;
+    }
+    return casualFishWorkerInstance;
+}
+
+function playCasualFishMove(bestMove, possibleMoves) {
     if (bestMove && isImmortalEnabled()) {
         const bestSan = typeof bestMove === 'string' ? bestMove : bestMove.san;
         if (!possibleMoves.some(move => move.san === bestSan)) bestMove = possibleMoves[0];
     }
 
     if (bestMove) {
-        const moveObj = typeof bestMove === 'string' ? { san: bestMove } : bestMove;
-        const moveResult = gameEngine.move(moveObj);
+        const moveResult = gameEngine.move(bestMove);
 
         if (moveResult) {
             if (typeof playPopSound === 'function') playPopSound();
@@ -749,6 +790,7 @@ function showGameOver(title, detail) {
  * Start a fresh game with the current lobby settings
  */
 function startGame() {
+    casualFishRequest++;
     clearTimeout(botTimer);
     botTimer = null;
     closePromotionPicker();
@@ -774,6 +816,7 @@ function startGame() {
  * Handle Reset Game
  */
 function resetGame() {
+    casualFishRequest++;
     clearTimeout(botTimer);
     botTimer = null;
     closePromotionPicker();
