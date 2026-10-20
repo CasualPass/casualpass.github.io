@@ -725,7 +725,13 @@
         if (mode !== 'playing' || drag) return;
         if (event.button !== undefined && event.button > 0) return;
         const point = toLogical(event);
-        if (point.y < TRAY_Y - 10) return;
+        if (point.y < TRAY_Y - 10) {
+            if (keyPick) {
+                const r = Math.floor((point.y - BY) / CELL), c = Math.floor((point.x - BX) / CELL);
+                if (!place(keyPick.slot, r, c)) toast('Parça buraya sığmıyor. Başka bir hücre dene.');
+            }
+            return;
+        }
         const slot = Math.min(2, Math.max(0, Math.floor(point.x / SLOT_W)));
         if (!tray[slot]) return;
         event.preventDefault();
@@ -733,7 +739,7 @@
         keyPick = null;
         const center = slotCenter(slot);
         const touch = event.pointerType !== 'mouse';
-        drag = { slot, pointerId: event.pointerId, x: center.x, y: center.y, size: CELL, lift: touch ? TOUCH_LIFT + tray[slot].h * CELL / 2 : 0, dx: 0, dy: 0, target: null };
+        drag = { start: point, moved: false, slot, pointerId: event.pointerId, x: center.x, y: center.y, size: CELL, lift: touch ? TOUCH_LIFT + tray[slot].h * CELL / 2 : 0, dx: 0, dy: 0, target: null };
         // Mouse keeps the grab point under the cursor; touch lifts the piece above the finger.
         if (!touch) { drag.dx = (center.x - point.x) * CELL / TRAY_CELL; drag.dy = (center.y - point.y) * CELL / TRAY_CELL; }
         moveDrag(point);
@@ -743,14 +749,19 @@
     canvas.addEventListener('pointermove', (event) => {
         if (!drag || event.pointerId !== drag.pointerId) return;
         event.preventDefault();
-        moveDrag(toLogical(event));
+        const point = toLogical(event);
+        if (Math.hypot(point.x - drag.start.x, point.y - drag.start.y) > 10) drag.moved = true;
+        moveDrag(point);
     });
 
     function endDrag(event, cancelled) {
         if (!drag || event.pointerId !== drag.pointerId) return;
-        const { slot, target } = drag;
+        const { slot, target, moved } = drag;
         drag = null;
-        if (!cancelled && target && mode === 'playing') place(slot, target.r, target.c);
+        if (!cancelled && mode === 'playing') {
+            if (!moved) { pickSlot(slot); toast('Parça seçildi. Tahtada sol üst hücresine dokun.'); }
+            else if (target) place(slot, target.r, target.c);
+        }
     }
 
     canvas.addEventListener('pointerup', (event) => endDrag(event, false));
@@ -768,6 +779,7 @@
 
     window.addEventListener('keydown', (event) => {
         const target = event.target;
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
         if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
         if (mode === 'over') {
             if (target instanceof HTMLButtonElement) return;

@@ -311,3 +311,98 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 
 - Node: FailFish (siyah) CasualFish v2 Kolay'a 10/10, Orta'ya 10/10, Zor'a 6/6 kaybetti (Zor'a karşı 7 yarım hamlede mat); rastgele oynayan rakibe karşı 10 oyunda hiç kazanmadı (6 kayıp, 1 beraberlik, 3'ü 300 yarım hamlede bitmedi; rastgele rakip mat etmeye çalışmıyor).
 - Playwright 1280 px: e4, Qh5, Bc4, Qxf7# ile 4 hamlede kazanıldı, "Tebrikler, FailFish'i yendin!"; 390 px lobi ve taşma kontrolü, sayfa hatası yok.
+
+
+## 2026-10-20 — Kesilen arayüz çalışmasının devamı
+
+### Amaç
+
+Claude oturumundaki UI ve oyun geliştirme isteğini `3d16f73` kontrol kaydından sürdürmek; kaydedilmiş HTML ile eksik CSS/JavaScript entegrasyonunu tamamlamak. Önceki turda yenilenen Wood Turning bu çalışmanın dışında tutuldu.
+
+### Yapılanlar ve teknik kararlar
+
+- `index.html`, `script.js`, `style.css`: Kontrol kaydındaki tür filtreleri, kişisel oyun rekorları, ödül adımları ve kazanç çarpanı için responsive tasarım tamamlandı. Filtreleme yalnızca görünümü değiştirir.
+- `xox-game/`: Klasik, 4×4 ve Ultimate kuralları; ilk oyuncu seçimi, raunt geçmişi ve sonuçtan tahtayı inceleme tamamlandı. Zor bot klasikte minimax, büyük tahtalarda sınırlı taktiksel değerlendirme kullanır; arayüz bunu açıklar.
+- `chess-game/`: Hamle geçmişi, rakip özeti ve sonuç ekranını kapatıp bitmiş tahtayı inceleme eklendi; motorlar değiştirilmedi.
+- `snake-game/`: Klasik/Hızlanan/Engelli modları, engellerden kaçınan yem üretimi, altın yem/kombo ve sonuç istatistikleri tamamlandı.
+- `2048-game/`: `cp_2048_run` çereziyle otomatik devam, hamle/en büyük taş göstergesi ve eski animasyon çağrılarının yeni oyuna karışmasını önleyen nesil kontrolü eklendi. Başarılı yükleme kaydı hemen yeniden yazar; hamle yapmadan iki kez yenilemek oyunu kaybettirmez.
+- `owl-game/`, `wood-blocks/`: Erişilebilir duraklatma paneli ve dokunarak parça seçip yerleştirme eklendi; mevcut kontroller korundu.
+- `son-hat/`, `fps-game/`, `vektor/`: Kontrol/amaç rehberleri, klavyeyle menü sekmeleri, okunabilir HUD ve dikey telefon kontrol yerleşimi iyileştirildi. Ağ/ödül kuralları değiştirilmedi.
+- `about.html`, `README.md`: Güncel oyun davranışı ve mevcut yerel görselle AI Generated açıklaması belgelendi. Yeni bağımlılık eklenmedi.
+- `sw.js`, `version.json`: Yayın varlıkları için `python3 tools/build-sw.py` ile yeniden üretilir.
+
+### Hedef durumu
+
+- [x] Kaydedilmiş yarım HTML değişikliklerini tamamlamak ve oyun arayüzlerini geliştirmek.
+- [x] Sözdizimi, HTML bağlantıları ve hedefli oyun mantığı doğrulamaları.
+- [ ] Gerçek tarayıcıda tüm oyunların görsel/mobil dokunma doğrulaması: environment nedeniyle doğrulanamadı; otomatik devam görevi değildir.
+
+### Testler ve sınırlar
+
+- Değişen tüm JavaScript dosyalarında `node --check` ve `git diff --check`: başarılı.
+- Node VM: XOX klasik/4×4/Ultimate kazanma ve yönlendirme, bot/başlangıç/raunt/hile korumaları; gerçek chess.js ile hamle geçmişi; Snake yem/engel/hız/kombo/duraklatma; 2048 birleştirme/eski callback/yükleme/iki yenileme; Owl duraklatma ve Blocks dokunma/sürükleme/iptal: başarılı.
+- 12 HTML sayfasında benzersiz ID, yerel dosya bağlantıları ve ARIA hedefleri: başarılı.
+- Yerel Brave erişilebilirlik ağacında dashboard ödül/filtre/10 oyun ve Hakkında içeriği yüklendi. Ekran yakalama ScreenCaptureKit hatası verdi; sonraki tıklama/klavye etkileşimleri güvenilir çalışmadı. Görsel yerleşim ve gerçek dokunma davranışı doğrulanamadı. VM testleri gerçek DOM/CSS render doğrulaması değildir.
+
+
+## 2026-10-20 — Supabase hesabı ve isteğe bağlı bulut kaydı
+
+### Amaç ve kapsam
+
+E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından başlatılan cihazlar arası ilerleme aktarımı. Yerel/çevrimdışı oyunlar korunur; otomatik birleştirme ve sunucuda hesaplanan ekonomi kapsam dışıdır.
+
+### Yapılanlar ve teknik kararlar
+
+- `cloud-config.js`: Yeni bağımsız `casualpass` projesinin açık URL/publishable anahtarı; secret/service_role yok. Varsayılan `loginMode: 'magiclink'`.
+- `casual-cloud.js`: Supabase Auth HTTP API’siyle e-posta bağlantısı/isteğe bağlı OTP, URL’den token temizleme ve `/user` doğrulaması, token yenileme, çıkış, oturum değişimi korumaları ve PostgREST kayıt aktarımı. npm metadata okuma izni verilmediğinden SDK indirilmedi; ek paket yok.
+- Kimlik doğrulama token’ları `sb-casualpass-…` localStorage anahtarında tutulur. Bu, eski yalnızca-çerez kuralına auth için sınırlı istisnadır; token’lar oyun yedeğine/buluta alınmaz. Depolama kapalıysa oturum sayfa ömrüyle sınırlıdır. Web Locks desteklendiğinde sekmeler arası yenileme sıraya alınır.
+- `account-ui.js`, `index.html`, `style.css`: E-posta girişi, hata/bekleme durumları, yeniden gönderim beklemesi, hesap bilgisi/çıkış ve açık kullanıcı eylemiyle bulut yükleme/indirme/önizleme. Üstteki eski yerel oturum düğmesi `Oyuncuyu başlat` olarak ayrıştırıldı.
+- `casual-save.js`: Mevcut tam oyun yedeği `build()` API’siyle yeniden kullanılır. Buluttan getirme mevcut dosya doğrulamasını kullanır; geçersiz kayıt otomatik uygulanmaz.
+- `supabase/schema.sql`: Mevcut RLS şeması kullanıldı. Kullanıcı yeni projeyi kendisi oluşturup şemayı çalıştırdı; canlı anonim SELECT isteği 401/42501 (permission denied) döndü. Canlı iki kullanıcı arasında RLS izolasyonu henüz test edilmedi.
+- `supabase/email-otp.html`: SMTP ile isteğe bağlı sayısal kod şablonu. Ücretsiz varsayılan e-posta hizmeti özel şablon düzenlemeyi engellediğinden varsayılan bağlantı akışı seçildi. Genel alıcılar için SMTP gerekir; bu bir yayın öncesi kurulum gereksinimidir.
+- `README.md`, `about.html`: Hesap/bulut/yerel kayıt farkı, ortak cihaz davranışı ve kurulum belgelendi. Bulut kaydı son yükleyen tarafından değiştirilir; otomatik birleştirme yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] Hesap arayüzü, auth yaşam döngüsü ve elle bulut aktarımı uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 12 test başarılı (auth, yenileme, çıkış, yarışlar, çevrimdışı, kayıt/token ayrımı, bağlantı dönüşü).
+- [x] Değişen JS dosyalarında `node --check`, HTML ID/ARIA/form bağları ve `git diff --check`: başarılı.
+- [x] Canlı `/auth/v1/settings`: e-posta giriş/yeni kayıt açık, e-posta doğrulaması gerekli. Anonim tablo okuma engellendi.
+- [x] Gerçek e-posta bağlantısı sonrası doğru hesapla giriş ve temiz sekmede kalıcı oturum doğrulandı. Kullanıcının açık yükleme/geri getirme onayıyla mevcut oyun kaydı Supabase’e yüklendi, 3 kayıt alanı doğrulanarak geri getirildi ve aynı yedek yerel oyuna uygulandı. Uygulama yenilemesinden sonra hesap açık, Snake rekoru 10, oynanan oyun 1 ve Liquid teması korundu.
+- [ ] İki ayrı kullanıcı arasında canlı RLS izolasyonu ve farklı fiziksel cihazda aktarım: bu testte çalıştırılmadı.
+- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; e-posta giriş testi ve aynı tarayıcıda bulut yükle/geri getir/uygula akışı başarılı (yukarıdaki kayıt).
+
+Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.
+
+
+## 2026-10-20 — Kullanıcı adı ve şifreyle giriş
+
+### Amaç ve kararlar
+
+Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı adı + şifre akışına geçildi. Bu kayıt, yukarıdaki e-posta girişinin güncel ürün davranışı olarak değerlendirilmesini geçersiz kılar.
+
+- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ile yeni hesap oluşturma. Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Kullanıcının son düzeltmesiyle uygulama en az 6 karakter, en fazla 72 UTF-8 bayt kabul eder.
+- Canlı Auth loglarında eski hesabın `PUT /user` çağrısı sırasında `Mail.send` ve HTTP 400 görüldü. Supabase kalıcı hesaplarda e-posta değişimini yeni kayıt autoconfirm ayarından bağımsız doğrulatır. Bu hatalı geçiş kaldırıldı: eski hesap açıkken ayrı kullanıcı adı hesabı oluşturulur, yerel ilerleme korunur ve kullanıcı manuel bulut yüklemesiyle aktarır. Eski Auth ID/bulut kaydı değiştirilmez. Başarısız kayıt eski oturumu korur.
+- `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve eski hesap açıkken yeni kullanıcı adı hesabı oluşturma formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
+- `cloud-config.js`: `loginMode: 'password'`. Eski e-posta/OTP fonksiyonları yalnızca kod uyumluluğu için kaldı; yeni arayüzde sunulmaz.
+- Kullanıcının işlem anındaki açık onayıyla yalnızca CasualPass projesinde **Confirm email** kapatıldı. Canlı `/auth/v1/settings` sonucu `mailer_autoconfirm: true`, `disable_signup: false`; SMTP bu kullanıcı adı akışı için gerekli değil.
+- README/Hakkında ve PWA varlık sürümleri güncellendi. Şema ve oyun/ödül kuralları değişmedi.
+
+### Hedefler ve testler
+
+- [x] Kullanıcı adı/şifre kodu ve eski hesaptan yeni hesap oluşturma formu uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 17 test başarılı. Yeni testler kullanıcı adı eşleme, parola byte sınırı, parolanın saklanmaması, yeni hesap sahipliği, hatada eski oturumun korunması ve güvenli hata mesajlarını kapsar.
+- [x] `node --check`, HTML ID/ARIA/form bağları, `git diff --check`: başarılı; `build-sw.py` çalıştırıldı.
+- [x] E-posta onayının kapandığı canlı API’den doğrulandı.
+- [ ] Gerçek kullanıcı adı/şifre ile yeni hesap oluşturma ve yeniden giriş: henüz doğrulanmadı. Eski hesabı dönüştürme denemesi canlı loglarda başarısız; bu yol kaldırıldı.
+
+Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.
+
+
+## 2026-10-20 — Açık sekmelerde otomatik güncelleme
+
+- Kullanıcı isteği: GitHub push durumunu doğrulamak ve otomatik güncellemeyi güçlendirmek. `18b4bc1` uzak PR dalında doğrulandı; PR #23 taslak ve main’e birleştirilmedi.
+- `shared-settings.js`: Görünür sekmede dakikada bir, çevrimiçi olunca ve sekmeye dönünce sürüm kontrolü. Worker kaydı beklenir, HTTP cache kullanılmadan worker güncellemesi denenir; sürüm çerezi daha önce yazılmış olsa da başarısız worker güncellemesi sonraki kontrolde yeniden denenir.
+- Hesap formunda odak/değer veya bekleyen hesap işlemi varsa hub yenilemesi ertelenir; uygun olduğunda 5 saniyelik kontrol uygular. Oyun ortasında otomatik yenileme yapılmaz. HTML betik sürümleri ve PWA varlıkları güncellendi.
+- `johnappleseed` kullanıcı adıyla gerçek kayıt ve oturum açılması Brave’de görüldü; yerel Snake rekoru 10 ve Liquid teması korundu. Yeni hesapla çıkış/yeniden giriş henüz test edilmedi.
+- Doğrulama: `node --test tools/test-updates.cjs` 5/5; periyodik kontrol/bağlantı dönüşü, başarısız güncellemeyi tekrar deneme, form sırasında erteleme, oyun ortasında yenilememe ve worker olmadan güncelleme. `node --check shared-settings.js` ve `git diff --check` başarılı. Gerçek tarayıcıda yeni bir uzak sürüm yayınlanarak güncelleme testi yapılmadı.

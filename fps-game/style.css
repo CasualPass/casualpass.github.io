@@ -235,3 +235,34 @@ body.theme-paper .standings tr.me td { color: #18794e; }
 @media (prefers-reduced-motion: reduce) {
     #banner div, #killfeed div, #clickhint { animation: none; }
 }
+
+/* A short, visible briefing keeps essential controls beside the start action. */
+.field-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 16px; }
+.field-guide span { min-width: 0; padding: 10px; font-size: 12px; line-height: 1.5; }
+.field-guide b { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: .06em; }
+@media (max-width: 480px) {
+    .field-guide { grid-template-columns: 1fr; gap: 5px; }
+    .field-guide span { padding: 7px 10px; }
+    .field-guide b { display: inline; margin-right: 8px; }
+}
+.field-guide span { color: var(--cp-text-muted); border: 1px solid var(--cp-glass-border); border-radius: 10px; background: var(--cp-glass-bg); }
+.field-guide b { color: var(--cp-text); }
+#hpbox, #weaponbox { padding: 8px 12px; border-radius: 12px; background: rgba(8, 14, 12, .7); }
+body.touch-mode #hpbox, body.touch-mode #weaponbox { padding: 5px 8px; }
+
+/* Portrait phones keep the movement pad clear of the action buttons. */
+@media (max-width: 480px) and (orientation: portrait) {
+    body.touch-mode #stick { left: max(12px, env(safe-area-inset-left)); width: 100px; height: 100px; transform: none; }
+    body.touch-mode #stick i { left: 23px; top: 23px; }
+    body.touch-mode .touch-buttons { right: max(12px, env(safe-area-inset-right)); width: 180px; height: 220px; transform: none; }
+    .touch-buttons .tbtn.fire { right: 0; bottom: 58px; width: 72px; height: 72px; }
+    .touch-buttons .tbtn[data-act="ads"] { right: 76px; bottom: 76px; }
+    .touch-buttons .tbtn[data-act="jump"] { right: 0; bottom: 142px; }
+    .touch-buttons .tbtn[data-act="crouch"] { right: 60px; bottom: 0; }
+    .touch-buttons .tbtn[data-act="reload"] { right: 120px; bottom: 12px; width: 48px; height: 48px; }
+    .touch-buttons .tbtn[data-act="swap"] { right: 62px; bottom: 142px; }
+    .touch-buttons .tbtn[data-act="nade"], .touch-buttons .tbtn[data-act="use"] { right: 120px; bottom: 142px; width: 50px; height: 50px; }
+    #clickhint { max-width: calc(100% - 32px); width: max-content; text-align: center; font-size: 14px; }
+    .room-box { flex-wrap: wrap; gap: 8px; }
+    .session-line { flex-wrap: wrap; }
+}

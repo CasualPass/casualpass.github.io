@@ -458,3 +458,20 @@ button { cursor: pointer; }
     .node.current, .tile-ready, .reveal-icon { animation: none; }
     .sheet { animation: none; }
 }
+
+/* A short, visible briefing keeps essential controls beside the start action. */
+.field-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 16px; }
+.field-guide span { min-width: 0; padding: 10px; font-size: 12px; line-height: 1.5; }
+.field-guide b { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: .06em; }
+@media (max-width: 480px) {
+    .field-guide { grid-template-columns: 1fr; gap: 5px; }
+    .field-guide span { padding: 7px 10px; }
+    .field-guide b { display: inline; margin-right: 8px; }
+}
+.field-guide span { color: #3b5568; background: #eef6fb; border-left: 3px solid var(--blue); border-radius: 8px; }
+.field-guide b { color: var(--blue-dark); }
+.sh-app button:focus-visible, .sh-app a:focus-visible { outline: 3px solid #10324a; outline-offset: 3px; }
+@media (max-height: 680px) {
+    .map-panel { flex: none; }
+    .map-path { max-height: 260px; flex: none; }
+}

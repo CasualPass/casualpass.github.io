@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedInput = document.getElementById("speed-val");
     const speedValText = document.getElementById("speed-display");
     const wallDeathToggle = document.getElementById("wall-death");
+    const showPad = document.getElementById("show-pad");
+    const modeChip = document.getElementById("mode-chip");
+    const modeBtns = document.querySelectorAll(".mode-btn");
     const presetBtns = document.querySelectorAll(".preset-btn");
 
     // Game logic runs on a fixed 400x400 board; the backing store is scaled for crisp pixels.
@@ -53,6 +56,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let paused = false;
 
     let colors = {};
+    let mode = 'classic';
+    let rocks = [];
+    let eaten = 0, combo = 1, bestCombo = 1, ticks = 0, lastMeal = -Infinity;
+    let elapsed = 0, lastTick = 0;
+    let golden = false, foodUntil = Infinity;
+    const modeNames = { classic: 'Klasik', rush: 'Hızlanan', maze: 'Engelli' };
+    function say(message) { document.getElementById('sr-status').textContent = message; }
+    function updateModeChip() {
+        modeChip.textContent = `${modeNames[mode]} · ${tileCount}×${tileCount} · ${fps} adım/sn${combo > 1 ? ` · Kombo ×${combo}` : ''}`;
+    }
+    modeBtns.forEach(button => button.addEventListener('click', () => {
+        mode = button.dataset.mode;
+        modeBtns.forEach(b => {
+            b.classList.toggle('active', b === button);
+            b.setAttribute('aria-pressed', String(b === button));
+        });
+    }));
 
     // Snake colours follow the active CasualPass theme through its CSS variables.
     function readColors() {
@@ -115,7 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
         configMenu.classList.toggle("hidden", on);
         boardWrapper.classList.toggle("hidden", !on);
         gameActions.classList.toggle("hidden", !on);
-        mobileControls.classList.toggle("hidden", !on);
+        mobileControls.classList.toggle("hidden", !on || !showPad.checked);
+        modeChip.classList.toggle("hidden", !on);
+        modeChip.setAttribute("aria-hidden", String(!on));
         document.body.classList.toggle("is-playing", on);
     }
 
@@ -127,6 +149,16 @@ document.addEventListener('DOMContentLoaded', () => {
         wallDeath = wallDeathToggle.checked;
         boardWrapper.classList.toggle("wrap-walls", !wallDeath);
 
+        eaten = 0; combo = 1; bestCombo = 1; ticks = 0; lastMeal = -Infinity; elapsed = 0; lastTick = 0;
+        rocks = [];
+        if (mode === 'maze') {
+            // Separate small islands leave a clear starting corridor and routes around every obstacle.
+            const a = Math.floor(tileCount / 4), b = tileCount - a - 1;
+            for (const x of [a, b]) for (const y of [a, b]) {
+                rocks.push({ x, y }, { x: x + (x === a ? 1 : -1), y });
+            }
+        }
+        updateModeChip();
         snake = [{ x: Math.floor(tileCount / 2), y: Math.floor(tileCount / 2) }];
         tail = 3;
         score = 0;
@@ -151,7 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Main Game Loop Update
     function update() {
-        if (isGameOver || paused) return;
+        if (isGameOver || paused || !gameStarted) return;
+        const now = performance.now();
+        if (lastTick) elapsed += now - lastTick;
+        lastTick = now;
+        ticks += 1;
+        if (golden && ticks >= foodUntil) spawnFood(false);
 
         if (dirQueue.length) velocity = dirQueue.shift();
 
@@ -172,6 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        if (!cheatImmortal() && rocks.some(rock => rock.x === headX && rock.y === headY)) {
+            finish(false);
+            return;
+        }
         const newHead = { x: headX, y: headY };
 
         // Process only if moving
@@ -193,9 +234,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check food collision
             if (eating) {
-                score += 10;
+                eaten += 1;
+                combo = ticks - lastMeal <= fps * 5 ? Math.min(5, combo + 1) : 1;
+                lastMeal = ticks;
+                bestCombo = Math.max(bestCombo, combo);
+                score += (golden ? 50 : 10) * combo;
+                if (mode === 'rush') {
+                    fps = Math.min(35, Number(speedInput.value) + Math.floor(eaten / 2));
+                    startLoop();
+                }
+                updateModeChip();
                 scoreElem.textContent = score;
-                tail = Math.min(tileCount * tileCount - (cheatImmortal() ? 1 : 0), tail + 1);
+                tail = Math.min(tileCount * tileCount - rocks.length - (cheatImmortal() ? 1 : 0), tail + 1);
                 playEatSound();
                 if (!spawnFood()) {
                     if (!cheatImmortal()) {
@@ -211,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     snake.pop();
                 }
             } else {
-                tail = Math.min(tileCount * tileCount - (cheatImmortal() ? 1 : 0), tail + 1);
+                tail = Math.min(tileCount * tileCount - rocks.length - (cheatImmortal() ? 1 : 0), tail + 1);
                 while (snake.length > tail) snake.pop();
             }
         }
@@ -242,6 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
 
+        // Rocks have an inset and cross so they remain distinct from the snake.
+        rocks.forEach(rock => {
+            const x = rock.x * gridSize, y = rock.y * gridSize;
+            ctx.fillStyle = '#85929e';
+            ctx.fillRect(x + 2, y + 2, gridSize - 4, gridSize - 4);
+            ctx.fillStyle = '#414b58';
+            ctx.fillRect(x + gridSize * .25, y + gridSize * .45, gridSize * .5, 2);
+        });
         // Render Snake, tail first so the head is always on top
         const inset = Math.max(1, gridSize * 0.08);
         for (let index = snake.length - 1; index >= 0; index--) {
@@ -269,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Render Food
-        ctx.fillStyle = colors.food;
+        ctx.fillStyle = golden ? '#ffcc70' : colors.food;
         ctx.beginPath();
         ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, Math.max(2, gridSize / 2 - 2), 0, 2 * Math.PI);
         ctx.fill();
@@ -294,8 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Spawn Apple on a random free cell. Returns false only when the board is full.
-    function spawnFood() {
-        const occupied = new Set(snake.map((segment) => `${segment.x},${segment.y}`));
+    function spawnFood(allowGold = true) {
+        golden = allowGold && eaten > 0 && eaten % 5 === 0;
+        foodUntil = golden ? ticks + fps * 7 : Infinity;
+        const occupied = new Set([...snake, ...rocks].map((segment) => `${segment.x},${segment.y}`));
         const free = [];
         for (let x = 0; x < tileCount; x++) {
             for (let y = 0; y < tileCount; y++) {
@@ -322,6 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         overlayTitle.textContent = won ? "Tahtayı doldurdun!" : "Oyun Bitti";
         finalScoreElem.textContent = score;
+        document.getElementById('final-best').textContent = highScore;
+        document.getElementById('stat-length').textContent = snake.length;
+        document.getElementById('stat-eaten').textContent = eaten;
+        document.getElementById('stat-combo').textContent = `×${bestCombo}`;
+        const seconds = Math.floor(elapsed / 1000);
+        document.getElementById('stat-time').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+        say(`${won ? 'Tahtayı doldurdun' : 'Oyun bitti'}. Skor ${score}, ${eaten} elma.`);
         newRecordElem.textContent = cheatsActive() ? "Hile açık, rekor kaydedilmedi" : "Yeni rekor!";
         newRecordElem.classList.toggle("hidden", !beatRecord);
         overlay.classList.remove("hidden");
@@ -346,6 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function setPaused(next) {
         if (!gameStarted || isGameOver || paused === next) return;
         paused = next;
+        lastTick = 0;
+        say(paused ? "Duraklatıldı" : "Oyun devam ediyor");
         pauseOverlay.classList.toggle("hidden", !paused);
         if (paused) {
             stopLoop();
@@ -383,6 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (paused) setPaused(false);
         if (!gameStarted) {
             gameStarted = true;
+            lastTick = performance.now();
             startHint.classList.add("hidden");
             pauseBtn.disabled = false;
         }
@@ -409,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener("keydown", (e) => {
         // Sliders, toggles and the menu itself keep their own arrow/WASD keys.
-        if (isFormControl(e.target) || boardWrapper.classList.contains("hidden")) return;
+        if (e.ctrlKey || e.metaKey || e.altKey || isFormControl(e.target) || boardWrapper.classList.contains("hidden")) return;
 
         // Prevent default scrolling for arrows
         if (ARROW_KEYS.includes(e.key)) {
@@ -471,6 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
         swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }, { passive: false });
     boardWrapper.addEventListener('touchend', () => { swipeStart = null; });
+    boardWrapper.addEventListener('touchcancel', () => { swipeStart = null; });
 
     // Configuration Inputs Handlers
     function showGrid(value) { gridValText.textContent = `${value}x${value}`; }
@@ -481,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             grid: Number(gridSizeInput.value),
             speed: Number(speedInput.value),
             wall: wallDeathToggle.checked,
-            preset
+            preset, mode, pad: showPad.checked
         }));
     }
 
@@ -540,6 +611,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const saved = JSON.parse(getCookieValue(SETTINGS_COOKIE) || 'null');
         if (saved && Number.isFinite(saved.grid) && Number.isFinite(saved.speed)) {
             applyConfig(saved);
+            showPad.checked = saved.pad !== false;
+            if (modeNames[saved.mode]) {
+                mode = saved.mode;
+                modeBtns.forEach(b => { b.classList.toggle('active', b.dataset.mode === mode); b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
+            }
             updateActivePreset(presets[saved.preset] ? saved.preset : "custom");
         }
     } catch { /* defaults stay */ }
@@ -588,6 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.focus({ preventScroll: true });
     });
 
+    new MutationObserver(() => { readColors(); draw(); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
     if (typeof ResizeObserver === 'function') new ResizeObserver(resizeCanvas).observe(canvas);
     window.addEventListener('resize', resizeCanvas);
 

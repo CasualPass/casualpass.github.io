@@ -19,8 +19,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=18">
-    <script src="shared-settings.js?v=9"></script>
+    <link rel="stylesheet" href="style.css?v=22">
+    <script src="shared-settings.js?v=10"></script>
 </head>
 
 <body class="theme-liquid">
@@ -42,7 +42,7 @@
         <section class="about-hero">
             <p class="eyebrow">HAKKINDA</p>
             <h1>Oyunlar ve nasıl oynanır</h1>
-            <p>CasualPass, tarayıcıda anında açılan reklamsız mini oyunlardan oluşur. Hesap gerekmez: profilin, CasualMoney (CM) bakiyen ve satın aldıkların yalnızca bu tarayıcının çerezlerinde saklanır. Dashboard'dan oturumu başlatınca +15 CM, günlük ödülle +20 CM alırsın; oyunlarda kazandığın CM ile tema, boya, baykuş, ahşap ve silah kaplaması açarsın.</p>
+            <p>CasualPass, tarayıcıda anında açılan reklamsız mini oyunlardan oluşur. Hesapsız oynayabilirsin: profilin, CasualMoney (CM) bakiyen ve satın aldıkların yerel çerezlerde saklanır. İstersen dashboard’da kullanıcı adı ve şifrenle giriş yapıp ilerlemeni buluta yedekleyebilir, başka cihazda geri alabilirsin. Aktarım kullanıcı seçimiyle yapılır. Dashboard'dan oturumu başlatınca +15 CM, günlük ödülle +20 CM alırsın; oyunlarda kazandığın CM ile tema, boya, baykuş, ahşap ve silah kaplaması açarsın.</p>
             <nav class="about-toc" aria-label="Oyunlar">
                 <a href="#wood-turning">Wood Turning</a><a href="#snake">Snake</a><a href="#g2048">2048</a><a href="#xox">XOX</a><a href="#chess">Chess</a><a href="#son-hat">Son Hat</a><a href="#owl">Minerva Owl</a><a href="#blocks">Wood Blocks</a><a href="#arena">Arena FPS</a><a href="#vektor">Vektör</a>
             </nav>
@@ -66,7 +66,7 @@
 
             <article class="about-card" id="snake">
                 <header><h2>Snake</h2><span class="tag">Refleks</span></header>
-                <p>Yemi yedikçe yılan uzar ve hızlanır. Duvara ya da kendi kuyruğuna çarparsan oyun biter.</p>
+                <p>Klasik, Hızlanan veya Engelli modu seç. Yemleri kısa aralıklarla toplayarak kombo yap; her beş yemden sonra gelen altın yemi süre dolmadan yakala. Duvar çarpışması ayardan kapatılabilir; Engelli modundaki kayalardan kaçın.</p>
                 <h3>Kontroller</h3>
                 <ul>
                     <li><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> ya da <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> ile yön değiştir.</li>
@@ -84,17 +84,17 @@
                     <li>Ok tuşları ya da <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>.</li>
                     <li>Telefonda tahtayı kaydır.</li>
                 </ul>
-                <p>İpucu: büyük taşı bir köşede tut, o köşeden uzaklaştıran yöne az kaydır.</p>
+                <p>İpucu: büyük taşı bir köşede tut, o köşeden uzaklaştıran yöne az kaydır. Hamle sayısı ve en büyük taş tahtanın üstünde görünür; hilesiz oyunun bu tarayıcıda çerezle saklanır ve yeniden açınca devam eder.</p>
                 <a class="play" href="2048-game/index.html">Oyna →</a>
             </article>
 
             <article class="about-card" id="xox">
                 <header><h2>XOX</h2><span class="tag">Strateji</span></header>
-                <p>3×3 tahtada sırayla X ve O koy. Yatay, dikey ya da çapraz üçlüyü ilk kuran kazanır; tahta dolarsa berabere.</p>
+                <p>Klasik 3×3 tahtada üçlü, Büyük 4×4 tahtada dörtlü kur. Ultimate modunda oynadığın kare rakibin küçük tahtasını belirler; küçük tahtaları kazanarak büyük tahtada üçlü yap. Dolu veya kazanılmış bir tahtaya yönlendirilirsen serbestçe tahta seçebilirsin.</p>
                 <h3>Nasıl oynanır</h3>
                 <ul>
                     <li>Boş kareye tıkla ya da dokun.</li>
-                    <li>Bota karşı ya da aynı cihazda bir arkadaşınla oyna.</li>
+                    <li>Bota karşı ya da aynı cihazda bir arkadaşınla oyna. İlk hamleyi seç; raunt sonunda tahtayı incele veya sonraki raunda geç. Zor bot klasikte kusursuz, büyük tahtalarda taktiksel oynar.</li>
                 </ul>
                 <a class="play" href="xox-game/index.html">Oyna →</a>
             </article>
@@ -139,7 +139,7 @@
                 <p>9×9 tahtaya her turda gelen 3 parçayı yerleştir. Dolan satır, sütun ve 3×3 kareler silinir. Hiçbir parça sığmayınca oyun biter.</p>
                 <h3>Kontroller</h3>
                 <ul>
-                    <li>Parçayı sürükleyip bırak (telefonda parça parmağının üstünde görünür).</li>
+                    <li>Parçayı sürükleyip bırak (telefonda parça parmağının üstünde görünür) veya parçaya dokunup tahtada sol üst hücresini seç.</li>
                     <li>Klavye: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> parça seçer, oklar taşır, <kbd>Enter</kbd> bırakır, <kbd>Esc</kbd> vazgeçer.</li>
                 </ul>
                 <h3>Puan</h3>
@@ -180,7 +180,7 @@
         </section>
     </main>
 
-    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>İlerleme yalnızca bu tarayıcının çerezlerinde saklanır.</small></footer>
+    <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>Yerel ilerleme isteğe bağlı olarak hesaba yedeklenebilir.</small></footer>
 </body>
 
 </html>

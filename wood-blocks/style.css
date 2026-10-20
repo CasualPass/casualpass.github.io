@@ -85,3 +85,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--cp-accent); out
 }
 @media (hover: none) { .stage-hint .kbd-only { display: none; } }
 @media (prefers-reduced-motion: reduce) { .stage-hint { animation: none; } .wb-toast { transition: none; } }
+
+.sheet-footer { position: sticky; bottom: -20px; margin: 0 -20px -20px; padding: 10px 20px 20px; background: var(--cp-glass-base); }
+body.theme-paper .primary, body.theme-paper .session-line button, body.theme-paper .wood-card.locked:not(.poor) button { color: #fff; }
+.stage-hint { max-width: 95%; white-space: normal; text-align: center; }
+@media (max-width: 420px) { .sheet-footer { bottom: -14px; margin: 0 -14px -14px; padding: 8px 14px 14px; } }

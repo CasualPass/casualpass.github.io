@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../shared-settings.css">
     <link rel="stylesheet" href="style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="../shared-settings.js?v=9"></script>
+    <script src="../shared-settings.js?v=10"></script>
     <script src="../casual-profile.js?v=16"></script>
     <script src="../casual-cheats.js?v=8"></script>
 </head>
@@ -42,6 +42,13 @@
             </button>
             <p class="stage-hint hidden" id="stage-hint">Dokun, tıkla ya da <kbd>Boşluk</kbd></p>
 
+            <div class="sheet-overlay hidden" id="pause-panel" role="dialog" aria-labelledby="pause-title">
+                <div class="sheet compact">
+                    <p class="eyebrow">KISA BİR MOLA</p><h2 id="pause-title">Uçuş duraklatıldı</h2>
+                    <p class="over-note">Sütunlar seni bekliyor. Devam ettiğinde baykuş kanat çırpar.</p>
+                    <button class="primary" id="resume-btn" type="button">Uçuşa devam et</button>
+                </div>
+            </div>
             <div class="sheet-overlay" id="menu">
                 <div class="sheet">
                     <p class="eyebrow">BİLGELİK UÇUŞU</p>

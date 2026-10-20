@@ -97,6 +97,7 @@ function makeCoord(className, text) {
  * Renders the pieces onto the board based on chess.js internal state
  */
 function renderPieces() {
+    renderMoveHistory();
     const boardState = gameEngine.board();
 
     document.querySelectorAll('.square').forEach(sq => {
@@ -140,6 +141,25 @@ function renderPieces() {
             }
         }
     }
+}
+
+// Keep the move record outside the board so it remains readable on phones.
+function renderMoveHistory() {
+    const history = gameEngine.history();
+    const list = document.getElementById('move-list');
+    list.replaceChildren();
+    for (let i = 0; i < history.length; i += 2) {
+        const row = document.createElement('li');
+        const white = document.createElement('span');
+        white.textContent = history[i];
+        const black = document.createElement('span');
+        black.textContent = history[i + 1] || '…';
+        row.append(white, black);
+        list.appendChild(row);
+    }
+    document.getElementById('move-count').textContent = `${history.length} yarım hamle`;
+    document.getElementById('moves-empty').classList.toggle('hidden', history.length > 0);
+    list.scrollTop = list.scrollHeight;
 }
 
 function describeSquare(squareId, piece) {
@@ -789,6 +809,7 @@ function showGameOver(title, detail) {
     statusDisplay.className = 'status-display game-over';
     statusDisplay.textContent = detail ? `${title} · ${detail}` : title;
     overlay.classList.remove('hidden');
+    document.getElementById('show-result-btn').classList.remove('hidden');
     if (typeof playPopSound === 'function') playPopSound();
     rematchBtn.focus();
 }
@@ -797,6 +818,10 @@ function showGameOver(title, detail) {
  * Start a fresh game with the current lobby settings
  */
 function startGame() {
+    document.getElementById('show-result-btn').classList.add('hidden');
+    document.getElementById('match-info').textContent = isVersusBot
+        ? `Beyaz: Sen · Siyah: ${botName()}${botEngine === 'casual' ? ' · ' + DIFFICULTY_NAMES[diffSlider.value] : ''}`
+        : 'Yerel oyun · Beyaz ve Siyah aynı cihazda';
     casualFishRequest++;
     clearTimeout(botTimer);
     botTimer = null;
@@ -924,3 +949,12 @@ startGameBtn.addEventListener('click', () => {
 // Initialization state
 createBoard();
 renderPieces();
+
+// The completed position remains available without starting a new match.
+document.getElementById('view-final-board-btn').addEventListener('click', () => {
+    overlay.classList.add('hidden');
+    document.getElementById('show-result-btn').focus();
+});
+document.getElementById('show-result-btn').addEventListener('click', () => {
+    if (!gameActive) { overlay.classList.remove('hidden'); rematchBtn.focus(); }
+});

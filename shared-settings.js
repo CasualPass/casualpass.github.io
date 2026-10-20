@@ -122,26 +122,30 @@ document.addEventListener('DOMContentLoaded', applySettings);
 
 // Çevrimdışı oyun ve güncelleme: sw.js tüm dosyaları önbelleğe alır. Yeni bir sürüm yayınlanınca
 // (version.json değişir) service worker güncellenir; sayfa yalnızca oyun ortasında değilse yenilenir:
-// dashboard/Hakkında her zaman, oyun sayfaları yalnızca açılışın ilk saniyelerinde.
+// Dashboard/Hakkında hesap formu boşken; oyun sayfaları yalnızca açılışın ilk saniyelerinde.
 (function siteUpdates() {
     const KEY = 'cp_site_version';
     const base = document.currentScript ? document.currentScript.src : location.href;
     const versionUrl = new URL('version.json', base).href;
     const openedAt = performance.now();
     const hub = () => Boolean(document.querySelector('meta[name="cp-page"][content="hub"]'));
-    const safeToReload = () => hub() || performance.now() - openedAt < 6000;
-    let registration = null;
+    const editingAccount = () => Boolean(document.activeElement?.closest?.('#account-login-form, #account-setup-form'))
+        || Array.from(document.querySelectorAll('#account-login-form input, #account-setup-form input')).some(input => !input.closest('[hidden]') && input.value)
+        || Boolean(document.querySelector('#account-login:disabled, #account-setup-submit:disabled'));
+    const safeToReload = () => (hub() && !editingAccount()) || (!hub() && performance.now() - openedAt < 6000);
+    let registration = null, registrationReady = Promise.resolve();
     let pending = false;
 
     function reload() {
         if (!safeToReload()) { pending = true; return; }
+        pending = false;
         const next = new URL(location.href);
         next.searchParams.delete('v');
         location.replace(next.href);
     }
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-        navigator.serviceWorker.register(new URL('sw.js', base).href).then((reg) => { registration = reg; }).catch(() => {});
+        registrationReady = navigator.serviceWorker.register(new URL('sw.js', base).href, { updateViaCache: 'none' }).then((reg) => { registration = reg; }).catch(() => {});
         let controlled = Boolean(navigator.serviceWorker.controller);
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             // The first install only takes control; a later swap means new files are ready.
@@ -152,26 +156,30 @@ document.addEventListener('DOMContentLoaded', applySettings);
 
     let busy = false;
     async function check() {
-        if (busy || !navigator.onLine) return;
+        if (busy || !navigator.onLine || document.visibilityState === 'hidden') return;
         busy = true;
         try {
             const res = await fetch(`${versionUrl}?t=${Date.now()}`, { cache: 'no-store' });
             const { v } = await res.json();
+            if (typeof v !== 'string' || !v) return;
             const seen = getCookieValue(KEY);
-            if (v && seen !== v) {
+            await registrationReady;
+            // Retry worker updates even if a previous fetch already recorded this version.
+            if (registration) await registration.update();
+            if (seen !== v) {
                 setCookieValue(KEY, v);
-                if (seen) {
-                    if (registration) registration.update().catch(() => {});
-                    else reload();
-                }
+                if (seen && !registration) reload();
             }
         } catch { /* çevrimdışı */ }
-        busy = false;
+        finally { busy = false; }
     }
     check();
+    setInterval(check, 60000);
+    setInterval(() => { if (pending && document.visibilityState === 'visible' && safeToReload()) reload(); }, 5000);
+    window.addEventListener('online', check);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'visible') return;
-        if (pending && hub()) { reload(); return; }
+        if (pending && safeToReload()) { reload(); return; }
         check();
     });
 }());

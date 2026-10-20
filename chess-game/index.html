@@ -21,13 +21,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Local Game Styling -->
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 
     <!-- Load chess.js Logic Engine -->
     <script src="vendor/chess.js"></script>
 
     <!-- Global Setting Script -->
-    <script src="../shared-settings.js?v=9"></script>
+    <script src="../shared-settings.js?v=10"></script>
     <script src="../casual-profile.js"></script>
     <script src="../casual-cheats.js"></script>
 </head>
@@ -90,6 +90,9 @@
                 <div id="status-display" class="status-display turn-white" role="status" aria-live="polite">Sıra: Beyaz</div>
             </div>
 
+            <p class="board-help">Taşı seç, ardından hedef kareye dokun. Taşları sürükleyebilir veya ok tuşları ve Enter ile oynayabilirsin.</p>
+            <div id="match-info" class="match-info"></div>
+
             <!-- The Chess Board Container -->
             <div class="board-wrapper">
                 <div id="chessboard" class="chessboard" role="grid" aria-label="Satranç tahtası. Ok tuşlarıyla gezin, Enter ile seçin.">
@@ -117,21 +120,29 @@
                         <p id="game-over-detail" class="game-over-detail"></p>
                         <div class="overlay-actions">
                             <button type="button" id="rematch-btn" class="btn">Tekrar Oyna</button>
+                            <button type="button" id="view-final-board-btn" class="secondary-btn">Tahtayı incele</button>
                             <button type="button" id="reset-btn" class="secondary-btn">Lobiye Dön</button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <section class="move-panel" aria-labelledby="move-list-title">
+                <h2 id="move-list-title">Hamleler <span id="move-count">0</span></h2>
+                <ol id="move-list" class="move-list" aria-label="Hamle geçmişi"></ol>
+                <p id="moves-empty" class="board-help">İlk hamleni yap; hamleler burada görünür.</p>
+            </section>
+
             <!-- Game Actions -->
             <div class="hud-panel">
+                <button type="button" id="show-result-btn" class="secondary-btn hidden">Sonuç</button>
                 <button type="button" id="resign-btn" class="secondary-btn">Oyundan Çekil</button>
             </div>
         </section>
     </main>
 
     <!-- Game Logic -->
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=4"></script>
 </body>
 
 </html>

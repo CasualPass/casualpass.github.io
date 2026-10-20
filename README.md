@@ -15,7 +15,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 
 ## Çerez tabanlı profil ve CasualMoney
 
-CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullanılmaz. Oturum, kullanıcı profili, CasualMoney, Wood Turning ilerlemesi, satın alınan temalar, oyun istatistikleri ve yüksek skorlar yalnızca birinci taraf tarayıcı çerezlerinde saklanır.
+Hesapsız oynanabilir. Oyun profili, CasualMoney, ilerleme ve rekorlar birinci taraf tarayıcı çerezlerinde tutulur. İsteğe bağlı Supabase hesabıyla kullanıcı adı ve şifre üzerinden giriş/kayıt yapılır; dashboard’daki **Buluta kaydet / Buluttan getir** ile ilerleme cihazlar arasında aktarılır. Otomatik birleştirme/senkronizasyon yapılmaz.
 
 - Oturumu başlatmak günde bir kez **15 CM** verir.
 - Günlük ödül günde bir kez **20 CM** verir.
@@ -26,7 +26,7 @@ CasualPass'ta sunucu hesabı, e-posta girişi ya da bulut senkronizasyonu kullan
 - Arena FPS'te her öldürme 2 CM, maç birinciliği +6 CM kazandırır (maç başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). `Standart` varsayılan silah kaplamasıdır; `Çöl` (100 CM), `Orman` (180 CM), `Kutup` (260 CM), `Kızıl` (420 CM) ve `Altın` (800 CM) CasualMoney ile açılır.
 - Vektör'de her öldürme ve kazanılan her raunt 1 CM, maç zaferi +10 CM kazandırır (maç başına en fazla 40 CM). Silahlarda Arena FPS'te açılan kaplamalar kullanılır.
 - `Liquid` varsayılan temadır; `Paper` (30 CM), `Neon` (180 CM) ve `Retro` (300 CM) temaları CasualMoney ile açılır.
-- Çerezleri silmek profil, bakiye ve ilerlemeyi de siler. Bu bilerek seçilmiş, yalnızca-çerez tasarımının sonucudur.
+- Çerezleri silmek yerel profil, bakiye ve ilerlemeyi siler. Önceden buluta veya dosyaya yedeklediğin kaydı geri yükleyebilirsin.
 
 Çerezlerdeki veriler kullanıcı tarafından değiştirilebilir. Bu nedenle CasualMoney gerçek para, rekabetçi skor veya güvenlik gerektiren satın alma akışları için uygun değildir.
 
@@ -60,3 +60,37 @@ MIT
 ## PWA ve çevrimdışı
 
 Site ana ekrana eklenebilen bir PWA'dır; ilk açılışta tüm oyunlar telefona indirilir ve internetsiz oynanır (çevrimiçi odalar hariç). Yayından önce `python3 tools/build-sw.py` çalıştırın: `sw.js` önbellek listesini ve `version.json` sürümünü yeniden üretir.
+
+## AI Generated
+
+Bu proje büyük ölçüde AI araçlarıyla geliştirilmiştir.
+
+<p><img src="ai-generated.svg" height="64" alt="AI Generated"></p>
+
+## Supabase kullanıcı adı ve şifre
+
+Giriş/kayıt için e-posta veya SMTP gerekmez. Kullanıcı adı 3–24 karakterdir (`a-z`, `0-9`, `_`); baş/son boşluklar temizlenir ve küçük harfe çevrilir. Supabase’in e-posta tabanlı Auth kimliği, `<kullanıcı-adı>@accounts.casualpass.invalid` biçiminde dahili bir tanımlayıcıya eşlenir. Bu posta almayan bir kimliktir; e-posta sahipliği iddiası veya e-postayla şifre sıfırlama yoktur. Kullanıcı adını ve şifreni güvenli yerde sakla.
+
+- Parolalar HTTPS üzerinden Supabase Auth’a gider; Supabase bunları **bcrypt hash** olarak saklar. Uygulama şifreyi veya hash’ini kendi tablolarına, çerezlerine, localStorage’a veya oyun yedeklerine yazmaz. Hash’i istemcide üretip parola yerine göndermeyiz.
+- Uygulama en az 6 karakter ve bcrypt sınırı nedeniyle en fazla 72 UTF-8 bayt kabul eder. Supabase Email sağlayıcısının Minimum password length ayarını 6 olarak tut.
+- Dashboard’da giriş ve yeni hesap oluşturma vardır. Eski e-posta hesabı açıkken ayrı kullanıcı adı hesabı oluşturulabilir. Yerel ilerleme korunur; kullanıcı yeni hesaba **Buluta kaydet** ile aktarır. Eski Auth ID ve bulut kaydı değiştirilmez. Mevcut hesabın e-postasını değiştirmek doğrulama e-postası istediğinden SMTP’siz geçişte bu yöntem kullanılmaz. Yeni şifreyi kullanıcı kendisi formda girer.
+
+### Sunucu kurulumu
+
+1. `cloud-config.js`: HTTPS `url`, yalnızca açık `publishableKey`, `enabled: true`, `loginMode: 'password'`. Secret/service_role anahtarı tarayıcıya konmaz.
+2. `supabase/schema.sql` şemasını uygula. `casual_profiles` tablosunda `auth.uid() = user_id` RLS politikaları vardır; anonim role tablo yetkisi verilmez. Uygulamaya özel bir parola tablosu yoktur.
+3. Authentication → Sign In / Providers: **Allow new users to sign up** açık, **Confirm email** kapalı. Bu proje kullanıcı adı kimlikleri kullandığından gerçek e-posta doğrulaması yapılmaz. Email sağlayıcısı şifre girişinin altyapısı olarak açık kalır. E-posta değişimi/şifre değişimi bildirimleri için SMTP kullanılmaz; eski e-posta/OTP yardımcıları yalnızca geriye dönük kod uyumluluğu içindir, yeni arayüzde sunulmaz.
+4. `python3 tools/build-sw.py` ile önbelleği üretip yayınla. Giriş ve bulut aktarımı internet ister; yerel oyunlar çevrimdışı sürer.
+
+`casual-cloud.js`, Supabase Auth HTTP API’sini ve PostgREST’i kullanır; ek paket/CDN yoktur. Access/refresh token’ları `sb-casualpass-…` localStorage anahtarında tutulur. Bu, yalnızca-çerez oyun depolamasına auth için sınırlı istisnadır; giriş token’ları oyun yedeğine girmez. Depolama kapalıysa oturum sayfa ömrüyle sınırlıdır. Süresi yaklaşan token yetkili işlem öncesinde yenilenir; Web Locks desteklendiğinde yenilemeler sıraya alınır.
+
+Giriş yerel ilerlemeyi otomatik yüklemez veya başka hesaba geçince silmez. Ortak cihazda yerel kayıt paylaşılır. Buluta yükleme açık onayla önceki bulut kaydını değiştirir. Getirme doğrulama ve önizlemeden sonra açık kullanıcı eylemiyle yerel kaydı değiştirir. Otomatik birleştirme yoktur; son yüklenen kayıt geçerlidir. CM istemcide hesaplanır; bulut kaydı hileye dayanıklı ekonomi sağlamaz.
+
+Doğrulama: `node --test tools/test-cloud.cjs`. Testler taklit HTTP ile parola girişi/kayıt, eski hesaptan ayrı yeni hesap oluşturma ve hata halinde eski oturumun korunması, şifrenin saklanmaması, doğrulama, token yenileme, çıkış ve yedek/token ayrımını kapsar. Canlı kullanıcı adı/şifre testi ayrıca yapılmalıdır.
+
+Kaynaklar: [Supabase password security](https://supabase.com/docs/guides/auth/password-security), [password-based Auth](https://supabase.com/docs/guides/auth/passwords).
+
+
+## Otomatik güncelleme
+
+Yeni sürüm yayınlandığında uygulama açılışta, sekmeye dönünce, bağlantı geri gelince ve görünür sekmede dakikada bir güncellemeyi kontrol eder. Yeni dosyalar hazır olduğunda dashboard/Hakkında yenilenir; hesap formu dolduruluyorsa veya hesap işlemi sürüyorsa bekler. Oyun sayfaları açılıştan 6 saniye sonra otomatik yenilenmez; yeni sürüm sonraki sayfa açılışında kullanılır. Yayın öncesi `python3 tools/build-sw.py` çalıştırılarak sürüm ve çevrimdışı önbellek listesi üretilmelidir. Bir PR dalına push yapmak canlı GitHub Pages sitesini güncellemez; yayınlanan dala alınması gerekir.
