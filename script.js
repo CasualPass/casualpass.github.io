@@ -287,4 +287,52 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('casual-cheat', render);
     document.getElementById('cheat-disable-all').addEventListener('click', () => CasualCheats.disableAll());
     render();
+
+    /* ---------- Kayıt dosyası ---------- */
+
+    const saveDialog = document.getElementById('save-dialog');
+    const saveFile = document.getElementById('save-file');
+
+    function ask(title, body, okLabel, danger) {
+        document.getElementById('save-dialog-title').textContent = title;
+        document.getElementById('save-dialog-body').textContent = body;
+        document.getElementById('save-dialog-ok').textContent = okLabel;
+        saveDialog.classList.toggle('danger', Boolean(danger));
+        saveDialog.returnValue = '';
+        return new Promise((resolve) => {
+            saveDialog.addEventListener('close', () => resolve(saveDialog.returnValue === 'ok'), { once: true });
+            saveDialog.showModal();
+        });
+    }
+
+    document.getElementById('save-unverified').hidden = !window.CasualSave?.unverified();
+
+    document.getElementById('save-export').addEventListener('click', async () => {
+        try {
+            const result = await CasualSave.exportSave();
+            if (!result.cancelled) showToast(`Kayıt hazır: ${result.name}`);
+        } catch {
+            showToast('Kayıt dışa aktarılamadı.');
+        }
+    });
+
+    document.getElementById('save-import').addEventListener('click', () => saveFile.click());
+    saveFile.addEventListener('change', async () => {
+        const file = saveFile.files[0];
+        saveFile.value = '';
+        if (!file) return;
+        const result = await CasualSave.inspect(file);
+        if (result.fatal) { showToast(result.fatal); return; }
+        const when = result.created ? new Date(result.created).toLocaleString('tr-TR') : 'bilinmeyen tarih';
+        let go;
+        if (result.ok) {
+            go = await ask('Kaydı yükle', `${when} tarihli kayıt doğrulandı. Bu cihazdaki ilerlemen bu kayıtla değiştirilecek.`, 'Kaydı yükle', false);
+        } else {
+            go = await ask('Kayıt doğrulanamadı', `Bu dosya değiştirilmiş olabilir (${result.problems.join(', ')}). Yine de bu kayıt dosyasıyla devam etmek istiyor musunuz? Bu cihazdaki ilerlemen değiştirilecek ve kayıt "doğrulanmamış" olarak işaretlenecek.`, 'Yine de devam et', true);
+        }
+        if (!go) return;
+        CasualSave.apply(result.save, result.ok);
+        showToast('Kayıt yüklendi, sayfa yenileniyor…');
+        window.setTimeout(() => location.reload(), 700);
+    });
 });

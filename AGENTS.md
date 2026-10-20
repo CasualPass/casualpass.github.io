@@ -275,3 +275,13 @@ Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen b
 
 - Playwright: ilk açılışta 81 adres önbelleğe alındı, sayfa service worker kontrolünde; internet kesikken 12 sayfanın hepsi açıldı (Chess motoru ve Three.js yüklü, sayfa hatası yok), Vektör'de tek oyunculu maç başladı.
 - Güncelleme: Hakkında sayfası değiştirilip `build-sw.py` çalıştırıldı, uygulamaya dönüş olayıyla sayfa yeni içerikle yenilendi ve eski önbellek silindi.
+
+## 2026-10-20 — Kayıt dosyası (dışa/içe aktarma, 7-3-1 doğrulama)
+
+- `casual-save.js` (`window.CasualSave`): `cp_*` ve `casualpass_*` çerezlerinin hepsini (`cp_site_version` hariç) ham değerleriyle JSON dosyasına yazar (`casualpass-kayit-YYYY-AA-GG.json`; telefonda paylaşım menüsü, masaüstünde indirme). Bütünlük: her çerez için bir 7-3-1 kontrol hanesi (karakter kodları 7, 3, 1 ağırlıklarıyla toplanır, mod 10), tüm yük için bir hane daha (`check731`, ör. `873-6`) ve tuz + yük + hanelerden SHA-256 mühür (`seal`). Tuz sayfada olduğu için bu yalnızca değiştirildiğini gösterir; kodu okuyan birini durduramaz.
+- İçe aktarma: dosya biçimi ve çerez adları/değerleri denetlenir (yalnızca bizim çerezler, `;`/satır sonu yok, ≤4000 karakter). Doğrulanırsa "Kaydı yükle" onayı; doğrulanamazsa "Bu dosya değiştirilmiş olabilir… Yine de bu kayıt dosyasıyla devam etmek istiyor musunuz?" uyarısı. Kabul edilirse mevcut çerezler silinip dosyadakiler yazılır, sayfa yenilenir; doğrulanmamış dosya `cp_save_unverified` çereziyle işaretlenir ve dashboard'da uyarı görünür.
+- `index.html` (dashboard'da "Kayıt dosyası" paneli ve `<dialog>`), `script.js?v=13`, `style.css?v=19`, `about.html` notu.
+
+### Testler
+
+- Playwright 390 px: günlük ödülle 35 CM → dışa aktarma (3 çerez, `873-6`) → çerezleri silme (0) → içe aktarma "doğrulandı", bakiye 35'e döndü; profildeki bakiye elle +9000 yapılınca "Kayıt doğrulanamadı" uyarısı (7-3-1 ve mühür tutmuyor), Vazgeç bakiyeyi değiştirmedi, kabul 9.035 yükleyip "doğrulanmamış" uyarısını gösterdi; CasualPass kaydı olmayan dosya reddedildi; sayfa hatası yok.
