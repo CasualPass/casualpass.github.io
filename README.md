@@ -73,7 +73,7 @@ Giriş/kayıt için e-posta veya SMTP gerekmez. Kullanıcı adı 3–24 karakter
 
 - Parolalar HTTPS üzerinden Supabase Auth’a gider; Supabase bunları **bcrypt hash** olarak saklar. Uygulama şifreyi veya hash’ini kendi tablolarına, çerezlerine, localStorage’a veya oyun yedeklerine yazmaz. Hash’i istemcide üretip parola yerine göndermeyiz.
 - Uygulama en az 6 karakter ve bcrypt sınırı nedeniyle en fazla 72 UTF-8 bayt kabul eder. Supabase Email sağlayıcısının Minimum password length ayarını 6 olarak tut.
-- Dashboard’da giriş ve yeni hesap oluşturma vardır. E-postayla açılmış mevcut hesapta **Bu hesaba tanımla** formu, oturumu açık kullanıcının aynı Auth kullanıcı ID’sine kullanıcı adı/şifre atar; bulut kaydı korunur. Hesap tanımlandıktan sonra giriş için kullanıcı adı kullanılır. Yeni şifreyi kullanıcı kendisi formda girer.
+- Dashboard’da giriş ve yeni hesap oluşturma vardır. Eski e-posta hesabı açıkken ayrı kullanıcı adı hesabı oluşturulabilir. Yerel ilerleme korunur; kullanıcı yeni hesaba **Buluta kaydet** ile aktarır. Eski Auth ID ve bulut kaydı değiştirilmez. Mevcut hesabın e-postasını değiştirmek doğrulama e-postası istediğinden SMTP’siz geçişte bu yöntem kullanılmaz. Yeni şifreyi kullanıcı kendisi formda girer.
 
 ### Sunucu kurulumu
 
@@ -86,6 +86,6 @@ Giriş/kayıt için e-posta veya SMTP gerekmez. Kullanıcı adı 3–24 karakter
 
 Giriş yerel ilerlemeyi otomatik yüklemez veya başka hesaba geçince silmez. Ortak cihazda yerel kayıt paylaşılır. Buluta yükleme açık onayla önceki bulut kaydını değiştirir. Getirme doğrulama ve önizlemeden sonra açık kullanıcı eylemiyle yerel kaydı değiştirir. Otomatik birleştirme yoktur; son yüklenen kayıt geçerlidir. CM istemcide hesaplanır; bulut kaydı hileye dayanıklı ekonomi sağlamaz.
 
-Doğrulama: `node --test tools/test-cloud.cjs`. Testler taklit HTTP ile parola girişi/kayıt, mevcut kullanıcı ID’sinin korunması, şifrenin saklanmaması, doğrulama, token yenileme, çıkış ve yedek/token ayrımını kapsar. Canlı kullanıcı adı/şifre testi ayrıca yapılmalıdır.
+Doğrulama: `node --test tools/test-cloud.cjs`. Testler taklit HTTP ile parola girişi/kayıt, eski hesaptan ayrı yeni hesap oluşturma ve hata halinde eski oturumun korunması, şifrenin saklanmaması, doğrulama, token yenileme, çıkış ve yedek/token ayrımını kapsar. Canlı kullanıcı adı/şifre testi ayrıca yapılmalıdır.
 
 Kaynaklar: [Supabase password security](https://supabase.com/docs/guides/auth/password-security), [password-based Auth](https://supabase.com/docs/guides/auth/passwords).

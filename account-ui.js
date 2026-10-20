@@ -46,8 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = $('account-setup-password').value;
             try {
                 if (password !== $('account-setup-confirm').value) throw new Error('Şifreler eşleşmiyor.');
-                await cloud.setupCredentials($('account-setup-username').value, password);
-                message('Kullanıcı adı ve şifren tanımlandı. Mevcut hesabın ve bulut kaydın korundu.');
+                await cloud.signUp($('account-setup-username').value, password);
+                message('Yeni hesabın oluşturuldu. Yerel ilerlemen korunuyor; bu hesaba aktarmak için Buluta kaydet’i kullan.');
             } finally { $('account-setup-password').value = ''; $('account-setup-confirm').value = ''; }
         });
     });

@@ -131,21 +131,26 @@ test('username and bcrypt byte-limit validation happens before network calls', a
     for (const [name, pass] of [['ab','long-test-password'], ['bad@name','long-test-password'], ['user','short'], ['user','a'.repeat(73)], ['user','ş'.repeat(37)]]) await assert.rejects(b.cloud.signUp(name,pass));
     assert.equal(b.calls.length, 0);
 });
-test('legacy account credential setup preserves authenticated user ID and cloud-save ownership', async () => {
-    const user = { id: 'user-a', email: 'player_1@accounts.casualpass.invalid' };
-    const b = boot({ initial: makeSession(), handler: async c => c.method === 'PUT' ? user : c.url.includes('/auth/') ? makeSession().user : ({ raw: '' }) }); await b.cloud.ready;
-    await b.cloud.setupCredentials('player_1','six-ok');
-    assert.equal(b.calls[1].method, 'PUT'); assert.equal(b.calls[1].headers.Authorization,'Bearer access-private');
+test('new username account replaces legacy session without changing legacy credentials or local game data', async () => {
+    const user = { id: 'user-new', email: 'player_1@accounts.casualpass.invalid' };
+    const b = boot({ initial: makeSession(), handler: async c => c.url.endsWith('/signup') ? { ...makeSession('user-new'), user } : c.url.includes('/auth/') ? makeSession().user : ({ raw: '' }) }); await b.cloud.ready;
+    await b.cloud.signUp('player_1','six-ok');
+    assert.equal(b.calls[1].method, 'POST'); assert.ok(b.calls[1].url.endsWith('/signup'));
     assert.equal(b.cloud.getState().username,'player_1');
-    assert.equal(JSON.parse(b.storage.get(storedKey)).user.id,'user-a');
-    await b.cloud.uploadSave(); assert.equal(b.calls.at(-1).json.user_id,'user-a');
-    await assert.rejects(b.cloud.setupCredentials('other_name','test-only-long-password'), /zaten/);
+    assert.equal(JSON.parse(b.storage.get(storedKey)).user.id,'user-new');
+    assert.equal(b.context.applied, undefined);
+    await b.cloud.uploadSave(); assert.equal(b.calls.at(-1).json.user_id,'user-new');
+    assert.equal(b.calls.some(c => c.method === 'PUT'), false);
 });
-test('confirmation-required signup and pending legacy change are not reported as completed', async () => {
-    const b=boot({handler:async()=>({user:makeSession().user})});await b.cloud.ready;
-    await assert.rejects(b.cloud.signUp('player_1','test-only-long-password'),/Kayıt tamamlanamadı/);
-    assert.equal(b.cloud.getState().authenticated,false);
-    const c=boot({initial:makeSession(),handler:async()=>makeSession().user});await c.cloud.ready;
-    await assert.rejects(c.cloud.setupCredentials('player_1','six-ok'), /geçiş tamamlanmadı/);
-    assert.equal(c.cloud.getState().username,'');assert.equal(c.cloud.getState().authenticated,true);
+test('failed new account creation preserves the existing legacy session', async () => {
+    const b=boot({initial:makeSession(),handler:async c=>c.url.endsWith('/signup')?{user:makeSession().user}:makeSession().user});await b.cloud.ready;
+    await assert.rejects(b.cloud.signUp('player_1','six-ok'),/Kayıt tamamlanamadı/);
+    assert.equal(b.cloud.getState().authenticated,true);
+    assert.equal(JSON.parse(b.storage.get(storedKey)).user.id,'user-a');
+});
+test('known auth error codes have useful messages without reflecting server content', async () => {
+    for (const [code, expected] of [['email_address_invalid',/hesap kimliğini/],['email_address_not_authorized',/SMTP/],['weak_password',/En az 6/],['invalid_credentials',/şifre yanlış/]]) {
+        const b=boot({handler:async()=>({status:400,body:{error_code:code,msg:'private server text'}})}); await b.cloud.ready;
+        await assert.rejects(b.cloud.signUp('player_1','six-ok'),e=>expected.test(e.message)&&!e.message.includes('private server text'));
+    }
 });

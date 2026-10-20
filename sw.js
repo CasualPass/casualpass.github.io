@@ -3,18 +3,18 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "a6e9adfddc54";
+const VERSION = "75797fea7c76";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
         "about.html",
         "account-ui.js",
-        "account-ui.js?v=2",
+        "account-ui.js?v=3",
         "ai-generated.svg",
         "casual-cheats.js",
         "casual-cheats.js?v=8",
         "casual-cloud.js",
-        "casual-cloud.js?v=4",
+        "casual-cloud.js?v=5",
         "casual-profile.js",
         "casual-profile.js?v=16",
         "casual-save.js",

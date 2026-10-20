@@ -381,19 +381,19 @@ Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQ
 
 Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı adı + şifre akışına geçildi. Bu kayıt, yukarıdaki e-posta girişinin güncel ürün davranışı olarak değerlendirilmesini geçersiz kılar.
 
-- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ve mevcut hesaba kimlik bilgisi tanımlama (`PUT /user`). Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Kullanıcının son düzeltmesiyle uygulama en az 6 karakter, en fazla 72 UTF-8 bayt kabul eder.
-- Mevcut e-posta hesabına kullanıcı adı/şifre tanımlanırken Auth kullanıcı ID’sinin aynı kalması doğrulanır; bulut kaydı aynı ID’ye bağlı kalır. İşlem tam uygulanmazsa başarılı gösterilmez ve oturum kapatılmaz. Parola yalnızca form/istek sırasında kullanılır, formdan temizlenir; oyun yedeğine ve localStorage’a yazılmaz.
-- `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve mevcut hesaba kullanıcı adı/şifre tanımlama formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
+- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ile yeni hesap oluşturma. Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Kullanıcının son düzeltmesiyle uygulama en az 6 karakter, en fazla 72 UTF-8 bayt kabul eder.
+- Canlı Auth loglarında eski hesabın `PUT /user` çağrısı sırasında `Mail.send` ve HTTP 400 görüldü. Supabase kalıcı hesaplarda e-posta değişimini yeni kayıt autoconfirm ayarından bağımsız doğrulatır. Bu hatalı geçiş kaldırıldı: eski hesap açıkken ayrı kullanıcı adı hesabı oluşturulur, yerel ilerleme korunur ve kullanıcı manuel bulut yüklemesiyle aktarır. Eski Auth ID/bulut kaydı değiştirilmez. Başarısız kayıt eski oturumu korur.
+- `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve eski hesap açıkken yeni kullanıcı adı hesabı oluşturma formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
 - `cloud-config.js`: `loginMode: 'password'`. Eski e-posta/OTP fonksiyonları yalnızca kod uyumluluğu için kaldı; yeni arayüzde sunulmaz.
 - Kullanıcının işlem anındaki açık onayıyla yalnızca CasualPass projesinde **Confirm email** kapatıldı. Canlı `/auth/v1/settings` sonucu `mailer_autoconfirm: true`, `disable_signup: false`; SMTP bu kullanıcı adı akışı için gerekli değil.
 - README/Hakkında ve PWA varlık sürümleri güncellendi. Şema ve oyun/ödül kuralları değişmedi.
 
 ### Hedefler ve testler
 
-- [x] Kullanıcı adı/şifre kodu ve mevcut hesaba geçiş formu uygulandı.
-- [x] `node --test tools/test-cloud.cjs`: 16 test başarılı. Yeni testler kullanıcı adı eşleme, parola byte sınırı, parolanın saklanmaması, mevcut Auth ID/bulut sahipliği ve eksik onayın başarısız gösterilmesini kapsar.
+- [x] Kullanıcı adı/şifre kodu ve eski hesaptan yeni hesap oluşturma formu uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 17 test başarılı. Yeni testler kullanıcı adı eşleme, parola byte sınırı, parolanın saklanmaması, yeni hesap sahipliği, hatada eski oturumun korunması ve güvenli hata mesajlarını kapsar.
 - [x] `node --check`, HTML ID/ARIA/form bağları, `git diff --check`: başarılı; `build-sw.py` çalıştırıldı.
 - [x] E-posta onayının kapandığı canlı API’den doğrulandı.
-- [ ] Gerçek kullanıcı adı/şifre ile mevcut hesabın geçişi ve yeniden giriş: kullanıcının yeni parolayı kendisi girmesi bekleniyor; henüz doğrulanmadı.
+- [ ] Gerçek kullanıcı adı/şifre ile yeni hesap oluşturma ve yeniden giriş: henüz doğrulanmadı. Eski hesabı dönüştürme denemesi canlı loglarda başarısız; bu yol kaldırıldı.
 
-Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş ve mevcut hesaba tanımlamada kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.
+Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.

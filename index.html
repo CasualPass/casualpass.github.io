@@ -115,12 +115,12 @@
             </div>
             <div id="account-member" hidden>
                 <form id="account-setup-form" class="account-form" hidden>
-                    <h3>Mevcut hesabına kullanıcı adı ve şifre ekle</h3>
-                    <p class="account-note">Bu işlem mevcut hesabını ve bulut kaydını korur. Sonraki girişinde bu kullanıcı adını kullanırsın. E-postayla giriş yerini kullanıcı adına bırakır; e-postayla şifre sıfırlama kullanılmaz.</p>
+                    <h3>Kullanıcı adıyla yeni hesap oluştur</h3>
+                    <p class="account-note">Bu eski hesap e-postayla açılmış. Aşağıdan ayrı bir kullanıcı adı hesabı oluşturabilirsin. Yerel ilerlemen korunur; yeni hesaba geçince “Buluta kaydet” ile aktarabilirsin. Eski hesap ve bulut kaydı değiştirilmez. Şifre en az 6 karakter olmalı; e-postayla şifre sıfırlama yoktur.</p>
                     <label for="account-setup-username">Yeni kullanıcı adı</label><input id="account-setup-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9_]{3,24}" minlength="3" maxlength="24" required>
                     <label for="account-setup-password">Yeni şifre</label><input id="account-setup-password" type="password" autocomplete="new-password" minlength="6" required>
                     <label for="account-setup-confirm">Yeni şifre tekrar</label><input id="account-setup-confirm" type="password" autocomplete="new-password" minlength="6" required>
-                    <button class="save-button primary" id="account-setup-submit" type="submit">Bu hesaba tanımla</button>
+                    <button class="save-button primary" id="account-setup-submit" type="submit">Yeni hesap oluştur ve geç</button>
                 </form>
                 <p>Giriş yapılan hesap: <strong id="account-identity"></strong></p>
                 <p class="account-note">Oyunlar bu tarayıcıda kaydedilir. “Buluta kaydet” mevcut ilerlemeyi hesabına yükler; başka cihazda “Buluttan getir” ile geri alabilirsin. Aktarım otomatik değildir. Ortak cihazda yerel ilerleme sonraki oyuncuya görünür; hesaptan çıkmak bu ilerlemeyi silmez.</p>
@@ -227,8 +227,8 @@
     <script src="casual-cheats.js?v=8"></script>
     <script src="casual-save.js?v=2"></script>
     <script src="cloud-config.js?v=3"></script>
-    <script src="casual-cloud.js?v=4"></script>
-    <script src="account-ui.js?v=2"></script>
+    <script src="casual-cloud.js?v=5"></script>
+    <script src="account-ui.js?v=3"></script>
     <script src="script.js?v=15"></script>
 </body>
 </html>

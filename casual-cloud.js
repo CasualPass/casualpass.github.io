@@ -56,7 +56,8 @@
             try { data = raw ? JSON.parse(raw) : null; } catch { throw new Error('Sunucudan geçersiz yanıt geldi.'); }
             if (!response.ok) {
                 const messages = { 401: 'Giriş bilgileri veya oturum geçersiz. Yeniden giriş yap.', 403: 'Bu işlem için izin yok.', 429: 'Çok fazla deneme yapıldı. Bir süre bekleyip yeniden dene.' };
-                const error = new Error(messages[response.status] || (path.includes('/rest/') ? 'Bulut kaydı işlenemedi. Bağlantıyı ve sunucu kurulumunu kontrol et.' : 'İşlem tamamlanamadı. Kullanıcı adı kullanımda olabilir veya giriş bilgileri geçersiz olabilir.'));
+                const codes = { email_exists: 'Bu kullanıcı adı kullanımda. Başka bir ad seç veya giriş yap.', user_already_exists: 'Bu kullanıcı adı kullanımda. Başka bir ad seç veya giriş yap.', weak_password: 'Şifre sunucu kurallarını karşılamıyor. En az 6 karakter kullan.', email_address_invalid: 'Sunucu hesap kimliğini kabul etmedi. Hesap yapılandırmasının kontrol edilmesi gerekiyor.', email_address_not_authorized: 'Sunucu e-posta göndermeye çalıştı. SMTP’siz kayıt ayarının kontrol edilmesi gerekiyor.', invalid_credentials: 'Kullanıcı adı veya şifre yanlış.' };
+                const error = new Error(codes[data?.error_code] || codes[data?.code] || messages[response.status] || (path.includes('/rest/') ? 'Bulut kaydı işlenemedi. Bağlantıyı ve sunucu kurulumunu kontrol et.' : 'İşlem tamamlanamadı. Kullanıcı adı kullanımda olabilir veya giriş bilgileri geçersiz olabilir.'));
                 error.status = response.status; throw error;
             }
             return data;
@@ -116,16 +117,6 @@
         const data = await request('/auth/v1/signup', { email: input.email, password: input.password, data: { username: input.username } });
         if (!data?.access_token) throw new Error('Kayıt tamamlanamadı. Kullanıcı adı kullanımda olabilir veya sunucuda e-posta doğrulaması açık olabilir.');
         return accept(data, version);
-    }
-    async function setupCredentials(username, password) {
-        const input = credentials(username, password), version = epoch, s = await access();
-        if (usernameOf(s.user)) throw new Error('Bu hesapta kullanıcı adı zaten tanımlı.');
-        const user = await request('/auth/v1/user', { email: input.email, password: input.password, data: { username: input.username } }, s.access_token, { method: 'PUT' });
-        if (version !== epoch) throw new Error('Oturum değişti; işlemi yeniden başlat.');
-        if (user?.id !== s.user.id || user.email !== input.email) throw new Error('Kullanıcı adına geçiş tamamlanmadı. Hesaptan çıkmadan sunucu ayarını kontrol et.');
-        // Auth user ID is unchanged; its RLS-protected cloud save stays attached.
-        epoch++; setSession({ ...s, user });
-        return snapshot();
     }
     async function signOut() {
         const previous = session; epoch++; setSession(null);
@@ -194,5 +185,5 @@
         epoch++; session = readStored();
         emit({ authenticated: Boolean(session), email: session?.user?.email || '', username: usernameOf(session?.user), status: session ? 'signed-in' : 'signed-out', error: '' });
     });
-    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, setupCredentials, signOut, uploadSave, downloadSave, applySave });
+    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, signOut, uploadSave, downloadSave, applySave });
 })();
