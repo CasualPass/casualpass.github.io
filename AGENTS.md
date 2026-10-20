@@ -369,6 +369,6 @@ E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından
 - [x] Değişen JS dosyalarında `node --check`, HTML ID/ARIA/form bağları ve `git diff --check`: başarılı.
 - [x] Canlı `/auth/v1/settings`: e-posta giriş/yeni kayıt açık, e-posta doğrulaması gerekli. Anonim tablo okuma engellendi.
 - [ ] Gerçek e-posta bağlantısıyla giriş, iki kullanıcıyla RLS ve cihazlar arası yükle/geri al kabul testi: doğrulanması gerekiyor.
-- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; gerçek e-posta testi için alıcı adresi bekleniyor.
+- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; gerçek e-posta testi başlatıldı: kullanıcı tarafından belirtilen alıcıya giriş bağlantısı isteği gönderildi ve Supabase başarılı yanıt verdi. E-postanın teslimi ve bağlantıdan giriş henüz doğrulanmadı.
 
 Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.
