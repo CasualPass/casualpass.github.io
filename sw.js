@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "7a579f9ac756";
+const VERSION = "6aec4fc6040e";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -24,7 +24,7 @@ const PRECACHE = [
         "index.html",
         "manifest.webmanifest",
         "script.js",
-        "script.js?v=15",
+        "script.js?v=16",
         "shared-settings.css",
         "shared-settings.css?v=5",
         "shared-settings.css?v=6",
@@ -32,7 +32,7 @@ const PRECACHE = [
         "shared-settings.js?v=10",
         "style.css",
         "style.css?v=22",
-        "style.css?v=24",
+        "style.css?v=25",
         "./",
         "2048-game/",
         "2048-game/index.html",
@@ -76,7 +76,7 @@ const PRECACHE = [
         "owl-game/",
         "owl-game/index.html",
         "owl-game/script.js",
-        "owl-game/script.js?v=2",
+        "owl-game/script.js?v=3",
         "owl-game/style.css",
         "owl-game/style.css?v=2",
         "snake-game/",
@@ -102,13 +102,13 @@ const PRECACHE = [
         "wood-blocks/",
         "wood-blocks/index.html",
         "wood-blocks/script.js",
-        "wood-blocks/script.js?v=1",
+        "wood-blocks/script.js?v=2",
         "wood-blocks/style.css",
         "wood-blocks/style.css?v=1",
         "wood-turning/",
         "wood-turning/index.html",
         "wood-turning/script.js",
-        "wood-turning/script.js?v=11",
+        "wood-turning/script.js?v=12",
         "wood-turning/style.css",
         "wood-turning/style.css?v=7",
         "xox-game/",

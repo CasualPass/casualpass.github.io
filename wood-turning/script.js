@@ -125,6 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playSound(name) {
+        // Haptics follow their own setting, so they run even when sound is muted.
+        if (typeof playHaptic === 'function') playHaptic(name === 'pop' ? 'success' : 'tap');
         if (typeof cpSettings === 'undefined' || !cpSettings.sound) return;
         const audio = document.getElementById(name === 'pop' ? 'global-pop-sound' : 'global-click-sound');
         if (!audio) return;

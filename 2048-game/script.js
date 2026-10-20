@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (anyMerge && typeof playPopSound   === 'function') playPopSound();
             else if        (typeof playClickSound === 'function') playClickSound();
+            if (typeof playHaptic === 'function') playHaptic(anyMerge ? 'move' : 'tap');
 
             if (cheatImmortal() && isGameOver()) makeRoomForImmortal();
             if (won && !keepPlaying && !cheatImmortal()) {
@@ -343,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function endGame(didWin) {
         gameOver = true;
         queuedDir = null;
+        if (typeof playHaptic === 'function') playHaptic(didWin ? 'win' : 'fail');
         // The win is stored right away; playing on only raises its score later.
         recordResult(won);
         const thisRun = runId;

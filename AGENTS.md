@@ -470,3 +470,29 @@ Yayıncı kaynaklarından kaydırarak tüm kareleri boyama mekaniğini araştır
 - [x] Brave: gerçek çizim ve sağ okla hareket; hamle 0→1, boyalı kare 1/18→2/18 doğrulandı.
 - [x] JS syntax, HTML yerel hedefleri, PWA üretimi ve `git diff --check`.
 - Fiziksel telefon kaydırma, native runtime ve gerçek offline açılış test edilmedi; VM testleri bu kontrollerin yerine geçmez.
+
+## 2026-10-20 — Titreşim (haptic) geri bildirimi
+
+### Amaç
+
+Oyunlara dokunsal geri bildirim eklemek ve dashboard'dan açılıp kapatılabilir yapmak. Son Hat, aynı anda başka bir agent tarafından düzenlendiği için kapsam dışı bırakıldı.
+
+### Yapılanlar
+
+- `shared-settings.js`: `cpSettings.vibration` (varsayılan açık, `casualpass_settings_v2` çerezinde), `playHaptic(desen)` ve `CasualSettings.vibrate` / `vibrationSupported` eklendi. Desenler: `tap`, `move`, `success`, `win`, `fail` veya ham Vibration API dizisi. `navigator.vibrate` yoksa (iOS Safari) dokunmatik cihazlarda gizli `<input type="checkbox" switch>` etiketine tıklanarak iOS 18+ Taptic tıkı tetiklenir; bu tıklama `stopPropagation` ile oyun dinleyicilerine ulaşmaz.
+- Oyunlar `typeof playHaptic === 'function'` korumasıyla çağırır: Snake (yem, oyun sonu), 2048 (hamle/birleşme, oyun sonu), Chess (oyuncu ve bot hamlesi, oyun sonu), Minerva Owl (kanat, çarpma), Wood Blocks (yerleştirme, silme/kombo, tıkanma), Wood Turning (`playSound` üzerinden; ses kapalıyken de titreşir).
+- `index.html`, `script.js`, `style.css`: Temalar panelinin başlığına, bakiye rozetinin yanına "Titreşim" düğmesi (`aria-pressed`); titreşimi desteklemeyen masaüstü tarayıcılarda gizli. Üst çubuk (Oyunlar, Hakkında, Hesabım, oturum) 375 px'te dolu olduğu için oraya konmadı.
+- XOX, main'de yeniden yazıldığı için bu çalışmada titreşim almadı; yeni oyunlar (Arena FPS, Vektör, Nuts & Bolts, Maze Paint) da henüz bağlı değil. `playHaptic` hepsinde kullanılabilir.
+- Sürümler: `style.css?v=25`, dashboard `script.js?v=16`, Owl `script.js?v=3`, Wood Blocks `script.js?v=2`, Wood Turning `script.js?v=12`. `shared-settings.js` adresi `?v=10` olarak kaldı; service worker kurulumda dosyaları `cache: 'reload'` ile tazelediği için `build-sw.py` yeterli.
+- `sw.js`, `version.json`: `python3 tools/build-sw.py` ile yeniden üretildi.
+
+### Testler
+
+- `node --check` değişen betiklerde başarılı; `git diff --check` temiz.
+- Tarayıcı (375 px, `navigator.vibrate` kaydedici ile): düğme kapatınca titreşim durur, açınca `success` deseni çalar ve ayar çereze yazılır; 2048 hamleleri `tap`/`move`, Owl kanat `tap` ve çarpma `fail` üretti; konsol hatası yok, yatay taşma yok.
+- iOS yolu Vibration API kaldırılarak simüle edildi: switch toggle sayısı desen darbeleriyle eşleşti, tıklama `document`'a ulaşmadı. Gerçek iPhone/Android cihazda hissedilen titreşim: Doğrulanması gerekiyor.
+
+### Bilinen sorunlar
+
+- iOS'ta switch hilesi yalnızca kullanıcı etkileşimi sırasında güvenilir çalışır; zamanlayıcıyla gelen olaylar (ör. Snake'in çarpması, botun hamlesi) iOS'ta titremeyebilir.
+- Sürümsüz sayfalar (Snake, 2048, Chess, XOX) yeni betiği GitHub Pages önbelleği dolunca alır.

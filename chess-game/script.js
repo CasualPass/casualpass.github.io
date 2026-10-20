@@ -345,6 +345,7 @@ function tryMove(from, to, animate = true, promotion = null) {
             return false;
         }
         if (typeof playClickSound === 'function') playClickSound();
+        if (typeof playHaptic === 'function') playHaptic('move');
         selectedSquare = null;
         clearSelectionMarks();
         lastMove = { from, to };
@@ -625,6 +626,7 @@ function playCasualFishMove(bestMove, possibleMoves) {
 
         if (moveResult) {
             if (typeof playPopSound === 'function') playPopSound();
+            if (typeof playHaptic === 'function') playHaptic('tap');
             clearSelectionMarks();
             lastMove = { from: moveResult.from, to: moveResult.to };
 
@@ -811,6 +813,7 @@ function showGameOver(title, detail) {
     overlay.classList.remove('hidden');
     document.getElementById('show-result-btn').classList.remove('hidden');
     if (typeof playPopSound === 'function') playPopSound();
+    if (typeof playHaptic === 'function') playHaptic('success');
     rematchBtn.focus();
 }
 

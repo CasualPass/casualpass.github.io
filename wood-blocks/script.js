@@ -575,11 +575,13 @@
             addScore(gained, centerX, centerY, `+${gained}`, '#ffe08a', 30);
             floaters.push({ text: streak > 1 ? `${label} · Seri ${streak}` : label, x: W / 2, y: BY + BOARD / 2, at: now, color: '#fff3d6', size: 34 });
             sound(520 + Math.min(groups.count, 4) * 90, .22, 'triangle', 380);
+            if (typeof playHaptic === 'function') playHaptic(groups.count > 1 ? 'win' : 'success');
         } else {
             if (grace > 0) grace -= 1;
             if (grace === 0) streak = 0;
             addScore(gained, centerX, centerY, `+${gained}`, '#fff3d6', 20);
             sound(300, .06, 'square', -60);
+            if (typeof playHaptic === 'function') playHaptic('tap');
         }
         if (tray.every((item) => !item)) dealTray();
         checkStuck();
@@ -596,6 +598,7 @@
         }
         mode = 'ending';
         keyPick = null;
+        if (typeof playHaptic === 'function') playHaptic('fail');
         window.clearTimeout(overTimer);
         overTimer = window.setTimeout(finish, 700);
     }

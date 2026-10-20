@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 scoreElem.textContent = score;
                 tail = Math.min(tileCount * tileCount - rocks.length - (cheatImmortal() ? 1 : 0), tail + 1);
                 playEatSound();
+                if (typeof playHaptic === 'function') playHaptic('tap');
                 if (!spawnFood()) {
                     if (!cheatImmortal()) {
                         draw();
@@ -395,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pauseBtn.disabled = true;
         restartBtn.focus({ preventScroll: true });
         if (!won) playDieSound();
+        if (typeof playHaptic === 'function') playHaptic(won ? 'win' : 'fail');
 
         // Record stats
         if (typeof recordGameResult === 'function') {

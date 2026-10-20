@@ -564,6 +564,7 @@
         vy = FLAP;
         flapBoost = .22;
         sound(520, .09, 'triangle', 260);
+        if (typeof playHaptic === 'function') playHaptic('tap');
         if (palettes[activeOwlId()].trail) emit(4, palettes[activeOwlId()].trail, { dx: -10, dy: 8, vx: -120, vy: 60, spread: 70, size: 2.2 });
     }
 
@@ -576,6 +577,7 @@
         emit(12, p.body, { spread: 260, size: 3, leaf: true });
         emit(6, p.belly, { spread: 220, size: 2.5, leaf: true });
         sound(190, .3, 'sawtooth', -120);
+        if (typeof playHaptic === 'function') playHaptic('fail');
         crashReason = reason;
     }
 

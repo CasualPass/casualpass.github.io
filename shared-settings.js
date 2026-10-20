@@ -1,5 +1,5 @@
 /** Shared settings and game statistics are intentionally persisted in first-party cookies. */
-let cpSettings = { sound: true, effects: true, theme: 'liquid' };
+let cpSettings = { sound: true, effects: true, vibration: true, theme: 'liquid' };
 
 const CP_COOKIE_AGE = 60 * 60 * 24 * 365;
 const CP_SETTINGS_COOKIE = 'casualpass_settings_v2';
@@ -28,7 +28,7 @@ function loadSettings() {
     try {
         const saved = JSON.parse(getCookieValue(CP_SETTINGS_COOKIE) || '{}');
         const theme = CP_THEME_IDS.has(saved.theme) ? saved.theme : cpSettings.theme;
-        cpSettings = { ...cpSettings, sound: Boolean(saved.sound ?? cpSettings.sound), effects: Boolean(saved.effects ?? cpSettings.effects), theme };
+        cpSettings = { ...cpSettings, sound: Boolean(saved.sound ?? cpSettings.sound), effects: Boolean(saved.effects ?? cpSettings.effects), vibration: Boolean(saved.vibration ?? cpSettings.vibration), theme };
     } catch { /* default settings are used */ }
 }
 
@@ -71,6 +71,46 @@ function playPopSound() {
     audio.play().catch(() => {});
 }
 
+/** Named haptic patterns in milliseconds; games pass a name or a raw Vibration API pattern. */
+const CP_HAPTICS = { tap: 8, move: 12, success: [18, 40, 28], win: [30, 60, 30, 60, 60], fail: [70, 50, 110] };
+let cpHapticSwitch = null;
+
+/** iOS Safari has no Vibration API but ticks the Taptic Engine when a switch checkbox toggles. */
+function tapIosSwitch() {
+    if (!cpHapticSwitch) {
+        if (!document.body) return;
+        cpHapticSwitch = document.createElement('label');
+        cpHapticSwitch.setAttribute('aria-hidden', 'true');
+        cpHapticSwitch.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.tabIndex = -1;
+        input.setAttribute('switch', '');
+        cpHapticSwitch.append(input);
+        // The synthetic click must not reach game listeners (e.g. tap-to-flap).
+        cpHapticSwitch.addEventListener('click', (event) => event.stopPropagation());
+        document.body.append(cpHapticSwitch);
+    }
+    cpHapticSwitch.click();
+}
+
+function playHaptic(pattern = 'tap') {
+    if (!cpSettings.vibration) return;
+    const value = typeof pattern === 'string' ? CP_HAPTICS[pattern] ?? CP_HAPTICS.tap : pattern;
+    if (typeof navigator.vibrate === 'function') {
+        try { navigator.vibrate(value); } catch { /* vibration is optional */ }
+        return;
+    }
+    if (!window.matchMedia?.('(pointer: coarse)').matches) return;
+    // One tick per pulse; pauses in the pattern become gaps between ticks.
+    const steps = Array.isArray(value) ? value : [value];
+    let delay = 0;
+    for (let i = 0; i < steps.length; i += 2) {
+        if (delay === 0) tapIosSwitch(); else window.setTimeout(tapIosSwitch, delay);
+        delay += steps[i] + (steps[i + 1] || 0);
+    }
+}
+
 function getGameStats() {
     try {
         const saved = JSON.parse(getCookieValue(CP_STATS_COOKIE) || '{}');
@@ -104,6 +144,8 @@ function getHighScore(gameName) {
 
 window.CasualSettings = Object.freeze({
     get: () => ({ ...cpSettings }),
+    vibrationSupported: () => typeof navigator.vibrate === 'function' || Boolean(window.matchMedia?.('(pointer: coarse)').matches),
+    vibrate: (pattern) => playHaptic(pattern),
     setTheme(theme) {
         if (!CP_THEME_IDS.has(theme)) return;
         cpSettings.theme = theme;
