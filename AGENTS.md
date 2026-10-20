@@ -368,7 +368,8 @@ E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından
 - [x] `node --test tools/test-cloud.cjs`: 12 test başarılı (auth, yenileme, çıkış, yarışlar, çevrimdışı, kayıt/token ayrımı, bağlantı dönüşü).
 - [x] Değişen JS dosyalarında `node --check`, HTML ID/ARIA/form bağları ve `git diff --check`: başarılı.
 - [x] Canlı `/auth/v1/settings`: e-posta giriş/yeni kayıt açık, e-posta doğrulaması gerekli. Anonim tablo okuma engellendi.
-- [ ] Gerçek e-posta bağlantısıyla giriş, iki kullanıcıyla RLS ve cihazlar arası yükle/geri al kabul testi: doğrulanması gerekiyor.
-- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; gerçek e-posta testi başlatıldı: kullanıcı tarafından belirtilen alıcıya giriş bağlantısı isteği gönderildi ve Supabase başarılı yanıt verdi. E-postanın teslimi ve bağlantıdan giriş henüz doğrulanmadı.
+- [x] Gerçek e-posta bağlantısı sonrası doğru hesapla giriş ve temiz sekmede kalıcı oturum doğrulandı. Kullanıcının açık yükleme/geri getirme onayıyla mevcut oyun kaydı Supabase’e yüklendi, 3 kayıt alanı doğrulanarak geri getirildi ve aynı yedek yerel oyuna uygulandı. Uygulama yenilemesinden sonra hesap açık, Snake rekoru 10, oynanan oyun 1 ve Liquid teması korundu.
+- [ ] İki ayrı kullanıcı arasında canlı RLS izolasyonu ve farklı fiziksel cihazda aktarım: bu testte çalıştırılmadı.
+- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; e-posta giriş testi ve aynı tarayıcıda bulut yükle/geri getir/uygula akışı başarılı (yukarıdaki kayıt).
 
 Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.
