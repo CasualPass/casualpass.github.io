@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "f450d512af22";
+const VERSION = "b97a6c5cdecb";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -32,6 +32,7 @@ const PRECACHE = [
         "shared-settings.js?v=10",
         "style.css",
         "style.css?v=22",
+        "style.css?v=23",
         "./",
         "2048-game/",
         "2048-game/index.html",
@@ -56,6 +57,14 @@ const PRECACHE = [
         "icons/icon-192.png",
         "icons/icon-512.png",
         "icons/icon-maskable-512.png",
+        "nuts-bolts/",
+        "nuts-bolts/engine.js",
+        "nuts-bolts/engine.js?v=1",
+        "nuts-bolts/index.html",
+        "nuts-bolts/script.js",
+        "nuts-bolts/script.js?v=1",
+        "nuts-bolts/style.css",
+        "nuts-bolts/style.css?v=1",
         "owl-game/",
         "owl-game/index.html",
         "owl-game/script.js",
