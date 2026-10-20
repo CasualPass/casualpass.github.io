@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="stylesheet" href="style.css?v=19">
     <script src="shared-settings.js?v=9"></script>
 </head>
 <body class="theme-liquid">
@@ -127,10 +127,35 @@
             </div>
             <div class="cheat-grid" id="cheat-grid" aria-label="Açılabilir hile kodları"></div>
         </section>
+
+        <section class="panel save-panel" id="save" aria-labelledby="save-title">
+            <div class="section-heading compact">
+                <div><p class="eyebrow">YEDEK</p><h2 id="save-title">Kayıt dosyası</h2></div>
+            </div>
+            <p class="save-note">İlerlemen bu tarayıcının çerezlerinde durur. Dışa aktardığın dosyayla başka bir cihaza ya da tarayıcıya taşıyabilir, çerezler silinirse geri yükleyebilirsin. Dosya 7-3-1 kontrol haneleri ve bir mühürle korunur; değiştirilmiş bir dosya yüklenmeden önce sorulur.</p>
+            <p class="save-warning" id="save-unverified" hidden>Bu cihazdaki kayıt, doğrulanamayan bir dosyadan yüklendi.</p>
+            <div class="save-actions">
+                <button class="save-button primary" id="save-export" type="button">Dışa aktar</button>
+                <button class="save-button" id="save-import" type="button">İçe aktar</button>
+                <input id="save-file" type="file" accept=".json,application/json" hidden>
+            </div>
+        </section>
     </main>
 
     <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>İlerleme yalnızca bu tarayıcının çerezlerinde saklanır.</small></footer>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="save-dialog" id="save-dialog" aria-labelledby="save-dialog-title">
+        <form method="dialog">
+            <p class="eyebrow" id="save-dialog-kicker">KAYDI İÇE AKTAR</p>
+            <h2 id="save-dialog-title"></h2>
+            <p id="save-dialog-body"></p>
+            <div class="save-dialog-actions">
+                <button value="cancel" class="save-button" id="save-dialog-cancel">Vazgeç</button>
+                <button value="ok" class="save-button primary" id="save-dialog-ok">Devam et</button>
+            </div>
+        </form>
+    </dialog>
 
     <template id="theme-template">
         <article class="theme-card">
@@ -142,6 +167,7 @@
 
     <script src="casual-profile.js?v=16"></script>
     <script src="casual-cheats.js?v=8"></script>
-    <script src="script.js?v=12"></script>
+    <script src="casual-save.js?v=1"></script>
+    <script src="script.js?v=13"></script>
 </body>
 </html>
