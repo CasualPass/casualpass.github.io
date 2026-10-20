@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "dcfa6bf69bba";
+const VERSION = "f450d512af22";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -69,11 +69,13 @@ const PRECACHE = [
         "snake-game/style.css",
         "snake-game/style.css?v=2",
         "son-hat/",
+        "son-hat/battle-view.js",
+        "son-hat/battle-view.js?v=2",
         "son-hat/index.html",
         "son-hat/script.js",
-        "son-hat/script.js?v=7",
+        "son-hat/script.js?v=9",
         "son-hat/style.css",
-        "son-hat/style.css?v=7",
+        "son-hat/style.css?v=8",
         "vektor/",
         "vektor/index.html",
         "vektor/script.js",

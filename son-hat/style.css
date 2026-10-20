@@ -475,3 +475,23 @@ button { cursor: pointer; }
     .map-panel { flex: none; }
     .map-path { max-height: 260px; flex: none; }
 }
+
+/* A portrait battlefield keeps both choices within reach on a wide display. */
+body.sh-body { background: radial-gradient(ellipse at 50% 20%, #294652, #091b26 75%); }
+.sh-app { left: 50%; right: auto; width: min(100%, 620px); transform: translateX(-50%); box-shadow: 0 0 100px #0008; }
+#field-3d { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+#field-3d[hidden] { display: none; }
+.combat-strip { position: absolute; z-index: 4; left: 14px; right: 14px; top: 124px; display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.combat-strip > span { display: grid; gap: 2px; text-align: center; min-width: 82px; padding: 7px 12px; background: #102c43e8; border: 1px solid #a4d6f849; border-radius: 10px; color: white; box-shadow: 0 4px 10px #0002; }
+.combat-strip small { font-size: 9px; letter-spacing: .12em; color: #a9cde2; font-weight: 800; }
+.combat-strip b { font-size: 20px; line-height: 1; }
+.airstrike { position: absolute; right: 16px; bottom: max(25px, env(safe-area-inset-bottom)); z-index: 5; display: grid; gap: 4px; padding: 13px 17px; border-radius: 14px; color: #152c42; border: 2px solid #fff2b2; background: linear-gradient(#fff18f,#ffc33b); box-shadow: 0 5px 0 #96691b, 0 8px 20px #0003; font-weight: 900; }
+.airstrike small { font-size: 11px; font-weight: 700; }
+.airstrike:disabled { background: #748b96; border-color: #bac9cc; color: #e6eef0; box-shadow: 0 4px 0 #405762; }
+.boss-hud { position: absolute; top: 198px; left: 15%; right: 15%; z-index: 4; text-align: center; color: #fff; text-shadow: 0 2px 3px #000; }
+.boss-hud strong { font-size: 12px; letter-spacing: .08em; }
+.boss-hud > span { display: block; height: 12px; background: #152b3b; border: 2px solid #fff; border-radius: 8px; overflow: hidden; margin-top: 5px; }
+.boss-hud i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg,#e34238,#ff8b56); transition: width .1s linear; }
+.sh-app:not([data-mode="run"]) .combat-strip, .sh-app:not([data-mode="run"]) .airstrike, .sh-app:not([data-mode="run"]) .boss-hud { display: none; }
+.run-hint { white-space: normal; width: max-content; max-width: calc(100% - 30px); bottom: 104px; }
+@media (max-height: 680px) { .combat-strip { top: 112px; } .combat-strip > span { padding: 4px 10px; } .boss-hud { top: 174px; } }
