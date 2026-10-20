@@ -1,0 +1,15 @@
+<!doctype html><html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#102b30"><title>Maze Paint — CasualPass</title>
+<link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icons/favicon-32.png"><link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../shared-settings.css"><link rel="stylesheet" href="style.css?v=1"><script src="../shared-settings.js?v=10"></script><script src="../casual-profile.js?v=16"></script><script src="../casual-cheats.js?v=8"></script>
+</head><body><div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+<main><header><a href="../index.html">← Oyunlar</a><span>CASUALPASS / RENK LABİRENTİ</span><b id="progress">1 / 24</b></header>
+<section class="intro"><p class="eyebrow">KAYDIR. YUVARLAN. RENKLENDİR.</p><h1>Maze <span>Paint</span></h1><p>Bir kaydırış, duvara kadar renk.</p></section>
+<section class="game" aria-label="Maze Paint oyunu"><div class="hud"><div><small>BÖLÜM</small><h2 id="level-title">01</h2></div><div><small>HAMLE</small><b id="moves">0</b></div><div><small>BOYANAN</small><b id="coverage">0 / 0</b></div></div>
+<div id="board" class="board" tabindex="0" role="group" aria-label="Labirent. Kaydırarak veya ok tuşlarıyla topu hareket ettir."></div>
+<div class="meter" aria-hidden="true"><i id="fill"></i></div><p id="message" role="status" aria-live="polite">Kaydır veya yön düğmelerini kullan. Top duvara kadar gider.</p>
+<div class="directions" role="group" aria-label="Hareket yönleri"><button data-dir="up" aria-label="Yukarı">↑</button><button data-dir="left" aria-label="Sola">←</button><button data-dir="down" aria-label="Aşağı">↓</button><button data-dir="right" aria-label="Sağa">→</button></div>
+<div class="actions"><button id="undo">↶ Geri al</button><button id="restart">↻ Yeniden başla</button><button id="next" class="primary" hidden>Sonraki bölüm →</button></div></section>
+<footer><label for="level">Bölüm seç</label><select id="level"></select><span id="completed"></span></footer>
+<details><summary>Nasıl oynanır?</summary><p>Yukarı, aşağı, sola veya sağa kaydır. Top bir duvara ya da kenara çarpana kadar durmaz; geçtiği her kare boyanır. Boyalı karelerden tekrar geçebilirsin. Bütün açık kareleri boya; duvarları boyamana gerek yok. Başlangıç karesi boyalıdır.</p><p>Süre veya hamle sınırı yok. Ok tuşları, WASD ve ekrandaki düğmeler de çalışır. Son 300 hamleyi geri alabilirsin; geri alma geçmişi yenilemede sıfırlanır. Tahta ve ilerlemen cihazda kaydedilir; dashboard’daki dosya/bulut yedeğine dahildir. Bölüm seçmek o bölümü baştan açar.</p></details></main>
+<script src="engine.js?v=1"></script><script src="script.js?v=1"></script></body></html>
