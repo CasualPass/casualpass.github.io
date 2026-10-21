@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" class="dashboard-document">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,11 +18,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=27">
-    <script src="shared-settings.js?v=11"></script>
+    <link rel="stylesheet" href="style.css?v=29">
+    <link rel="stylesheet" href="dashboard.css?v=10">
+    <script src="shared-settings.js?v=12"></script>
     <script src="casual-activity.js?v=1" defer></script>
 </head>
-<body class="theme-liquid">
+<body class="theme-liquid dashboard-app">
     <a class="skip-link" href="#games">Oyunlara geç</a>
     <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
 
@@ -33,6 +34,7 @@
         </a>
         <nav class="topnav" aria-label="Site">
             <a href="index.html#games" aria-current="page">Oyunlar</a>
+            <a href="market.html">Market</a>
             <a href="about.html">Hakkında</a>
         </nav>
         <div class="topbar-actions">
@@ -44,8 +46,7 @@
         </div>
     </header>
 
-    <main class="dashboard">
-        <section class="welcome-panel" aria-labelledby="dashboard-title">
+<main class="dashboard app-dashboard"><section class="welcome-panel" aria-labelledby="dashboard-title">
             <div class="welcome-copy">
                 <p class="eyebrow">CASUALPASS DASHBOARD</p>
                 <h1 id="dashboard-title">Aç, seç, <em>oyna.</em></h1>
@@ -68,40 +69,18 @@
                 </ul>
                 <button id="daily-bonus-button" type="button">Günlük ödül</button>
             </section>
-        </section>
-
-        <section class="panel games-panel" id="games" aria-labelledby="games-title">
-            <div class="section-heading">
-                <div><p class="eyebrow">OYUNLAR</p><h2 id="games-title">Birini seç, tak diye oyna.</h2></div>
-                <p id="games-count">13 oyun aynı ekranda.</p>
-            </div>
-            <div class="game-filters" id="game-filters" role="group" aria-label="Oyunları türe göre süz">
-                <button type="button" class="filter-chip" data-filter="all" aria-pressed="true">Tümü <span></span></button>
-                <button type="button" class="filter-chip" data-filter="hizli" aria-pressed="false">Hızlı <span></span></button>
-                <button type="button" class="filter-chip" data-filter="zeka" aria-pressed="false">Zekâ <span></span></button>
-                <button type="button" class="filter-chip" data-filter="beceri" aria-pressed="false">Beceri <span></span></button>
-                <button type="button" class="filter-chip" data-filter="aksiyon" aria-pressed="false">Aksiyon <span></span></button>
-                <button type="button" class="filter-chip" data-filter="coklu" aria-pressed="false">Çok oyunculu <span></span></button>
-            </div>
-            <div class="game-grid" id="game-grid">
-                <a class="game-card wood-card" href="wood-turning/index.html" data-game="Wood Turning" data-tags="beceri"><span class="game-index">01</span><span class="game-art wood-art" aria-hidden="true"><i></i><b></b></span><span class="game-copy"><small>USTALIK</small><span class="title-row"><strong>Wood Turning</strong></span><em>Şekillendir · Zımparala · Kazan</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card snake-card" href="snake-game/index.html" data-game="Snake" data-tags="hizli beceri"><span class="game-index">02</span><span class="game-art snake-art" aria-hidden="true"><i></i><i></i><i></i><b></b></span><span class="game-copy"><small>REFLEKS</small><span class="title-row"><strong>Snake</strong></span><em>Yemi kap, rekoru uzat</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card tile-card" href="2048-game/index.html" data-game="2048" data-tags="hizli zeka"><span class="game-index">03</span><span class="game-art tile-art" aria-hidden="true"><b>2</b><b>0</b><b>4</b><b>8</b></span><span class="game-copy"><small>ZEKA</small><span class="title-row"><strong>2048</strong></span><em>Taşları birleştir</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card xox-card" href="xox-game/index.html" data-game="XOX" data-tags="hizli zeka coklu"><span class="game-index">04</span><span class="game-art xox-art" aria-hidden="true">× <b>○</b> ×</span><span class="game-copy"><small>STRATEJİ</small><span class="title-row"><strong>XOX</strong></span><em>Üçlüyü ilk sen kur</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card chess-card" href="chess-game/index.html" data-game="Chess" data-tags="zeka"><span class="game-index">05</span><span class="game-art chess-art" aria-hidden="true">♞</span><span class="game-copy"><small>TAKTİK</small><span class="title-row"><strong>Chess</strong></span><em>CasualFish'e karşı oyna</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card line-card" href="son-hat/index.html" data-game="Son Hat" data-tags="aksiyon"><span class="game-index">06</span><span class="game-art line-art" aria-hidden="true"><i></i><b></b><b></b></span><span class="game-copy"><small>HAYATTA KAL</small><span class="title-row"><strong>Son Hat</strong><b class="beta-badge">Beta</b></span><em>Şerit seç, birliğini büyüt</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card owl-card" href="owl-game/index.html" data-game="Minerva Owl" data-tags="hizli beceri"><span class="game-index">07</span><span class="game-art owl-art" aria-hidden="true"><b><i></i></b><s></s></span><span class="game-copy"><small>UÇUŞ</small><span class="title-row"><strong>Minerva Owl</strong><b class="new-badge">Yeni</b></span><em>Sütunlardan süzül, baykuş aç</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card blocks-card" href="wood-blocks/index.html" data-game="Wood Blocks" data-tags="zeka"><span class="game-index">08</span><span class="game-art blocks-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="game-copy"><small>BULMACA</small><span class="title-row"><strong>Wood Blocks</strong><b class="new-badge">Yeni</b></span><em>Blokları yerleştir, satırları sil</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card arena-card" href="fps-game/index.html" data-game="Arena FPS" data-tags="aksiyon coklu"><span class="game-index">09</span><span class="game-art arena-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>ÇOK OYUNCULU</small><span class="title-row"><strong>Arena FPS</strong><b class="new-badge">Yeni</b></span><em>Oda aç, kodla katıl</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card vektor-card" href="vektor/index.html" data-game="Vektör" data-tags="aksiyon coklu"><span class="game-index">10</span><span class="game-art vektor-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>TAKTİK 5v5</small><span class="title-row"><strong>Vektör</strong><b class="new-badge">Yeni</b></span><em>Çekirdeği kur ya da çöz</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card nuts-card" href="nuts-bolts/index.html" data-game="Nuts &amp; Bolts" data-tags="zeka"><span class="game-index">11</span><span class="game-art nuts-art" aria-hidden="true"><i>●</i><i>◆</i><i>▲</i></span><span class="game-copy"><small>RENK ATÖLYESİ</small><span class="title-row"><strong>Nuts &amp; Bolts</strong><b class="new-badge">Yeni</b></span><em>Somunları renklerine göre ayır</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card maze-card" href="maze-paint/index.html" data-game="Maze Paint" data-tags="zeka"><span class="game-index">12</span><span class="game-art maze-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="game-copy"><small>RENK LABİRENTİ</small><span class="title-row"><strong>Maze Paint</strong><b class="new-badge">Yeni</b></span><em>Kaydır, tüm kareleri boya</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-                <a class="game-card dino-card" href="dino-game/index.html" data-game="Dino" data-tags="hizli beceri"><span class="game-index">13</span><span class="game-art dino-art" aria-hidden="true">🦖</span><span class="game-copy"><small>KOŞU</small><span class="title-row"><strong>Dino</strong><b class="new-badge">Yeni</b></span><em>Zıpla, engelleri aş, rekor kır</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
-            </div>
-            <p class="filter-status" id="filter-status" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="panel leaderboard-panel" id="leaderboard" aria-labelledby="leaderboard-title">
+        </section><nav class="dashboard-tabs" role="tablist" aria-label="Ana ekran bölümleri"><button type="button" id="tab-games" data-dashboard-tab="games" role="tab" aria-controls="view-games" aria-selected="true">Oyunlar</button><button type="button" id="tab-leaderboard" data-dashboard-tab="leaderboard" role="tab" aria-controls="view-leaderboard" aria-selected="false">Sıralama</button><button type="button" id="tab-account" data-dashboard-tab="account" role="tab" aria-controls="view-account" aria-selected="false">Hesap</button><button type="button" id="tab-themes" data-dashboard-tab="themes" role="tab" aria-controls="view-themes" aria-selected="false">Görünüş</button><button type="button" id="tab-progress" data-dashboard-tab="progress" role="tab" aria-controls="view-progress" aria-selected="false">Gelişim</button></nav><div class="dashboard-views"><div id="view-games" data-dashboard-view="games" role="tabpanel" aria-labelledby="tab-games"><section class="panel games-panel" id="games" aria-labelledby="games-title">
+            <div class="section-heading"><div><p class="eyebrow">HIZLI ERİŞİM</p><h2 id="games-title">Hemen bir oyun aç.</h2></div><a class="market-link" href="market.html">Tüm oyunlar · Market ↗</a></div>
+            <p class="market-summary" id="games-count">13 oyun Market’te.</p>
+            <div class="game-grid quick-game-grid" id="game-grid" data-total-games="13">
+                <a class="game-card wood-card" href="wood-turning/index.html" data-game="Wood Turning" data-tags="beceri"><span class="game-index">01</span><span class="game-art wood-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="6.6" width="18" height="5.2" rx="2.4"/><rect x="3" y="13" width="18" height="5.2" rx="2.4"/><path d="M7 9.2h5.4M9.6 15.6h6"/></svg></span><span class="game-copy"><small>USTALIK</small><span class="title-row"><strong>Wood Turning</strong></span><em>Şekillendir · Zımparala · Kazan</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card snake-card" href="snake-game/index.html" data-game="Snake" data-tags="hizli beceri"><span class="game-index">02</span><span class="game-art snake-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="16.9" cy="6.9" r="3.2"/><path d="M18.1 5.6h.01"/><path d="M20 7.6 22.8 9M20 6.2 22.8 4.8"/><path d="M15.1 9.6c-2.7 1.4-3.7 4.4-2.1 6.5 1.4 1.9.7 4.3-1.6 5.1-1.2.4-2.4.2-3.2-.6"/></svg></span><span class="game-copy"><small>REFLEKS</small><span class="title-row"><strong>Snake</strong></span><em>Yemi kap, rekoru uzat</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card tile-card" href="2048-game/index.html" data-game="2048" data-tags="hizli zeka"><span class="game-index">03</span><span class="game-art tile-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.2" y="3.2" width="7.8" height="7.8" rx="2.2"/><rect x="13" y="3.2" width="7.8" height="7.8" rx="2.2"/><rect x="3.2" y="13" width="7.8" height="7.8" rx="2.2"/><path d="M13.4 16.9h6.4M17.2 13.7l3.2 3.2-3.2 3.2"/></svg></span><span class="game-copy"><small>ZEKA</small><span class="title-row"><strong>2048</strong></span><em>Taşları birleştir</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card chess-card" href="chess-game/index.html" data-game="Chess" data-tags="zeka"><span class="game-index">05</span><span class="game-art chess-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5.9" r="2.6"/><path d="M9.6 10.1h4.8c.6 1.7 1.8 2.9 2.8 4.1H6.8c1-1.2 2.2-2.4 2.8-4.1z"/><path d="M8.4 14.2h7.2l1.7 4.6H6.7z"/><path d="M5.6 20.4h12.8"/></svg></span><span class="game-copy"><small>TAKTİK</small><span class="title-row"><strong>Chess</strong></span><em>CasualFish'e karşı oyna</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card maze-card" href="maze-paint/index.html" data-game="Maze Paint" data-tags="zeka"><span class="game-index">12</span><span class="game-art maze-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.4" y="3.4" width="17.2" height="17.2" rx="3.8"/><path d="M8.6 3.4v6.2H3.4M20.6 14.4h-5.2V9.6M13.6 20.6v-5"/><circle cx="6.6" cy="17.6" r="2.1"/></svg></span><span class="game-copy"><small>RENK LABİRENTİ</small><span class="title-row"><strong>Maze Paint</strong><b class="new-badge">Yeni</b></span><em>Kaydır, tüm kareleri boya</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card dino-card" href="dino-game/index.html" data-game="Dino" data-tags="hizli beceri"><span class="game-index">13</span><span class="game-art dino-art" aria-hidden="true"><svg class="game-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.4 14.6 7.5 10.6l4.1-.8c.8-.9 1.9-2.4 3.3-2.9 1.6-.5 3.4-.3 4.9.5l1.2 1.4-.4 2-3 .8-2 .2-.6 2-1.6 1.8.2 4.4h-2l-.2-4.2-2.4 1-.6 3.8h-2l.2-4-2.2-.8z"/><path d="M17.6 8.7h.01"/></svg></span><span class="game-copy"><small>KOŞU</small><span class="title-row"><strong>Dino</strong><b class="new-badge">Yeni</b></span><em>Zıpla, engelleri aş, rekor kır</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+            </div><p class="filter-status" id="filter-status" role="status" aria-live="polite"></p><p class="market-status" id="home-games-status" role="status" aria-live="polite"></p><div class="home-controls"><label class="home-size-label" for="home-page-size">Grup başına <select id="home-page-size"><option value="0">Otomatik</option><option value="2">2 oyun</option><option value="4">4 oyun</option><option value="6">6 oyun</option><option value="8">8 oyun</option><option value="12">12 oyun</option><option value="18">18 oyun</option><option value="30">30 oyun</option></select></label><nav class="home-pagination" aria-label="Oyun sayfaları"><button type="button" id="home-page-prev" disabled>← Önceki</button><span id="home-page-label" role="status" aria-live="polite">1 / 1</span><button type="button" id="home-page-next" disabled>Sonraki →</button></nav></div>
+        </section></div><div id="view-leaderboard" data-dashboard-view="leaderboard" role="tabpanel" aria-labelledby="tab-leaderboard" hidden><section class="panel leaderboard-panel" id="leaderboard" aria-labelledby="leaderboard-title">
             <div class="section-heading">
                 <div><p class="eyebrow">OYUNCU TABLOSU</p><h2 id="leaderboard-title">Kim ne kadar oynadı?</h2></div>
                 <a class="text-button" href="#account-title">Hesabına giriş yap ↗</a>
@@ -122,9 +101,7 @@
                 <table class="leaderboard-table"><caption>Puan ve aktif süre sıralaması · ilk 50 oyuncu</caption><thead><tr><th scope="col">Sıra</th><th scope="col">Oyuncu</th><th scope="col">Toplam puan</th><th scope="col">Aktif süre</th><th scope="col">Oyun</th><th scope="col">Galibiyet</th></tr></thead><tbody id="leaderboard-body"></tbody></table>
             </div>
             <p class="leaderboard-note">Genel tabloda kullanıcı adın ve bu dört istatistiğin görünür. Katıl / güncelle ile paylaşılır; otomatik gönderilmez. Aynı hesabın en yüksek toplamları korunur; farklı cihazlar toplanmaz. Eski oyun puanların dahil, süre ölçümü bu özellikten itibaren başlar.</p>
-        </section>
-
-        <section class="panel account-panel" aria-labelledby="account-title">
+        </section></div><div id="view-account" data-dashboard-view="account" role="tabpanel" aria-labelledby="tab-account" hidden><section class="panel account-panel" aria-labelledby="account-title">
             <div class="section-heading compact"><div><p class="eyebrow">HESAP VE BULUT KAYDI</p><h2 id="account-title">Giriş yap / Kayıt ol</h2></div><span class="account-badge" id="account-badge">Misafir</span></div>
             <p class="account-note">Kullanıcı adı ve şifrenle giriş yap veya hesap oluştur. Hesapsız da oynayabilirsin.</p>
             <p id="account-status" role="status" aria-live="polite">Hesap bağlantısı hazırlanıyor…</p>
@@ -158,16 +135,35 @@
                 <p>Yüklemek bu tarayıcıdaki ilerlemenin yerine geçer. İstersen önce aşağıdan dosya yedeği al.</p>
                 <div class="save-actions"><button class="save-button primary" id="account-apply" type="button">Bu kaydı yükle</button><button class="save-button" id="account-cancel-restore" type="button">Vazgeç</button></div>
             </div>
-        </section>
-
-        <section class="metric-grid" aria-label="Oyuncu durumu">
+        </section><section class="panel save-panel" id="save" aria-labelledby="save-title">
+            <div class="section-heading compact">
+                <div><p class="eyebrow">YEDEK</p><h2 id="save-title">Kayıt dosyası</h2></div>
+            </div>
+            <p class="save-note">İlerlemen bu tarayıcının çerezlerinde durur. Dışa aktardığın dosyayla başka bir cihaza ya da tarayıcıya taşıyabilir, çerezler silinirse geri yükleyebilirsin. Dosya 7-3-1 kontrol haneleri ve bir mühürle korunur; değiştirilmiş bir dosya yüklenmeden önce sorulur.</p>
+            <p class="save-warning" id="save-unverified" hidden>Bu cihazdaki kayıt, doğrulanamayan bir dosyadan yüklendi.</p>
+            <div class="save-actions">
+                <button class="save-button primary" id="save-export" type="button"><span aria-hidden="true">↓</span> Dışa aktar</button>
+                <button class="save-button" id="save-import" type="button"><span aria-hidden="true">↑</span> İçe aktar</button>
+                <input id="save-file" type="file" accept=".json,application/json" hidden>
+            </div>
+        </section></div><div id="view-themes" data-dashboard-view="themes" role="tabpanel" aria-labelledby="tab-themes" hidden><section class="panel themes-panel" aria-labelledby="themes-title">
+                <div class="section-heading compact">
+                    <div><p class="eyebrow">CASUALMONEY MAĞAZASI</p><h2 id="themes-title">Görünüş</h2></div>
+                    <div class="theme-tools">
+                        <button class="haptic-toggle" id="haptic-toggle" type="button" aria-pressed="true" hidden>
+                            <span class="haptic-icon" aria-hidden="true">∿</span>
+                            <span id="haptic-toggle-label">Titreşim</span>
+                        </button>
+                        <span class="balance-badge"><b>C</b><span id="theme-balance-value">0</span></span>
+                    </div>
+                </div>
+                <div class="theme-grid" id="theme-grid"></div>
+            </section></div><div id="view-progress" data-dashboard-view="progress" role="tabpanel" aria-labelledby="tab-progress" hidden><div class="progress-view"><section class="metric-grid" aria-label="Oyuncu durumu">
             <article class="metric"><span class="metric-icon purple" aria-hidden="true">◷</span><div><small>Oturum ödülü</small><strong id="session-reward-value">+15 CM</strong></div></article>
             <article class="metric"><span class="metric-icon green" aria-hidden="true">↗</span><div><small>Toplam kazanç</small><strong id="earned-value">0 CM</strong></div></article>
             <article class="metric"><span class="metric-icon orange" aria-hidden="true">◎</span><div><small>Oynanan oyun</small><strong id="plays-value">0</strong></div></article>
             <article class="metric"><span class="metric-icon blue" aria-hidden="true">◐</span><div><small>Aktif tema</small><strong id="active-theme-value">Liquid</strong></div></article>
-        </section>
-
-        <section class="rebirth-panel" aria-labelledby="rebirth-title">
+        </section><section class="rebirth-panel" aria-labelledby="rebirth-title">
             <div class="rebirth-copy">
                 <p class="eyebrow">YENİDEN DOĞUŞ</p>
                 <h2 id="rebirth-title">Kazanç <span id="rebirth-multiplier">x1</span></h2>
@@ -180,33 +176,13 @@
                 <small id="rebirth-progress">0 / 500 CM</small>
                 <button id="rebirth-button" type="button" disabled>Henüz erken</button>
             </div>
-        </section>
-
-        <section class="lower-grid">
-            <section class="panel themes-panel" aria-labelledby="themes-title">
-                <div class="section-heading compact">
-                    <div><p class="eyebrow">CASUALMONEY MAĞAZASI</p><h2 id="themes-title">Temalar</h2></div>
-                    <div class="theme-tools">
-                        <button class="haptic-toggle" id="haptic-toggle" type="button" aria-pressed="true" hidden>
-                            <span class="haptic-icon" aria-hidden="true">∿</span>
-                            <span id="haptic-toggle-label">Titreşim</span>
-                        </button>
-                        <span class="balance-badge"><b>C</b><span id="theme-balance-value">0</span></span>
-                    </div>
-                </div>
-                <div class="theme-grid" id="theme-grid"></div>
-            </section>
-
-            <section class="panel activity-panel" aria-labelledby="activity-title">
+        </section><section class="panel activity-panel" aria-labelledby="activity-title">
                 <div class="section-heading compact">
                     <div><p class="eyebrow">SON HAREKETLER</p><h2 id="activity-title">Bugün</h2></div>
                     <button id="clear-activity-button" class="text-button" type="button" hidden>Temizle</button>
                 </div>
                 <ul class="activity-list" id="activity-list"><li class="empty-activity"><span aria-hidden="true">◎</span>İlk ödülün burada görünecek.</li></ul>
-            </section>
-        </section>
-
-        <section class="panel cheat-panel" aria-labelledby="cheat-title">
+            </section><section class="panel cheat-panel" aria-labelledby="cheat-title">
             <div class="section-heading compact">
                 <div><p class="eyebrow">OYUN İÇİ GÜÇLENDİRMELER</p><h2 id="cheat-title">Kod mağazası</h2></div>
             </div>
@@ -216,21 +192,7 @@
                 <button id="cheat-disable-all" type="button">Tüm hileleri kapat</button>
             </div>
             <div class="cheat-grid" id="cheat-grid" aria-label="Açılabilir hile kodları"></div>
-        </section>
-
-        <section class="panel save-panel" id="save" aria-labelledby="save-title">
-            <div class="section-heading compact">
-                <div><p class="eyebrow">YEDEK</p><h2 id="save-title">Kayıt dosyası</h2></div>
-            </div>
-            <p class="save-note">İlerlemen bu tarayıcının çerezlerinde durur. Dışa aktardığın dosyayla başka bir cihaza ya da tarayıcıya taşıyabilir, çerezler silinirse geri yükleyebilirsin. Dosya 7-3-1 kontrol haneleri ve bir mühürle korunur; değiştirilmiş bir dosya yüklenmeden önce sorulur.</p>
-            <p class="save-warning" id="save-unverified" hidden>Bu cihazdaki kayıt, doğrulanamayan bir dosyadan yüklendi.</p>
-            <div class="save-actions">
-                <button class="save-button primary" id="save-export" type="button"><span aria-hidden="true">↓</span> Dışa aktar</button>
-                <button class="save-button" id="save-import" type="button"><span aria-hidden="true">↑</span> İçe aktar</button>
-                <input id="save-file" type="file" accept=".json,application/json" hidden>
-            </div>
-        </section>
-    </main>
+        </section></div></div></div></main>
 
     <footer><span>CasualPass</span><p>Reklamsız. Hafif. Sadece oyna.</p><small>Oyunlar yerelde saklanır; hesabınla buluta yedekleyebilirsin.</small></footer>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -260,9 +222,13 @@
     <script src="casual-cheats.js?v=8"></script>
     <script src="casual-save.js?v=3"></script>
     <script src="cloud-config.js?v=3"></script>
-    <script src="casual-cloud.js?v=6"></script>
+    <script src="casual-cloud.js?v=9"></script>
     <script src="account-ui.js?v=3"></script>
-    <script src="script.js?v=17"></script>
+    <script src="script.js?v=18"></script>
     <script src="casual-leaderboard.js?v=1" defer></script>
+    <script src="market-rules.js?v=1"></script>
+    <script src="game-icons.js?v=1"></script><script src="home-games.js?v=5"></script>
+    <script src="home-screen.js?v=6" defer></script>
+    <script src="dashboard.js?v=2" defer></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "b76564271272";
+const VERSION = "5315272042cc";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -16,7 +16,7 @@ const PRECACHE = [
         "casual-cheats.js",
         "casual-cheats.js?v=8",
         "casual-cloud.js",
-        "casual-cloud.js?v=6",
+        "casual-cloud.js?v=9",
         "casual-leaderboard.js",
         "casual-leaderboard.js?v=1",
         "casual-profile.js",
@@ -26,18 +26,38 @@ const PRECACHE = [
         "casual-save.js?v=3",
         "cloud-config.js",
         "cloud-config.js?v=3",
+        "dashboard.css",
+        "dashboard.css?v=10",
+        "dashboard.js",
+        "dashboard.js?v=2",
+        "game-icons.js",
+        "game-icons.js?v=1",
+        "home-games.js",
+        "home-games.js?v=5",
+        "home-screen.js",
+        "home-screen.js?v=6",
         "index.html",
         "manifest.webmanifest",
+        "market-admin.js",
+        "market-admin.js?v=1",
+        "market-rules.js",
+        "market-rules.js?v=1",
+        "market.css",
+        "market.css?v=3",
+        "market.html",
+        "market.js",
+        "market.js?v=4",
         "script.js",
-        "script.js?v=17",
+        "script.js?v=18",
         "shared-settings.css",
         "shared-settings.css?v=5",
         "shared-settings.css?v=6",
         "shared-settings.js",
         "shared-settings.js?v=11",
+        "shared-settings.js?v=12",
         "style.css",
         "style.css?v=22",
-        "style.css?v=27",
+        "style.css?v=29",
         "./",
         "2048-game/",
         "2048-game/index.html",

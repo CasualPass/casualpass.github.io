@@ -166,3 +166,35 @@ Ana sayfadaki oyuncu tablosu toplam puan, aktif süre, oynanan oyun ve galibiyet
 Genel tablo için Supabase SQL Editor’da **`supabase/leaderboard.sql`** bir kez çalıştırılmalıdır. Uygulama bu migration'ı otomatik çalıştırmaz. Ardından hesabına giriş yapıp **Tabloya katıl / güncelle** düğmesiyle yalnızca kullanıcı adını ve dört sayısal istatistiği paylaş. Otomatik gönderim yoktur; e-posta, auth token ve kayıt JSON'u yayımlanmaz. Kullanıcı adı sunucuda doğrulanmış hesaptan türetilir. Doğrudan tablo erişimi kapalıdır; RPC yalnızca kendi hesabına yazar ve herkese ilk 50'nin özetini döndürür.
 
 Tekrarlanan gönderimler toplamları artırmaz: sunucu her sütunda en yüksek toplamı tutar. Farklı cihazlar toplanmaz; cihazlar arası tam toplam için aynı dosya/bulut kaydını taşı. İstemci kaynaklı sayılar hileye dayanıklı bir yarışma sistemi değildir. Sunucu kurulmamışsa veya bağlantı yoksa açık durum mesajı ve yerel satır gösterilir; sahte oyuncu eklenmez.
+
+
+## Market ve topluluk oyunları
+
+`market.html` tüm 13 CasualPass oyununu ve topluluk oyunlarını içerir. Arama, oyun türü, CasualPass/Topluluk/Benim oyunlarım filtreleri; 24'erli topluluk sayfalaması vardır. Dashboard altı hızlı bağlantı tutar. Yerleşik katalog market HTML'indedir; yeni yerleşik oyun eklenirse dashboard `data-total-games` sayısını da güncelle.
+
+Hesabına giriş yapan kullanıcı oyun adı, kısa açıklama, tür ve kendi sitesindeki herkese açık HTTPS bağlantısını paylaşabilir. Kart, bağlantıyı yeni sekmede `noopener noreferrer` ve `no-referrer` ile doğrudan açar. Topluluk oyunları CasualPass tarafından barındırılmaz; gömülmez, uzaktaki kodları önizleme için çekilmez. Dış oyunlarda CasualMoney veya CasualPass süre/puan takibi uygulanmaz. Başlık/açıklamalar metin olarak işlenir.
+
+Supabase'de `supabase/market.sql` uygulanır. RLS açık tabloya doğrudan erişim yoktur. Yalnızca doğrulanmış kullanıcı kendi adına yayınlayabilir ve kendi ilanını yayından kaldırabilir; kullanıcı adı sunucuda hesap kimliğinden türetilir. Hesap başına en fazla 10 aktif ilan vardır. Aynı URL'yi tekrar paylaşmak kendi ilanını günceller; kaldırmak satırı silmez. Herkese açık liste yalnızca onaylanmış ve yayındaki ilanları döndürür. JavaScript/data/file/HTTP, kimlik bilgili, IP ve yerel/reserved alan adı bağlantıları istemcide ve sunucuda reddedilir. Yayınlanan URL ve oyun açıklaması herkese açık olur.
+
+
+### Ana ekrana ekleme ve yönetici onayı
+
+Market’te **Oyunu ana ekrana ekle / Ana ekrandan kaldır** ile en fazla 30 hızlı bağlantı seçilir. `cp_home_games_v1` çerezi yalnızca yerleşik oyun kimliklerini veya topluluk ilan UUID'lerini tutar; dış URL çerezden okunmaz. `home-screen.js` topluluk bağlantılarını her açılışta sunucudan yeniden doğrular ve yalnızca yayındaki/onaylı olanları açar. Mevcut altı oyun ilk kullanımda varsayılandır.
+
+Yeni veya düzenlenen topluluk oyunları `pending` durumuna gider. Yalnızca yönetici `approved` yapınca genel listede ve ana ekran seçiminde görünür. Gönderen **Benim oyunlarım** filtresinde bekleme/reddedilme durumunu ve inceleme notunu görür. Onaylanan ilan düzenlenirse onayı sıfırlanır. İnceleme revizyonu, yöneticinin gördüğünden sonra değiştirilmiş içeriği yanlışlıkla onaylamasını engeller.
+
+`supabase/market.sql` yeniden uygulanarak onay şeması ve RPC'ler kurulur; eski satırlar da varsayılan `pending` olur. Ardından **`supabase/market-admin-eymnyld.sql`** çalıştırılır: mevcut `eymnyld@accounts.casualpass.invalid` Auth kullanıcısının UUID'sini yönetici tablosuna ekler. Hesap yoksa açık hata verir; gelecekte bu adı alan birine otomatik yetki verilmez. Tarayıcı adı/çerez/metadata yönetici yetkisi sağlamaz. Diğer yöneticiler SQL Editor üzerinden gerçek Auth UUID'leri ile `casual_market_admins` tablosuna eklenebilir; istemcinin rol atama yetkisi yoktur.
+
+Market içindeki **Yönetici paneli**, sunucu `market_is_admin` doğrulamasından sonra açılır. Onay bekleyen/onaylanan/reddedilen oyunlar incelenebilir; Onayla/Reddet ve isteğe bağlı not vardır. Yetki her sunucu çağrısında tekrar kontrol edilir.
+
+
+### Kaydırmasız ana ekran
+
+Ana ekran `dashboard.css` / `dashboard.js` ile ekran yüksekliğine sığan bir uygulama kabuğudur. Oyunlar/Sıralama/Hesap/Görünüş/Gelişim sekmeleri mevcut özellikleri korur. Sayfanın tamamı aşağı kaymaz; uzun hesap, tablo ve ayar içerikleri kendi sekmesinin içinde kaydırılabilir. Dosya yedeği Hesap sekmesindedir; eski `#save` ve `#save-title` bağlantıları da Hesap sekmesini açar. `#account-title` ve diğer mevcut bağlantılar doğru sekmeyi açar.
+
+En fazla 30 oyun seçilebilir; oyun kartları masaüstünde 6, dar ekranda 4, kısa ekranlarda 3 veya 2 kartlık sayfalara ayrılır. “Grup başına” seçicisinden Otomatik, 2, 4, 6, 8, 12, 18 veya 30 oyun seçilebilir; `cp_home_page_size_v1` çerezi bu tercihi saklar. Önceki/Sonraki ile gezinilir. `cp_home_games_v1` değişmedi; mevcut seçimler korunur. Topluluk kimliği sorgu sınırı da 30'a çıkarıldı (`market.sql` güncel sürümü). Kart satır sayısı grup boyutuna göre değil ekrandaki gerçek oyun sayısına göre hesaplanır; bu yüzden 30 slot için seçilmiş 13 oyun paneli doldurur, altta boş satır kalmaz.
+
+
+### Oyun kartı simgeleri
+
+Ana ekran ve Market kartlarındaki simgeler tek bir çizgi stilinde SVG setinden gelir. `game-icons.js` içindeki `CasualGameIcons`, her oyun için 24×24 viewBox, `currentColor` kontur, 1.6 kalınlık ve yuvarlak uçlu/birleşimli çizimler üretir; `svg(id)` bilinmeyen kimliklerde ortak bağlantı simgesine (`FALLBACK`) düşer. Emoji ve CSS ile çizilen eski kart şekilleri kaldırıldı; JavaScript kapalıyken statik HTML de aynı satır içi SVG'yi gösterir, böylece ilk boyama ile çalışma zamanı görünümü aynıdır. Yeni simge eklemek yeterlidir; `node --test tools/test-game-icons.cjs` set ile oyun kataloğu ve kart HTML'i arasındaki tutarlılığı, stil bütünlüğünü ve emoji kalmadığını doğrular.
