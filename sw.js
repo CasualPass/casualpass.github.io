@@ -3,7 +3,7 @@
  * Every shipped file is precached on install, so all games open offline. Pages are network-first
  * (fresh when online, cached when offline); other files come from the cache of the current version.
  */
-const VERSION = "ab0d82af1b94";
+const VERSION = "b76564271272";
 const CACHE = `cp-${VERSION}`;
 const RUNTIME = 'cp-runtime';
 const PRECACHE = [
@@ -11,12 +11,17 @@ const PRECACHE = [
         "account-ui.js",
         "account-ui.js?v=3",
         "ai-generated.svg",
+        "casual-activity.js",
+        "casual-activity.js?v=1",
         "casual-cheats.js",
         "casual-cheats.js?v=8",
         "casual-cloud.js",
-        "casual-cloud.js?v=5",
+        "casual-cloud.js?v=6",
+        "casual-leaderboard.js",
+        "casual-leaderboard.js?v=1",
         "casual-profile.js",
         "casual-profile.js?v=16",
+        "casual-profile.js?v=17",
         "casual-save.js",
         "casual-save.js?v=3",
         "cloud-config.js",
@@ -32,7 +37,7 @@ const PRECACHE = [
         "shared-settings.js?v=11",
         "style.css",
         "style.css?v=22",
-        "style.css?v=25",
+        "style.css?v=27",
         "./",
         "2048-game/",
         "2048-game/index.html",
@@ -46,6 +51,12 @@ const PRECACHE = [
         "chess-game/script.js?v=4",
         "chess-game/style.css",
         "chess-game/style.css?v=3",
+        "dino-game/",
+        "dino-game/index.html",
+        "dino-game/script.js",
+        "dino-game/script.js?v=2",
+        "dino-game/style.css",
+        "dino-game/style.css?v=2",
         "fps-game/",
         "fps-game/index.html",
         "fps-game/script.js",

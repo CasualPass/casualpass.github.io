@@ -154,3 +154,28 @@ test('known auth error codes have useful messages without reflecting server cont
         await assert.rejects(b.cloud.signUp('player_1','six-ok'),e=>expected.test(e.message)&&!e.message.includes('private server text'));
     }
 });
+
+test('public leaderboard sorts safely and never transmits a stored bearer token', async () => {
+    const b = boot({ initial: makeSession(), handler: async c => c.url.includes('/auth/') ? makeSession().user : [{ username: 'player', total_points: 42 }] });
+    await b.cloud.ready;
+    const rows = await b.cloud.listLeaderboard('time');
+    assert.equal(rows[0].total_points, 42);
+    assert.equal(b.calls.at(-1).json.p_sort, 'time');
+    assert.equal(b.calls.at(-1).headers.Authorization, undefined);
+    await b.cloud.listLeaderboard('injected'); assert.equal(b.calls.at(-1).json.p_sort, 'points');
+});
+test('leaderboard publishing validates stats, requires auth and sends only own totals', async () => {
+    const b = boot({ initial: makeSession(), handler: async c => c.url.includes('/auth/') ? makeSession().user : {} });
+    await b.cloud.ready;
+    const totals = { active_seconds: 120, total_points: 500, played: 3, wins: 1, user_id: 'another-user' };
+    await b.cloud.publishLeaderboard(totals);
+    assert.deepEqual(Object.keys(b.calls.at(-1).json).sort(), ['p_active_seconds','p_played','p_total_points','p_wins']);
+    assert.equal(b.calls.at(-1).headers.Authorization, 'Bearer access-private');
+    const n = b.calls.length;
+    await assert.rejects(b.cloud.publishLeaderboard({ ...totals, total_points: Infinity }));
+    await assert.rejects(b.cloud.publishLeaderboard({ ...totals, wins: 4 }));
+    b.context.window.CasualCheats = { active: () => true };
+    await assert.rejects(b.cloud.publishLeaderboard(totals));
+    assert.equal(b.calls.length,n);
+    const guest=boot();await guest.cloud.ready;await assert.rejects(guest.cloud.publishLeaderboard(totals));assert.equal(guest.calls.length,0);
+});

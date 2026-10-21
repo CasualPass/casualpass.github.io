@@ -5,6 +5,7 @@ CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağı
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
 - **Maze Paint:** Kaydırarak topu duvara kadar yuvarla, tüm açık kareleri boya. Çözülebilir 36 bölüm (son 12 bölümde durak kareleri), ipucu, kaydırma/ok tuşları/WASD, geri alma ve kayıt desteği.
 - **Nuts & Bolts:** Somunları aynı renkteki somunların üstüne veya boş cıvatalara taşı. Dört somun kapasiteli cıvatalar, çözülebilir 30 bölüm, çözüm arayan ipucu, geri alma ve çerezde kaldığın yerden devam etme. Renk simgeleri ve klavye desteği vardır.
+- **Dino:** Kaktüslerden zıplayarak kaç, hızlanan koşuda rekorunu kır. Boşluk / ↑, dokunma veya Zıpla düğmesi; P ile duraklat/devam et. Rekor ve koşular ortak çerez istatistiklerine kaydedilir. Açık oturumda her 100 puan 1 CM verir; koşu başına 40 CM taban sınırına yeniden doğuş çarpanı uygulanır. Ödül koşu sonunda eklenir; hileli koşu kaydedilmez.
 - **Snake:** Yemi kapıp rekorunu uzat.
 - **2048:** Taşları birleştirip en yüksek skora ulaş.
 - **XOX:** Yerel rakibe veya bota karşı üçlüyü kur.
@@ -154,3 +155,14 @@ Native kabuk 1.0.1 (2), iOS UIKit ve Android Vibrator köprülerini ekler. Gerç
 ### Minerva Owl odak düzeltmesi
 
 Gizli iOS switch tıklaması oyundan odağı alıp “Uçuş duraklatıldı” durumuna yol açabildiği için kaldırıldı. Native köprü veya gerçek Vibration API dışında titreşim yolu yoktur. Titreşim düğmesinde “Uygulama” yazıyorsa native köprü algılanmıştır. Ortak helper `v=11` ile yüklenir; bu, eski önbellekteki focus-stealing kodun kullanımını önler.
+
+
+## Oyuncu tablosu ve aktif süre
+
+Ana sayfadaki oyuncu tablosu toplam puan, aktif süre, oynanan oyun ve galibiyetleri gösterir. Puan, ortak oyun istatistiklerindeki `totalScore` değerlerinin toplamıdır; farklı oyunların puan ölçekleri aynı değildir. Puan/süre/oyun sayısı sıralaması ilk 50 hesabı getirir.
+
+`casual-activity.js`, tüm oyunlarda ve dashboard’da aktif sayfa süresini `cp_activity_v1` çerezinde tutar. Gizli/odaksız sayfalar, hile açıkken geçen süre ve son girdiden 60 saniye sonrası sayılmaz. Tarihsel süre tahmin edilmez. Çerez temizlenirse yerel süre sıfırlanır; dışa aktarılan kayıt süreyi de içerir. Odak şartı aynı tarayıcıda birden fazla sekmenin birlikte süre yazmasını engeller.
+
+Genel tablo için Supabase SQL Editor’da **`supabase/leaderboard.sql`** bir kez çalıştırılmalıdır. Uygulama bu migration'ı otomatik çalıştırmaz. Ardından hesabına giriş yapıp **Tabloya katıl / güncelle** düğmesiyle yalnızca kullanıcı adını ve dört sayısal istatistiği paylaş. Otomatik gönderim yoktur; e-posta, auth token ve kayıt JSON'u yayımlanmaz. Kullanıcı adı sunucuda doğrulanmış hesaptan türetilir. Doğrudan tablo erişimi kapalıdır; RPC yalnızca kendi hesabına yazar ve herkese ilk 50'nin özetini döndürür.
+
+Tekrarlanan gönderimler toplamları artırmaz: sunucu her sütunda en yüksek toplamı tutar. Farklı cihazlar toplanmaz; cihazlar arası tam toplam için aynı dosya/bulut kaydını taşı. İstemci kaynaklı sayılar hileye dayanıklı bir yarışma sistemi değildir. Sunucu kurulmamışsa veya bağlantı yoksa açık durum mesajı ve yerel satır gösterilir; sahte oyuncu eklenmez.

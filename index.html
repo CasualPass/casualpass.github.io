@@ -18,8 +18,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared-settings.css?v=6">
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=27">
     <script src="shared-settings.js?v=11"></script>
+    <script src="casual-activity.js?v=1" defer></script>
 </head>
 <body class="theme-liquid">
     <a class="skip-link" href="#games">Oyunlara geç</a>
@@ -72,7 +73,7 @@
         <section class="panel games-panel" id="games" aria-labelledby="games-title">
             <div class="section-heading">
                 <div><p class="eyebrow">OYUNLAR</p><h2 id="games-title">Birini seç, tak diye oyna.</h2></div>
-                <p id="games-count">On oyun aynı ekranda.</p>
+                <p id="games-count">13 oyun aynı ekranda.</p>
             </div>
             <div class="game-filters" id="game-filters" role="group" aria-label="Oyunları türe göre süz">
                 <button type="button" class="filter-chip" data-filter="all" aria-pressed="true">Tümü <span></span></button>
@@ -95,8 +96,32 @@
                 <a class="game-card vektor-card" href="vektor/index.html" data-game="Vektör" data-tags="aksiyon coklu"><span class="game-index">10</span><span class="game-art vektor-art" aria-hidden="true"><b></b><i></i></span><span class="game-copy"><small>TAKTİK 5v5</small><span class="title-row"><strong>Vektör</strong><b class="new-badge">Yeni</b></span><em>Çekirdeği kur ya da çöz</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
                 <a class="game-card nuts-card" href="nuts-bolts/index.html" data-game="Nuts &amp; Bolts" data-tags="zeka"><span class="game-index">11</span><span class="game-art nuts-art" aria-hidden="true"><i>●</i><i>◆</i><i>▲</i></span><span class="game-copy"><small>RENK ATÖLYESİ</small><span class="title-row"><strong>Nuts &amp; Bolts</strong><b class="new-badge">Yeni</b></span><em>Somunları renklerine göre ayır</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
                 <a class="game-card maze-card" href="maze-paint/index.html" data-game="Maze Paint" data-tags="zeka"><span class="game-index">12</span><span class="game-art maze-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="game-copy"><small>RENK LABİRENTİ</small><span class="title-row"><strong>Maze Paint</strong><b class="new-badge">Yeni</b></span><em>Kaydır, tüm kareleri boya</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
+                <a class="game-card dino-card" href="dino-game/index.html" data-game="Dino" data-tags="hizli beceri"><span class="game-index">13</span><span class="game-art dino-art" aria-hidden="true">🦖</span><span class="game-copy"><small>KOŞU</small><span class="title-row"><strong>Dino</strong><b class="new-badge">Yeni</b></span><em>Zıpla, engelleri aş, rekor kır</em></span><span class="game-meta"><span class="game-stat" hidden></span><span class="game-play" aria-hidden="true">Oyna</span></span></a>
             </div>
             <p class="filter-status" id="filter-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel leaderboard-panel" id="leaderboard" aria-labelledby="leaderboard-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">OYUNCU TABLOSU</p><h2 id="leaderboard-title">Kim ne kadar oynadı?</h2></div>
+                <a class="text-button" href="#account-title">Hesabına giriş yap ↗</a>
+            </div>
+            <div class="leaderboard-summary">
+                <div><small>SENİN AKTİF SÜREN</small><strong id="your-active-time">0 sn</strong></div>
+                <div><small>SENİN TOPLAM PUANIN</small><strong id="your-total-points">0</strong></div>
+                <p>Her oyunun kaydedilen puanları toplanır. Oyunların puan ölçekleri farklıdır. Süre yalnızca açık ve aktif sayfada sayılır; 60 saniye hareketsizlikte durur.</p>
+            </div>
+            <div class="leaderboard-actions">
+                <label for="leaderboard-sort">Sırala</label>
+                <select id="leaderboard-sort"><option value="points">En çok puan</option><option value="time">En çok süre</option><option value="played">En çok oyun</option></select>
+                <button type="button" class="save-button" id="leaderboard-refresh">Yenile</button>
+                <button type="button" class="save-button primary" id="leaderboard-publish" disabled>Tabloya katıl / güncelle</button>
+            </div>
+            <p id="leaderboard-status" role="status" aria-live="polite">Oyuncu tablosu yükleniyor…</p>
+            <div class="leaderboard-scroll" tabindex="0" role="region" aria-label="Oyuncu istatistikleri tablosu">
+                <table class="leaderboard-table"><caption>Puan ve aktif süre sıralaması · ilk 50 oyuncu</caption><thead><tr><th scope="col">Sıra</th><th scope="col">Oyuncu</th><th scope="col">Toplam puan</th><th scope="col">Aktif süre</th><th scope="col">Oyun</th><th scope="col">Galibiyet</th></tr></thead><tbody id="leaderboard-body"></tbody></table>
+            </div>
+            <p class="leaderboard-note">Genel tabloda kullanıcı adın ve bu dört istatistiğin görünür. Katıl / güncelle ile paylaşılır; otomatik gönderilmez. Aynı hesabın en yüksek toplamları korunur; farklı cihazlar toplanmaz. Eski oyun puanların dahil, süre ölçümü bu özellikten itibaren başlar.</p>
         </section>
 
         <section class="panel account-panel" aria-labelledby="account-title">
@@ -235,8 +260,9 @@
     <script src="casual-cheats.js?v=8"></script>
     <script src="casual-save.js?v=3"></script>
     <script src="cloud-config.js?v=3"></script>
-    <script src="casual-cloud.js?v=5"></script>
+    <script src="casual-cloud.js?v=6"></script>
     <script src="account-ui.js?v=3"></script>
     <script src="script.js?v=17"></script>
+    <script src="casual-leaderboard.js?v=1" defer></script>
 </body>
 </html>

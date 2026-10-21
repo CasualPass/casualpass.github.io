@@ -585,3 +585,27 @@ Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone tit
 - `owl-game/script.js`: Gizli yardımcıdan gelen odak olayı uçuşu durdurmaz; gerçek odak/sekme kaybında duraklama korunur. Regresyon testi bu iki durumu ayırır.
 - `script.js`: Dashboard native köprü algıladığında “Titreşim · Uygulama” gösterir. Tüm HTML ortak helper referansları `v=11`, Owl script `v=5`, dashboard script `v=17`; eski v10 dosyasının cache’den gelmesi engellenir. Son Hat’ta yalnızca ortak helper URL’si değişti, oyun kodu değişmedi.
 - `node --test tools/test-remaster-haptics.cjs tools/test-remaster-arcade.cjs`: 10/10 başarılı. Native önceliği, kapatma, gizli kontrol oluşturmama ve Owl gerçek/yardımcı odak ayrımı doğrulandı. Gerçek telefonda his ve uçuş kullanıcıyla yeniden doğrulanmalıdır. Native paket 1.0.1 değişmedi; bu düzeltme webden gelir.
+
+## 2026-10-21 — Dino integration
+
+- [x] Added `dino-game/` from the older CasualPass checkout to this current 12-game project; dashboard now has 13 games. Existing games and local documentation changes are preserved.
+- Dino uses the shared theme, `getHighScore('Dino')` and `recordGameResult('Dino', ...)`; `casual-cheats.js` preserves the shared persistence guard. No extra dependencies or reward rules.
+- Keyboard (Space/Up, P), touch, collision, increasing speed, restart, and automatic pause on focus loss are supported. Dashboard tags include `hizli beceri`.
+- Regenerate service-worker assets with `python3 tools/build-sw.py` after web edits.
+- Validation: `node --check dino-game/script.js` and `git diff --check` passed. Chrome/Playwright on port 4190 passed: 13 dashboard cards, Dino navigation/start/jump input, pause/resume, collision, one result per run, persistent best after reload, restart, blur pause, four themes and mobile fit; no page errors. Desktop/mobile screenshots inspected. Physical-device touch and offline installation were not tested. `python3 tools/build-sw.py` regenerated `sw.js` and `version.json` (118 URLs, including Dino assets).
+
+
+## 2026-10-21 — Dino CasualMoney rewards
+
+- Added `CasualProfile.dinoRewardForScore` / `awardDinoRun`: 100 points = 1 CM, base cap 40 per run, then existing rebirth multiplier. Finite nonnegative scores only; guest/cheat sessions earn nothing.
+- Dino loads the profile module and shows balance, a session button and reward rules. Collision pays once; a run that used cheats cannot persist results even after cheats are disabled.
+- Existing 12 games and their reward rules are preserved. Validation: `node --test tools/*.cjs` passed 81/81 tests, including 3 new Dino reward regressions. Chrome end-to-end: a 136-point collision paid exactly 1 CM once, wallet persisted after reload and matched dashboard, 13 cards and mobile fit verified; no page errors. `node --check` passed for profile and Dino scripts; `git diff --check` passed. Physical-device tests were not run. Service-worker assets regenerated.
+
+
+## 2026-10-21 — Player time and leaderboard
+
+- Scope: dashboard table for player name, total points, active site seconds, played and wins; sort by points/time/played. `casual-activity.js` is loaded alongside the existing shared settings on all pages. Idle cutoff 60 seconds; hidden/unfocused/cheat time excluded. `cp_activity_v1` is cookie/save-compatible; historical time is not inferred.
+- `casual-leaderboard.js` renders a separate local row, explicit publish and error states. Total points sum saved `totalScore`; game scales differ. No fake users or automatic publishing.
+- `casual-cloud.js` adds authenticated publish RPC and public list RPC without exposing auth tokens. `supabase/leaderboard.sql` adds a private RLS-enabled table and restricted security-definer functions; only verified identity can publish its own row. Per-field maxima make retries idempotent and prevent decreases; devices are not summed.
+- [x] Applied `supabase/leaderboard.sql` to live project `hyxikdqpiykzkeiuihew` through the signed-in Brave SQL Editor on 2026-10-21.
+- Validation: `node --test tools/*.cjs` passed 86/86, including active/idle/hidden/unfocused/cheat timing, totals, API payload validation and guest restrictions. Syntax and `git diff --check` passed. Chrome: real local tracking survived game navigation; 13 games preserved; desktop/mobile screenshots inspected; no page errors. Isolated server fixtures verified global rows, sort and explicit-only publishing without sending test data to the service. Live migration applied in the follow-up: public list RPC returns HTTP 200 with an empty array; anonymous direct table reads and anonymous publish RPC return HTTP 401 / SQLSTATE 42501. Live authenticated publishing has not been exercised with a real player account. Native Brave automation timed out after Run; the successful schema application was independently confirmed through the live HTTP API. Physical devices not tested. Service-worker assets regenerated.

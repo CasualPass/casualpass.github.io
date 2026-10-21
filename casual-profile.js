@@ -12,6 +12,8 @@
     const OWL_REWARD_CAP = 40;
     const BLOCKS_REWARD_CAP = 40;
     const BLOCKS_POINTS_PER_CM = 50;
+    const DINO_REWARD_CAP = 40;
+    const DINO_POINTS_PER_CM = 100;
     const SONHAT_REWARD_CAP = 40;
     const SONHAT_COINS_PER_CM = 8;
     const ARENA_REWARD_CAP = 40;
@@ -532,6 +534,22 @@
         return { profile, reward };
     }
 
+    function dinoRewardForScore(score) {
+        const points = Number(score);
+        return Number.isFinite(points) ? Math.min(DINO_REWARD_CAP, Math.floor(Math.max(0, points) / DINO_POINTS_PER_CM)) : 0;
+    }
+
+    function awardDinoRun(result) {
+        if (cheatsActive() || !current()) return { profile: current(), reward: 0 };
+        const base = dinoRewardForScore(result?.score);
+        if (!base) return { profile: current(), reward: 0 };
+        let reward = 0;
+        const profile = update((draft) => {
+            reward = grant(draft, base, 'Dino koşusu');
+        });
+        return { profile, reward };
+    }
+
     function sonHatRewardForCoins(coins) {
         return Math.min(SONHAT_REWARD_CAP, Math.floor(Math.max(0, Number(coins) || 0) / SONHAT_COINS_PER_CM));
     }
@@ -714,6 +732,7 @@
         buyOwl, selectOwl, owlRewardForScore, awardOwlFlight,
         buyWood, selectWood, blocksRewardForScore, awardBlocksGame,
         sonHatRewardForCoins, awardSonHatRun,
+        dinoRewardForScore, awardDinoRun, DINO_REWARD_CAP, DINO_POINTS_PER_CM,
         buyLog, selectLog, buyChisel, selectChisel, turnStars,
         buyCamo, selectCamo, arenaRewardForMatch, awardArenaMatch, vektorRewardForMatch, awardVektorMatch,
         SESSION_REWARD, DAILY_REWARD, REBIRTH_BASE, MAX_REBIRTHS, OWL_REWARD_CAP, BLOCKS_REWARD_CAP, BLOCKS_POINTS_PER_CM,

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="CasualPass Dino: Kaktüslerin üzerinden zıpla, hızlanan parkurda rekorunu kır.">
+    <title>Dino — CasualPass</title>
+    <link rel="stylesheet" href="../shared-settings.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../icons/favicon-32.png">
+    <script src="../shared-settings.js?v=11"></script>
+    <script src="../casual-activity.js?v=1" defer></script>
+    <script src="../casual-profile.js?v=17"></script>
+    <script src="../casual-cheats.js?v=8"></script>
+</head>
+<body class="theme-liquid">
+    <div id="global-bg-container" class="background-container" aria-hidden="true"></div>
+    <main class="dino-container">
+        <a class="back-link" href="../index.html">← Oyunlara dön</a>
+        <header>
+            <div><p class="eyebrow">KOŞ · ZIPLA · TEKRARLA</p><h1>Dino</h1></div>
+            <div class="scores"><div><small>SKOR</small><strong id="score">0</strong></div><div><small>REKOR</small><strong id="best">0</strong></div></div>
+        </header>
+        <div class="wallet"><span>Bakiye: <strong id="balance">0 CM</strong></span><button id="session" type="button">Oturumu başlat</button></div>
+        <p id="reward-info">Her 100 puan = 1 CM · Koşu başına en fazla 40 CM (yeniden doğuş çarpanı öncesi). Ödül koşu bitince eklenir.</p>
+        <section class="arena" aria-label="Dino oyunu">
+            <canvas id="game" width="900" height="320" tabindex="0" role="img" aria-label="Dino koşu alanı. Boşluk veya yukarı ok ile zıpla; P ile duraklat." aria-describedby="instructions"></canvas>
+            <p id="status" role="status" aria-live="polite">Koşuya hazır mısın? Başla ve kaktüslerin üzerinden zıpla.</p>
+        </section>
+        <div class="controls">
+            <button id="start" type="button">Başla</button>
+            <button id="jump" type="button">Zıpla ↑</button>
+            <button id="pause" type="button" disabled>Duraklat</button>
+        </div>
+        <p id="instructions">Boşluk / ↑: zıpla · P: duraklat / devam et<br>Telefonda oyun alanına veya Zıpla düğmesine dokun. Hız zamanla artar!</p>
+    </main>
+    <script src="script.js?v=2"></script>
+</body>
+</html>

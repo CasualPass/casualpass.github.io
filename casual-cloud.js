@@ -146,6 +146,24 @@
         if (result.fatal) throw new Error(result.fatal);
         return { ...result, userId: s.user.id, epoch: version };
     }
+    async function listLeaderboard(sort = 'points') {
+        return request('/rest/v1/rpc/list_casual_leaderboard', { p_sort: ['points', 'time', 'played'].includes(sort) ? sort : 'points' });
+    }
+    async function publishLeaderboard(totals) {
+        if (window.CasualCheats?.active()) throw new Error('Hile açıkken tablo güncellenmez.');
+        const body = {};
+        for (const field of ['active_seconds', 'total_points', 'played', 'wins']) {
+            const value = totals?.[field];
+            if (!Number.isSafeInteger(value) || value < 0) throw new Error('İstatistikler geçersiz.');
+            body['p_' + field] = value;
+        }
+        if (totals.wins > totals.played) throw new Error('İstatistikler geçersiz.');
+        const version = epoch, s = await access();
+        if (version !== epoch || !session || window.CasualCheats?.active()) throw new Error('Oturum değişti; yeniden dene.');
+        await request('/rest/v1/rpc/publish_casual_leaderboard', body, s.access_token);
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden giriş yap.');
+    }
+
     function applySave(result) {
         if (!session || result.userId !== session.user.id || result.epoch !== epoch) throw new Error('Oturum değişti; bulut kaydını yeniden getir.');
         if (!result.ok) throw new Error('Bulut kaydı doğrulanamadı. Mevcut ilerleme değiştirilmedi.');
@@ -185,5 +203,5 @@
         epoch++; session = readStored();
         emit({ authenticated: Boolean(session), email: session?.user?.email || '', username: usernameOf(session?.user), status: session ? 'signed-in' : 'signed-out', error: '' });
     });
-    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, signOut, uploadSave, downloadSave, applySave });
+    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, signOut, uploadSave, downloadSave, applySave, listLeaderboard, publishLeaderboard });
 })();

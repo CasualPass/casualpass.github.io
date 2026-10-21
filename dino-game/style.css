@@ -1,0 +1,25 @@
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--cp-text); font-family: 'Outfit', system-ui, sans-serif; }
+.dino-container { position: relative; z-index: 2; width: min(960px, calc(100% - 32px)); margin: 48px auto; }
+.back-link { color: var(--cp-text-muted); text-decoration: none; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 36px 0 24px; }
+.eyebrow { color: var(--cp-accent); font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+h1 { margin: 0; font-size: clamp(42px, 8vw, 72px); letter-spacing: -.06em; line-height: 1; }
+.scores { display: flex; gap: 12px; }
+.scores > div { min-width: 90px; padding: 14px; background: var(--cp-glass-bg); border: 1px solid var(--cp-glass-border); border-radius: 14px; }
+small { display: block; color: var(--cp-text-muted); font-size: 10px; letter-spacing: .1em; }
+strong { display: block; margin-top: 6px; font-size: 26px; font-variant-numeric: tabular-nums; }
+.arena { overflow: hidden; border: 1px solid var(--cp-glass-border); border-radius: 22px; background: var(--cp-glass-base); }
+canvas { display: block; width: 100%; height: auto; touch-action: manipulation; }
+#status { min-height: 3em; margin: 0; padding: 16px 20px; border-top: 1px solid var(--cp-glass-border); font-size: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+button { min-height: 48px; padding: 12px 22px; border: 1px solid var(--cp-glass-border); border-radius: 12px; background: var(--cp-glass-base); color: var(--cp-text); font: inherit; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+#start, #jump { background: var(--cp-accent); color: var(--cp-bg); }
+button:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 4px; }
+#instructions { color: var(--cp-text-muted); font-size: 13px; line-height: 1.8; }
+@media (max-width: 520px) { .dino-container { margin: 24px auto; } header { margin-top: 28px; } .scores { gap: 6px; } .scores > div { min-width: 64px; padding: 10px; } strong { font-size: 21px; } .eyebrow { max-width: 130px; line-height: 1.7; } button { flex: 1; padding: 12px; } }
+
+.wallet { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.wallet strong { display: inline; font-size: 18px; }
+#reward-info { color: var(--cp-text-muted); font-size: 13px; line-height: 1.7; }
