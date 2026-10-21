@@ -311,9 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const gameCards = Array.from(document.querySelectorAll('.game-grid .game-card'));
-    const gameCount = gameCards.length;
+    const gameCount = Number(document.getElementById('game-grid').dataset.totalGames) || gameCards.length;
     const countWords = ['Sıfır', 'Bir', 'İki', 'Üç', 'Dört', 'Beş', 'Altı', 'Yedi', 'Sekiz', 'Dokuz', 'On'];
-    document.getElementById('games-count').textContent = `${countWords[gameCount] || gameCount} oyun aynı ekranda.`;
+    document.getElementById('games-count').textContent = `${countWords[gameCount] || gameCount} oyun Market’te.`;
     document.getElementById('hero-games-count').textContent = String(gameCount);
 
     function renderGameStats() {
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterStatus.textContent = filter === 'all' ? '' : `${visible} oyun gösteriliyor.`;
         });
     });
-    gameCards[gameCards.length - 1].classList.toggle('span-last', gameCount % 2 === 1);
+    gameCards[gameCards.length - 1].classList.toggle('span-last', gameCards.length % 2 === 1);
 
     window.addEventListener('casualprofilechange', render);
     window.addEventListener('casual-cheat', render);

@@ -7,7 +7,7 @@ const source = fs.readFileSync(path.join(__dirname, '../shared-settings.js'), 'u
 async function boot({ hub = true, form = false, worker = true, failOnce = false, seen = 'old' } = {}) {
     const events = {}, intervals = new Map(), state = { updates: 0, reloads: 0, requests: 0, form, now: 10000, seen };
     const document = { currentScript: { src: 'https://example.com/shared-settings.js' }, visibilityState: 'visible', activeElement: null,
-        querySelector: s => s.startsWith('meta') ? hub : null,
+        querySelector: s => s.startsWith('meta') ? hub : s === '#submit-dialog[open]' ? state.marketForm : null,
         querySelectorAll: () => [{ closest: () => null, get value() { return state.form ? 'editing' : ''; } }],
         addEventListener: (name, fn) => { events[name] = fn; } };
     const registration = { update: async () => { state.updates++; if (failOnce && state.updates === 1) throw Error('offline'); } };
@@ -48,4 +48,10 @@ test('ready update never reloads a running game after the startup window', async
 });
 test('without a service worker a changed version reloads the hub', async () => {
     const b = await boot({ worker: false }); assert.equal(b.state.reloads, 1);
+});
+
+test('an open Market submission dialog defers update reload until it closes', async () => {
+    const b = await boot(); b.state.marketForm = true; b.events.controllerchange();
+    assert.equal(b.state.reloads, 0); b.state.marketForm = false; b.intervals.get(5000)();
+    assert.equal(b.state.reloads, 1);
 });

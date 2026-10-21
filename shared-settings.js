@@ -164,7 +164,8 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelHapti
     const hub = () => Boolean(document.querySelector('meta[name="cp-page"][content="hub"]'));
     const editingAccount = () => Boolean(document.activeElement?.closest?.('#account-login-form, #account-setup-form'))
         || Array.from(document.querySelectorAll('#account-login-form input, #account-setup-form input')).some(input => !input.closest('[hidden]') && input.value)
-        || Boolean(document.querySelector('#account-login:disabled, #account-setup-submit:disabled'));
+        || Boolean(document.querySelector('#account-login:disabled, #account-setup-submit:disabled'))
+        || Boolean(document.querySelector('#submit-dialog[open]'));
     const safeToReload = () => (hub() && !editingAccount()) || (!hub() && performance.now() - openedAt < 6000);
     let registration = null, registrationReady = Promise.resolve();
     let pending = false;

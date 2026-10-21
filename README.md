@@ -1,6 +1,6 @@
 # CasualPass 🎮
 
-CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa sade bir dashboard olarak oyunları tek ekranda sunar:
+CasualPass, GitHub Pages üzerinde doğrudan çalışabilen reklamsız ve bağımlılıksız mini oyun koleksiyonudur. Ana sayfa altı hızlı erişim kartı sunar; tüm oyunlar arama ve tür filtreleriyle `market.html` kataloğundadır:
 
 - **Wood Turning:** Hedef formu şekillendir, zımparala, boya ve CasualMoney kazan.
 - **Maze Paint:** Kaydırarak topu duvara kadar yuvarla, tüm açık kareleri boya. Çözülebilir 36 bölüm (son 12 bölümde durak kareleri), ipucu, kaydırma/ok tuşları/WASD, geri alma ve kayıt desteği.

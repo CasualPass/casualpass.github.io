@@ -164,6 +164,61 @@
         if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden giriş yap.');
     }
 
+    async function listMarketGames(options = {}) {
+        const version = epoch;
+        const s = session ? await access() : null;
+        if (version !== epoch) throw new Error('Oturum değişti; yeniden dene.');
+        const rows = await request('/rest/v1/rpc/list_market_games', {
+            p_search: String(options.search || '').trim().slice(0,80),
+            p_category: ['hizli','zeka','beceri','aksiyon','coklu'].includes(options.category) ? options.category : 'all',
+            p_offset: Math.max(0,Math.min(100000,Math.floor(Number(options.offset)||0))), p_mine: Boolean(options.mine)
+        }, s?.access_token);
+        if (version !== epoch) throw new Error('Oturum değişti; yeniden dene.');
+        return rows;
+    }
+    async function publishMarketGame(input) {
+        const game = window.CasualMarketRules.validateGame(input);
+        const version = epoch, s = await access();
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        const id = await request('/rest/v1/rpc/publish_market_game', { p_title: game.title, p_description: game.description, p_url: game.url, p_category: game.category }, s.access_token);
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        return id;
+    }
+    async function unpublishMarketGame(id) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id))) throw new Error('İlan bulunamadı.');
+        const version = epoch, s = await access();
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        await request('/rest/v1/rpc/unpublish_market_game', { p_id: id }, s.access_token);
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+    }
+
+    async function isMarketAdmin() {
+        if (!session) return false;
+        const version = epoch, s = await access();
+        if (version !== epoch || !session) return false;
+        const result = await request('/rest/v1/rpc/market_is_admin', {}, s.access_token);
+        return version === epoch && Boolean(session) && result === true;
+    }
+    async function listMarketReview(status = 'pending', offset = 0) {
+        if (!['pending','approved','rejected'].includes(status)) throw new Error('Geçersiz durum.');
+        const version = epoch, s = await access();
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        const rows = await request('/rest/v1/rpc/list_market_review', { p_status: status, p_offset: Math.max(0,Math.min(100000,Math.floor(Number(offset)||0))) }, s.access_token);
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        return rows;
+    }
+    async function reviewMarketGame(id, status, revision, note = '') {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id)) || !['approved','rejected'].includes(status) || !Number.isSafeInteger(revision) || revision<1 || typeof note!=='string' || note.length>280) throw new Error('Geçersiz inceleme.');
+        const version = epoch, s = await access();
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+        await request('/rest/v1/rpc/review_market_game', {p_id:id,p_status:status,p_revision:revision,p_note:note}, s.access_token);
+        if (version !== epoch || !session) throw new Error('Oturum değişti; yeniden dene.');
+    }
+    async function getMarketHomeGames(ids) {
+        if (!Array.isArray(ids) || ids.length>30 || ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id)))) throw new Error('Oyun listesi geçersiz.');
+        return request('/rest/v1/rpc/get_market_home_games', {p_ids:ids});
+    }
+
     function applySave(result) {
         if (!session || result.userId !== session.user.id || result.epoch !== epoch) throw new Error('Oturum değişti; bulut kaydını yeniden getir.');
         if (!result.ok) throw new Error('Bulut kaydı doğrulanamadı. Mevcut ilerleme değiştirilmedi.');
@@ -203,5 +258,5 @@
         epoch++; session = readStored();
         emit({ authenticated: Boolean(session), email: session?.user?.email || '', username: usernameOf(session?.user), status: session ? 'signed-in' : 'signed-out', error: '' });
     });
-    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, signOut, uploadSave, downloadSave, applySave, listLeaderboard, publishLeaderboard });
+    window.CasualCloud = Object.freeze({ ready, getState: snapshot, requestOtp, verifyOtp, signIn, signUp, signOut, uploadSave, downloadSave, applySave, listLeaderboard, publishLeaderboard, listMarketGames, publishMarketGame, unpublishMarketGame, isMarketAdmin, listMarketReview, reviewMarketGame, getMarketHomeGames });
 })();

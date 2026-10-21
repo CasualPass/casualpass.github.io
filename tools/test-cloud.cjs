@@ -179,3 +179,47 @@ test('leaderboard publishing validates stats, requires auth and sends only own t
     assert.equal(b.calls.length,n);
     const guest=boot();await guest.cloud.ready;await assert.rejects(guest.cloud.publishLeaderboard(totals));assert.equal(guest.calls.length,0);
 });
+
+test('Market list clamps filters and offset, guest has no bearer and owners use auth',async()=>{
+ const b=boot({handler:async()=>[]});await b.cloud.ready;
+ await b.cloud.listMarketGames({search:'x'.repeat(120),category:'unsafe',offset:-3,mine:true});
+ assert.equal(b.calls.at(-1).json.p_search.length,80);assert.equal(b.calls.at(-1).json.p_category,'all');assert.equal(b.calls.at(-1).json.p_offset,0);assert.equal(b.calls.at(-1).headers.Authorization,undefined);
+ const owner=boot({initial:makeSession(),handler:async c=>c.url.includes('/auth/')?makeSession().user:[]});await owner.cloud.ready;
+ await owner.cloud.listMarketGames({category:'zeka'});assert.equal(owner.calls.at(-1).headers.Authorization,'Bearer access-private');
+});
+test('Market publish validates URLs, refuses guests and never accepts client-selected owner',async()=>{
+ const game={title:'Test Game',description:'A valid test game description',category:'beceri',url:'https://games.example.com/play',owner_id:'different-user'};
+ const b=boot({initial:makeSession(),handler:async c=>c.url.includes('/auth/')?makeSession().user:'11111111-1111-1111-1111-111111111111'});await b.cloud.ready;
+ vm.runInContext(fs.readFileSync(path.join(root,'market-rules.js'),'utf8'),b.context);
+ await b.cloud.publishMarketGame(game);
+ assert.deepEqual(Object.keys(b.calls.at(-1).json).sort(),['p_category','p_description','p_title','p_url']);assert.equal(b.calls.at(-1).headers.Authorization,'Bearer access-private');
+ const n=b.calls.length;await assert.rejects(b.cloud.publishMarketGame({...game,url:'javascript:alert(1)'}));assert.equal(b.calls.length,n);
+ const guest=boot();await guest.cloud.ready;vm.runInContext(fs.readFileSync(path.join(root,'market-rules.js'),'utf8'),guest.context);await assert.rejects(guest.cloud.publishMarketGame(game));assert.equal(guest.calls.length,0);
+});
+test('Market unpublish validates ID, requires auth and submits only the listing ID',async()=>{
+ const b=boot({initial:makeSession(),handler:async c=>c.url.includes('/auth/')?makeSession().user:{}});await b.cloud.ready;
+ await assert.rejects(b.cloud.unpublishMarketGame('bad-id'));
+ const id='11111111-1111-1111-1111-111111111111';await b.cloud.unpublishMarketGame(id);assert.equal(b.calls.at(-1).json.p_id,id);
+ const guest=boot();await guest.cloud.ready;await assert.rejects(guest.cloud.unpublishMarketGame(id));assert.equal(guest.calls.length,0);
+});
+
+test('Market admin identity is server-derived and fails closed on name or nonboolean data',async()=>{
+ const guest=boot();await guest.cloud.ready;assert.equal(await guest.cloud.isMarketAdmin(),false);assert.equal(guest.calls.length,0);
+ for(const response of [false,'true',{admin:true},true]){
+  const b=boot({initial:makeSession(),handler:async c=>c.url.includes('/auth/')?{...makeSession().user,email:'eymnyld@accounts.casualpass.invalid'}:response});await b.cloud.ready;
+  assert.equal(await b.cloud.isMarketAdmin(),response===true);
+ }
+});
+test('review rejects invalid inputs and sends decision with displayed revision and auth',async()=>{
+ const b=boot({initial:makeSession(),handler:async c=>c.url.includes('/auth/')?makeSession().user:{}});await b.cloud.ready;
+ const id='11111111-1111-1111-1111-111111111111';
+ for(const args of [[id,'pending',1],[id,'approved',0],['bad','approved',1],[id,'rejected',2,'x'.repeat(281)]])await assert.rejects(b.cloud.reviewMarketGame(...args));
+ await b.cloud.reviewMarketGame(id,'approved',3,'');assert.equal(b.calls.at(-1).json.p_revision,3);assert.equal(b.calls.at(-1).json.p_status,'approved');assert.equal(b.calls.at(-1).headers.Authorization,'Bearer access-private');
+ await b.cloud.listMarketReview('pending',0);assert.equal(b.calls.at(-1).json.p_status,'pending');
+ const guest=boot();await guest.cloud.ready;await assert.rejects(guest.cloud.listMarketReview());await assert.rejects(guest.cloud.reviewMarketGame(id,'approved',1));
+});
+test('home community lookup only sends bounded UUIDs without bearer or stored URLs',async()=>{
+ const b=boot({handler:async()=>[]});await b.cloud.ready;const id='11111111-1111-1111-1111-111111111111';
+ await b.cloud.getMarketHomeGames([id]);assert.equal(b.calls.at(-1).json.p_ids[0],id);assert.equal(b.calls.at(-1).headers.Authorization,undefined);
+ await assert.rejects(b.cloud.getMarketHomeGames(['https://evil.example/']));await assert.rejects(b.cloud.getMarketHomeGames(Array(31).fill(id)));
+});

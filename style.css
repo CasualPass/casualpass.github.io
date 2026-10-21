@@ -266,3 +266,10 @@ body.theme-paper .account-error { color: #a82d1e; }
 @media (max-width: 720px) { .leaderboard-panel { padding: 15px; } .leaderboard-summary { gap: 16px; } .leaderboard-actions .save-button { flex: 1 1 auto; } }
 
 .leaderboard-actions button:disabled, .leaderboard-actions select:disabled { opacity: .5; cursor: default; }
+
+.market-link { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 14px; border-radius: 10px; background: var(--dashboard-accent); color: var(--cp-bg); font-size: 12px; font-weight: 800; text-decoration: none; }
+.market-summary { margin: -4px 0 16px; color: var(--dashboard-muted); font-size: 12px; }
+.quick-game-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+@media(max-width:720px) { .quick-game-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .market-link { padding: 9px; font-size: 10px; white-space: nowrap; } }
+
+@media(max-width:480px) { .topbar { flex-wrap: wrap; gap: 6px; padding-block: 10px; } .topnav { order: 3; width: 100%; margin: 0; justify-content: center; } }

@@ -1,0 +1,587 @@
+# CasualPass çalışma kaydı
+
+## Proje özeti
+
+CasualPass, GitHub Pages üzerinde bağımlılıksız HTML, CSS ve JavaScript ile çalışan mini oyun koleksiyonudur. Oyunlar kök dashboard’dan `wood-turning`, `snake-game`, `2048-game`, `xox-game`, `chess-game`, `son-hat`, `owl-game`, `wood-blocks`, `fps-game`, `vektor`, `nuts-bolts` ve `maze-paint` sayfalarına doğrudan bağlanır.
+
+## 2026-08-31 — Çerez odaklı dashboard yenilemesi
+
+### Amaç
+
+Ana sayfayı kaydırmalı bir vitrin yerine sade bir dashboard’a dönüştürmek; oyunları ilk ekranda doğrudan erişilebilir yapmak; profil/oturum ve CasualMoney durumunu yalnızca birinci taraf çerezlerinde tutmak; CasualMoney ile tema satın almayı eklemek.
+
+### Hedef durumu
+
+- [x] Beş mevcut oyunu sade dashboard grid’inde tek tıkla erişilebilir yapmak.
+- [x] Profil ve ekonomi durumundan localStorage ile Supabase/OTP bağımlılığını kaldırmak.
+- [x] CasualMoney ile tema satın alma ve seçme akışı eklemek.
+- [x] Görsel ve işlevsel tarayıcı doğrulaması yapmak.
+
+### Yapılanlar
+
+- `index.html`, `style.css`, `script.js`: Açılış sayfası, hero/vitrin yapısı yerine sade dashboard olarak yeniden kuruldu. Beş oyunun tamamı masaüstünde tek grid satırında doğrudan bağlantı olarak görünür; bakiye, ödül, tema mağazası ve etkinlik özeti eklendi.
+- `casual-profile.js`: Profil, aktif oturum, CasualMoney, Wood Turning ilerlemesi, satın alınan tema/boya ve hareket kaydı `SameSite=Lax` birinci taraf çerezlerine taşındı. Oturum ödülü (+15 CM), günlük ödül (+20 CM), bir varsayılan ve üç CasualMoney ile açılabilen temadan oluşan katalog ile geriye dönük Wood Turning API'si eklendi/korundu.
+- `shared-settings.js`: Görsel ayarlar ve ortak oyun istatistikleri localStorage yerine çerezlere taşındı. `CasualSettings.setTheme()` ile seçilen tema tüm oyun sayfalarında uygulanır.
+- `2048-game/script.js`, `snake-game/script.js`, `xox-game/script.js`: Kişisel yüksek skor ve yerel skor tablosu çerezlere taşındı.
+- `wood-turning/index.html`, `wood-turning/script.js`: Bulut/OTP dosya yüklemeleri ve bulut durumu çıkarıldı; oyun cookie profilini, bakiyesini ve temayı doğrudan kullanır.
+- `casual-cloud.js`, `cloud-config.js`: Eski bir sayfa önbelleği bunları isterse dış ağ veya depolama kullanmayan pasif, çerez-odaklı uyumluluk yüzeyine indirildi.
+- `README.md`: Çerez odaklı mimari, ödüller, tema fiyatları ve çalıştırma notlarıyla güncellendi.
+
+### Bilinen bağlam ve riskler
+
+- Çerez tabanlı durum cihazlar arasında senkronlanmaz ve kullanıcı çerezleri temizlerse sıfırlanır.
+- İstemci tarafında tutulan CasualMoney gerçek para veya güvenlik gerektiren bir ekonomi için uygun değildir.
+- `wood-turning` `CasualProfile` API’sini kullanmaya devam eder; çerez sürümü bu API'nin gereken profil, ekonomi, boya ve ofis işlevlerini korur.
+- Depoda kullanılmayan tarihsel `supabase/schema.sql` dosyası bırakıldı. Aktif HTML sayfaları bu şemayı, Supabase SDK'sını veya OTP akışını yüklemez.
+
+### Testler
+
+- `python3 -m http.server 4173 --bind 127.0.0.1`: Uygulama yerelde başarıyla servis edildi.
+- Yerel tarayıcı görsel kontrolü: Dashboard, masaüstünde beş oyun kartını aynı satırda gösterdi; yatay carousel kullanılmadı.
+- Yerel tarayıcı etkileşim testi: Oturum başlatma (+15 CM), günlük ödül (+20 CM), Paper temasını 30 CM karşılığında satın alma ve seçme başarılı oldu.
+- Yerel tarayıcı yenileme testi: Açık oturum, 5 CM bakiye ve Paper teması sayfa yenilemesi sonrasında korundu.
+- Wood Turning entegrasyon testi: Oyun cookie profilini `@CasualOyuncu`, 5 CM bakiye ve Paper temasıyla açtı; tarayıcı konsolunda hata/uyarı yoktu.
+- 2048 yükleme testi: Ortak çerez yardımcılarıyla sayfa başarıyla yüklendi; tarayıcı konsolunda hata/uyarı yoktu.
+- `rg -n "localStorage" --glob '*.js' --glob '*.html'`: Aktif JavaScript/HTML içinde localStorage kullanımı kalmadığı doğrulandı.
+- `git diff --check`: Başarıyla tamamlandı.
+- `node --check`: Çalıştırılamadı; çalışma ortamında `node` komutu bulunmuyor. JavaScript dosyaları ilgili tarayıcı sayfalarında yüklenip yürütüldü.
+
+## 2026-09-30 — Minerva Owl
+
+### Amaç
+
+Flappy Bird benzeri, ana karakteri Minerva'nın baykuşu olan bir uçuş oyunu eklemek; diğer baykuşları CasualMoney ile satın alınabilir yapmak.
+
+### Yapılanlar
+
+- `owl-game/`: Canvas tabanlı uçuş oyunu. Baykuş mermer sütunların arasından geçer, her sütun 1 puan verir. Boşluk/↑/W, tıklama veya dokunma ile kanat çırpılır; Esc ya da sekme değişimi oyunu duraklatır. Fizik 1/120 sn alt adımlarla çalışır, böylece düşük FPS'de de hız aynıdır.
+- `casual-profile.js`: `owls` kataloğu (Minerva ücretsiz; Kar 80, Peçeli 150, Puhu 260, Gece 420, Altın 750 CM), `ownedOwls`/`selectedOwl` profil alanları, `buyOwl`, `selectOwl`, `owlRewardForScore`, `awardOwlFlight` eklendi. Uçuş ödülü `floor(skor / 2)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` baykuşları da açar.
+- `casual-cheats.js`: Ölümsüzlük baykuşu düşürmez; `allopen` baykuşları kaydetmeden önizlemeye açar. İpuçları güncellendi.
+- `index.html`, `style.css`: Dashboard'a 7. kart (Minerva Owl) eklendi; grid masaüstünde 7, tablette 4, telefonda 2 sütun (tek kalan kart tam genişlik).
+- Rekor `cp_owl_best` çerezinde, istatistik `recordGameResult('Minerva Owl', …)` ile tutulur. Hile açıkken rekor, ödül ve satın alma kaydedilmez.
+
+### Testler
+
+- `node --check`: `casual-profile.js`, `casual-cheats.js`, `owl-game/script.js`, `script.js` başarılı.
+- Playwright (Chromium) uçtan uca: oturum başlatma (+15 CM), yetersiz bakiyede satın alma reddi, gerçek uçuş ve çarpışma sonrası sonuç ekranı, 20 puan → 10 CM, 500 puan → 40 CM tavanı, Kar Baykuşu'nu 80 CM'ye alıp seçme, yenileme sonrası seçimin korunması, ölümsüzlük hilesinde sütunlardan geçip puan alma.
+- Görsel kontrol: masaüstü, 390 px telefon, 1000 px tablet dashboard'u ve Paper teması. Konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hataları görüldü.
+
+## 2026-10-01 — Dashboard UI/UX düzeltmeleri
+
+### Yapılanlar
+
+- `index.html`: Oyunlar paneli karşılama alanının hemen altına alındı; telefonda ilk ekranda dört oyun kartı tam görünür (önce yalnızca ilk satırın üstü görünüyordu). Metrikler ve yeniden doğuş oyunların altında.
+- `style.css`: Toast, sabit "Kod gir" düğmesinin arkasında kalıyordu; artık onun üstünde ve önünde. Footer'a düğme kadar alt boşluk eklendi. 9–10 px metinler 11–13 px'e büyütüldü. "Temizle" 40 px dokunma alanı aldı. Telefonda oturum düğmesi, ödül alınana kadar etiketini gösterir. 400 px altında kart numaraları gizlenir (Snake sanatıyla çakışıyordu).
+- `casual-cheats.js`: Sabit "Kod gir" düğmesi oyun sayfalarında her genişlikte, dashboard'da 720 px altında 44 px'lik yalnızca simgeli düğmedir (XOX tahtasını ve 1280 px'te Wood Turning'in "Zımparaya geç" düğmesini kapatıyordu); erişilebilir adı "Kod gir" olarak kalır. Sürümlü sayfalarda `?v=6`. `font: inherit` sıfırlaması `:where(.cp-cheat)` ile düşük özgüllüğe indirildi; önceden düğmelerin kendi boyut/kalınlık kuralları (ör. 14 px/800) eziliyordu ve oyunlar düğmeyi yeniden biçimlendiremiyordu.
+- `script.js`: Günlük ödül oturum yokken oturumu da başlatır. Oturum ödülü günlük olduğundan, alınmamışsa düğme "Ödülü al", metrik "Bugün alındı" gösterir. Tema kartları açıklamayı, düğme fiyatı gösterir. "Temizle" yalnızca hareket varken görünür. Oyun sayısı metni kartlardan hesaplanır.
+
+### Testler
+
+- Playwright (Chromium) 1440, 1000, 390 ve 320 px: yatay taşma yok, sayfa hatası yok, 40 px altı düğme yok (atlama bağlantısı ve logo hariç), toast ile "Kod gir" çakışmıyor, oturumsuz günlük ödül +15 ve +20 CM verir.
+
+## 2026-10-01 — Wood Blocks
+
+### Amaç
+
+Woodoku benzeri bir ahşap blok bulmacası eklemek; blok görünümlerini CasualMoney ile satın alınabilir yapmak.
+
+### Yapılanlar
+
+- `wood-blocks/`: Canvas tabanlı 9×9 bulmaca. Her turda 3 parça gelir; fare veya dokunmayla sürüklenir (dokunmada parça parmağın üstünde görünür). Dolu satır, sütun ve 3×3 kareler silinir. Yerleştirilen her kare 1 puan; silinen her grup 18 puan, aynı hamlede birden fazla grup ek bonus; art arda 3 hamle içinde yeniden silmek seri çarpanı verir. Hiçbir parça sığmayınca oyun biter. Klavye: 1/2/3 parça seçer, oklar taşır, Enter bırakır, Esc vazgeçer. Yeni elde her zaman en az bir parça sığar: rastgele el birkaç kez yeniden çekilir, yine sığmazsa bir parçası sığan bir şekille değiştirilir. Tahtaya sığmayan parçalar tepside soluk görünür.
+- `casual-profile.js`: `woods` kataloğu (Çam ücretsiz; Ceviz 90, Kiraz 180, Abanoz 360 CM), `ownedWoods`/`selectedWood`, `buyWood`, `selectWood`, `blocksRewardForScore`, `awardBlocksGame` eklendi. Ödül `floor(skor / 50)` CM, taban tavanı 40 CM; yeniden doğuş çarpanı uygulanır. `unlockAll` ahşapları da açar.
+- `casual-cheats.js`: Ölümsüzlükte tahta tıkanınca parçalar yenilenir; `allopen` ahşapları kaydetmeden önizlemeye açar.
+- Dashboard, Wood Blocks, Minerva Owl ve Wood Turning `casual-profile.js?v=12` ve `casual-cheats.js?v=7` yükler (main'deki `?v=6` düğme değişiklikleri ve yeni ahşap ipuçları birlikte); dashboard stili `style.css?v=15`. Sürümsüz sayfalar (Snake, 2048, Chess, Son Hat, XOX) yeni betiği GitHub Pages'in 10 dakikalık önbelleği dolunca alır. Eski `cleanProfile` bilinmeyen alanları attığı için, yayından önce açılmış bir sekme profili yazarsa yeni `ownedWoods` alanı sıfırlanabilir; aynı risk baykuşlarda da vardı.
+- `index.html`, `style.css`: Dashboard'a 8. kart (Wood Blocks); masaüstü grid 8 sütun.
+- Rekor `cp_blocks_best` çerezinde, istatistik `recordGameResult('Wood Blocks', …)` ile tutulur.
+
+### Testler
+
+- `node --check`: `casual-profile.js`, `casual-cheats.js`, `wood-blocks/script.js` başarılı.
+- Playwright (Chromium): gerçek fare sürüklemeleriyle oyun sonuna kadar oynama (833 puan → 16 CM), iPhone SE'de dokunmatik sürükleme, klavyeyle tam oyun, Ceviz'i 90 CM'ye alma ve yenileme sonrası seçimin korunması, yetersiz bakiyede red, ölümsüzlükte 150 hamle boyunca oyunun bitmemesi, `score set` hilesi.
+- Yalnızca tek blokların sığdığı tahtada (her satır, sütun ve 3×3 karede bir boşluk) dağıtılan 3000 elin hepsinde sığan bir parça vardı ve 1500 el bitişinde oyun erken bitmedi. Düzeltmeden önceki kod aynı testte 17 oynanamaz el ve 8 erken oyun sonu üretiyordu.
+- Görsel kontrol: masaüstü, telefon oyun ekranı ve dashboard (masaüstü, 1000 px, 390 px).
+
+## 2026-10-04 — Son Hat, Last War tarzında yeniden yazıldı
+
+### Amaç
+
+Eymen'in Last War: Survival Game açıklaması ve altı mağaza görseline göre Son Hat'ı hiper-casual bir şerit savaşına çevirmek; "Tam üs" seçimiyle bina kurma, kaynak üretimi, dünya haritası ve kahraman toplama eklemek. İttifak ve çok oyunculu kısım sunucu olmadığı için yok.
+
+### Yapılanlar
+
+- `son-hat/script.js`: Canvas üzerinde perspektifli köprü. Birlik ileri koşar, sürükleme veya ←/→/A/D ile şerit seçilir; her asker otomatik ateş eder. Mavi kapılar (+N, ×2) birliği büyütür, kırmızı kapılar (−N) küçültür; kapıları vurmak mavileri büyütür, kırmızıları boşaltıp maviye çevirir. Numaralı sandıklar vurulup kırılınca silah (Tabanca → Makineli → Pompalı → Lazer), helikopter, asker veya ateş hızı verir; vurmadan çarpınca asker kaybedilir ve ödül gelmez. Zombi sürüleri, iri zombiler ve bölüm sonunda can barlı boss (her 5. bölüm dev boss). Bölümler sabit tohumla üretilir (aynı bölüm hep aynı). Esc/P veya sekme değişimi duraklatır.
+- Üs: 5×5 arsa, ortada Karargâh. Bina türleri: Kışla (başlangıç askeri), Silah Atölyesi (hasar), Atış Poligonu (ateş hızı), Altın Madeni, Çiftlik, Demir Madeni, Depo (biriktirme süresi), Hangar (savaşa helikopterle başla). Karargâh seviyesi diğer binaların sınırı ve bina yeri sayısıdır (4 + Sv). Madenler dakika başı üretir, Depo'ya göre 60+30·Sv dakika biriktirir; kapalıyken de üretir (zaman damgası).
+- Kahramanlar: 3 sınıf (Tank kalkan, Uçak hava saldırısı, Füze hedef arayan füze) × 3 nadirlik = 9 kahraman. Çağırma 150 altın (%70/%25/%5); tekrar gelen seviye atlar. Takım en fazla 3; aynı sınıftan 2 kahraman +%5, 3 kahraman +%15 hasar. Eğitim altın + yiyecek ister.
+- Harita: bölgeler (Köprü, Liman, Sanayi, Şehir Merkezi, Son Kale), 99 bölüm, gücün ve önerilen güç.
+- Kayıt: `cp_sonhat_v2` çerezi, kısa anahtarlı JSON (~300 bayt; 3000 baytı aşarsa yazılmaz). Eski `cp_sonhat_v1` altını yeni kayda aktarılır ve eski çerez silinir.
+- `casual-profile.js`: `sonHatRewardForCoins`, `awardSonHatRun` (8 altın = 1 CM, koşu başına en fazla 40 CM, yeniden doğuş çarpanı uygulanır). Sürüm `?v=13` (dashboard, Owl, Wood Blocks, Wood Turning, Son Hat).
+- Hile açıkken ilerleme, ganimet, satın alma ve CM kaydedilmez; ölümsüzlükte birlik 1 askerin altına düşmez.
+
+### Testler
+
+- `node --check`: `son-hat/script.js`, `casual-profile.js` başarılı.
+- Playwright (Chromium), yönlendiren basit bir botla: Bölüm 1 ve 5 yükseltmesiz kazanıldı, Bölüm 10 yükseltmesiz kaybedildi, orta seviye üsle (Karargâh 4, savaş binaları 4, üç Sv 3 kahraman) Bölüm 10 kazanıldı.
+- Üs akışı: üretimi toplama, boş arsaya Çiftlik/Silah Atölyesi kurma, Karargâh yükseltme, kahraman çağırma ve takıma ekleme; kayıt çerezi 289 bayt.
+- 320, 390, 1000, 1440 px'te yatay taşma yok; konsolda yalnızca ortam proxy'sinin Google Fonts sertifika hatası.
+
+## 2026-10-19 — Arena FPS (çok oyunculu nişancı)
+
+### Amaç
+
+Eymen'in paylaştığı tek dosyalık "HTML5 + WebRTC Multiplayer FPS v4" oyununu CasualPass'e eklemek ve "çok daha gelişmiş" hâle getirmek.
+
+### Yapılanlar
+
+- `fps-game/`: Paylaşılan harita (sabit tohum), 4 silah, ADS/dürbün, kayma/çömelme/zıplama, çalılıkta saklanma, kafadan vuruş ve 13 baytlık ikili konum paketi korundu. Eklenenler:
+  - **Botlar** (yalnızca tek oyunculu/host'ta simüle edilir): 1 m'lik ızgarada A* ile yol bulma (string pulling), görüş/duyma/vurulma algısı, tepki süresi, oturan nişan hatası, şerit (strafe) hareketi, silaha göre tercih mesafesi, seri atış. Kolay/Normal/Zor.
+  - **Maç sistemi**: süre (3/5/10 dk) ve öldürme hedefi (10/20/30), skor tablosu (Tab), maç sonu sıralaması, yeniden başlatma; host çevrimiçi maçta 25 sn sonra kendiliğinden yeni maç açar.
+  - **Ağ**: host her tikte kendi kaydını, botları ve diğer istemcileri tek pakette toplar (1 + 12·N bayt); istemci yalnızca kendini yollar ve host başkası adına konum kabul etmez. Uzak oyuncular 100 ms gecikmeli anlık görüntü ara değerlemesiyle çizilir. İsabeti atan bildirir, hasarı hedefin sahibi uygular; host isabeti yalnızca hedefin bağlantısına iletir. Olaylar doğrulanır/sınırlanır; isimler yalnızca `textContent` ile basılır. TURN listesi artık `eval`/`new Function` ile değil yalnızca `JSON.parse` ile okunur ve kaydedilmez (aktif kodda localStorage yok).
+  - El bombası (G; sekme fiziği, görüş hattı kontrollü alan hasarı), can yenilenmesi, 2 sn doğuş kalkanı, hasar yönü göstergesi, isabet/öldürme işaretleri, seri bildirimleri, ölüm kamerası, radar (yalnızca ateş edenler görünür), isim etiketleri (yalnızca görüş hattındaysa), mermi izleri, geri tepme toparlanması, adım/konumsal (stereo) sesler.
+  - Dokunmatik kontroller: sol sanal çubuk (sonuna kadar itince koşu), sağ taraf bakış, Ateş/Nişan/Zıpla/Çömel/R/Silah/Bomba düğmeleri.
+  - Ayarlar (`cp_arena_prefs` çerezi): hassasiyet, görüş açısı, ses, grafik kalitesi (Düşük: düşük çözünürlük ve anizotropi yok; Yüksek: gölgeler). Maç seçenekleri de aynı çerezde.
+  - Performans: ~800 statik mesh malzemeye göre birleştirilir (~35 çizim çağrısı); efektler hiç dispose edilmeyen havuzlardan gelir (son malzeme dispose edilince three.js shader programını silip bir sonraki atışta yeniden derliyordu); efekt shader'ları maç başında derlenir; tam ekran gizli katmanlar (liquid temanın bulanık blob'ları, `backdrop-filter`, görünmez hasar flaşı) kaldırıldı; HUD yalnızca değer değişince DOM'a yazar; başarısız bot rotası her karede yeniden aranmıyor.
+  - `vendor/three.min.js` (three@0.128.0) ve `vendor/peerjs.min.js` (peerjs@1.5.4) npm paketlerinden değiştirilmeden kopyalandı; lisanslar `vendor/LICENSES.md`.
+  - `?debug` yalnızca testler için salt-okunur `window.ArenaDebug` açar; `?signal=host:port` kendi PeerJS sunucusunu kullanır.
+- `casual-profile.js`: `camos` kataloğu (Standart ücretsiz; Çöl 100, Orman 180, Kutup 260, Kızıl 420, Altın 800 CM), `ownedCamos`/`selectedCamo`, `buyCamo`, `selectCamo`, `arenaRewardForMatch`, `awardArenaMatch` (öldürme başına 2 CM, birincilik +6 CM, maç başına en fazla 40 CM, yeniden doğuş çarpanı). `unlockAll` kaplamaları da açar. Sürüm `?v=14`.
+- `casual-cheats.js`: ölümsüzlük yalnızca tek oyunculu Arena'da geçerli (çevrimiçi maçta arkadaşlara karşı işlemez); `allopen` kaplamaları önizlemeye açar; `score set`/`score plus` tek oyunculu maçta öldürme sayısına uygulanır. Sürüm `?v=8`. Maç sırasında "Kod gir" düğmesi ateş düğmelerinin üstüne binmesin diye gizlenir.
+- `index.html`, `style.css`: Dashboard'a 9. kart (Arena FPS); masaüstü grid 9, tablet 3 sütun (3×3). Stil `?v=16`.
+- Rekor (maçtaki en çok öldürme) `cp_arena_best` çerezinde; istatistik `recordGameResult('Arena FPS', …)`. Hile açıkken rekor, ödül ve satın alma kaydedilmez.
+
+### Bilinen bağlam ve riskler
+
+- Çok oyunculu mod PeerJS'in herkese açık sinyal sunucusuna (0.peerjs.com) bağlıdır; sunucu kapalıysa oda açılamaz (tek oyunculu mod çalışır). Simetrik NAT arkasındaki cihazlar TURN olmadan bağlanamayabilir.
+- İstemci tarafı isabet kaydı: hile yapan bir istemci sahte isabet yollayabilir. Hasar 0–250 ile sınırlanır; arkadaş oyunu için kabul edilmiştir.
+- Yalnızca host simüle eder: host ayrılınca oda kapanır (host göçü yok).
+
+### Testler
+
+- `node --check`: `fps-game/script.js`, `casual-profile.js`, `casual-cheats.js` başarılı.
+- Playwright (Chromium, SwiftShader): tek oyunculu maç başlatma, botların doğup gezmesi ve birbirleriyle savaşması; gerçek fare girdisiyle bota nişan alıp öldürme ve öldürme akışı; silah değiştirme, şarjör, el bombası (kendi ayağına atınca 100 → 12 can), W ile hareket, Tab skor tablosu, işaretçi kilidi bırakınca duraklatma/devam; maç sonu (+40 CM tavanı, istatistik, rekor), yeni maç ve menüye dönüş.
+- İki ayrı tarayıcı bağlamı ve yerel PeerJS sunucusuyla (`?signal=127.0.0.1:9000`) gerçek WebRTC: oda kodu ile katılma, host konumunun istemcide birebir görünmesi, istemcinin host'u vurup öldürmesi (iki tarafta aynı skor ve öldürme akışı), bomba senkronu, host maçı bitirince istemcide sonuç ekranı (+8 CM) ve "Host bekleniyor", host yeni maç açınca istemcinin oyuna dönmesi, istemci ayrılınca host'ta silinmesi, host ayrılınca istemcinin "Host ile bağlantı koptu." ile menüye dönmesi. Konsolda hata yok.
+- iPhone 12 dokunmatik emülasyonu (yatay 844×390 ve dikey 390×844): sanal çubukla yürüme, sağ tarafla bakış, Ateş düğmesiyle atış, duraklatma; yatay taşma yok.
+- Dashboard 1440, 1000, 390, 320 px: yatay taşma yok, "Dokuz oyun aynı ekranda."
+- Not: SwiftShader yazılım GPU'su bu ortamda karesi pahalı çizdiği için FPS ölçümleri gerçek cihazları temsil etmiyor; JS tarafı 5 sn'lik profilde ~100 ms'e indi ve maç sırasında shader yeniden derlenmiyor.
+
+## 2026-10-19 — Arena FPS doku kalitesi
+
+### Yapılanlar
+
+- `fps-game/script.js`: Tek renkli yüzeyler yerine dosya indirmeden üretilen dokular. Döşenebilir (kenarları birleşen) fraktal değer gürültüsü ve kenar sarmalı çizimle 11 yüzey: çim (tek tek çim yaprakları, kuru lekeler), asfalt (kenar çizgileri, aşınmış orta şerit, çatlaklar), sıva, beton (panel derzleri, kalıp delikleri), çatı, sandık (çerçeve, çapraz destek, tahta damarı, çivi), oluklu metal, kum torbası, kaya, ağaç kabuğu, yaprak. Dokular çoğunlukla açık gri; malzeme rengi onları renklendirir, böylece her bina/konteyner rengi aynı dokuyu paylaşır.
+- Birleştirilmiş statik geometriye dünya koordinatlı kutu UV'si verildi (her yüzeyde aynı piksel yoğunluğu); sandıklar kendi kutu UV'sini korur.
+- Zemine düşük frekanslı köşe renkleri (açık/koyu ve kuru çimen lekeleri) eklendi; çim dokusunun tekrarı görünmez.
+- Silahlar: Çöl/Orman/Kutup/Kızıl kaplamalar gerçek kamuflaj deseniyle boyanır; Standart ve Altın fırçalanmış metal ve ahşap damarı kullanır.
+- Kalite: Düşük 256 px, Orta 512 px, Yüksek 1024 px (çim ve asfalt; diğerleri en çok 512 px). Anizotropi Düşük 1, Orta 4, Yüksek 8. Ayardan kalite değişince dokular yeniden çizilir.
+- Hata düzeltmesi: güneşin gölge kamerası sınırları ayarlandıktan sonra `updateProjectionMatrix()` çağrılmıyordu; "Yüksek"te gölgeler yalnızca harita merkezinin ±5 m'sinde çıkıyordu. Artık tüm haritada.
+- `index.html` betik sürümü `?v=2`.
+
+### Testler
+
+- `node --check fps-game/script.js` başarılı.
+- Playwright: Orta ve Yüksek kalitede bina, konteyner, sandık, yol, kaya ve kamuflajlı silah ekran görüntüleri; konsolda hata yok.
+- Önceki tek oyunculu, iki tarayıcılı WebRTC ve iPhone 12 dokunmatik (Düşük kalite) testleri yeniden geçti.
+
+## 2026-10-19 — Vektör (5'e 5 taktik kahraman nişancı)
+
+### Amaç
+
+Eymen'in isteği: VALORANT'a grafik, tasarım ve teknik açıdan çok benzeyen bir oyun. Riot'un adı, logosu, ajan/silah/harita adları ve varlıkları kullanılmadı; oynanış ve görünüm türün kendi diliyle, özgün adlarla yeniden kuruldu.
+
+### Yapılanlar
+
+- `vektor/`: Arena FPS motoru (Three.js, prosedürel dokular, birleştirilmiş statik geometri, A*, WebRTC yıldız ağ) üzerine yeni oyun. `script.js` tek dosya, ~5000 satır.
+  - **Harita "Liman"**: 2 m hücreli ızgaradan oyulan, iki kurma bölgeli (A/B), orta alanlı, boğazlı ve ara geçitli Akdeniz liman kasabası. Bölgeye göre renkli sıva duvarlar, süpürgelik ve korniş, kiremit saçaklar, saksılar, duvar dışında çatılar ve çan kulesi. Bölge zeminleri boyalı, duvarlarda büyük A/B harfleri. Satın alma evresinde doğuş bariyerleri.
+  - **Raunt sistemi**: satın alma (25 sn) → raunt (100 sn) → çekirdek kurulunca 45 sn → raunt sonu. Kazanmak için 5/7/13 raunt; `hedef − 1` raunttan sonra taraf değişir. Eleme, süre dolması, patlama ve çözme sonuçları.
+  - **Çekirdek**: rastgele bir saldırgan taşır; ölünce düşer, ilk geçen saldırgan alır. Bölgede F basılı 4 sn kurma, 7 sn çözme (3,5 sn'de yarı kayıt). Kurulunca hızlanan bip ve kırmızı ışık.
+  - **Ekonomi**: başlangıç 800, galibiyet 3000, yenilgi 1900/2400/2900, öldürme 200, kurma 300 (tüm saldırganlara), tavan 9000; devre arasında sıfırlanır. Herkes kendi kredisini aynı kurallarla hesaplar.
+  - **Satın alma menüsü** (B): tabanca, hafif, tüfek, keskin, kalkanlar, yetenek şarjları; silah görselleri gerçek 3B modellerden beyaz siluet olarak çizilir. Bu raunt alınan geri satılabilir.
+  - **Silahlar**: Pim, Ölçü, Arı, Saçma, Kartal (mesafeden bağımsız tek kafa), Şahin (susturuculu), Yayla (gövdeye tek atış), bıçak, çekirdek. Kafa/gövde/bacak çarpanı ve mesafe düşüşü.
+  - **İsabet modeli**: duran ilk mermi isabetli; koşarken büyük, yürürken (Shift) küçük dağılım; havada çok kötü; çömelmek ve nişan almak iyileştirir. Tüfekte önce yukarı, sonra sağa sola kayan sabit tarama kalıbı; ara verince sıfırlanır. Hızlı ivmelenme ve daha hızlı fren (karşı-strafe). Vurulunca kısa yavaşlama. Koşan düşmanın ayak sesi duvar arkasından duyulur, yürüyen sessizdir.
+  - **Ajanlar** (C/Q/E + X nihai, 6 puan): Kor (alev topu, kör edici, atılım, cehennem), Sis (bataklık, gölge, duman, gece perdesi), Ok (şok oku, parlama, keşif oku, av), Kale (tuzak teli, kalkan duvarı, onarım, kilit). E her raunt ücretsiz yenilenir; nihai puanı öldürme, ölüm, kurma ve çözmeden gelir.
+  - **Görünüm**: düşmanlar kırmızı dış hatlı (ters gövde), görünür kılınınca hat duvarın arkasından görünür; müttefiklerin üstünde camgöbeği işaret ve isim. Lacivert/kırmızı/kırık beyaz HUD: üstte takım ajan çipleri ve skor/süre, solda harita (düşmanlar yalnızca görülünce), sağda öldürme akışı (silah siluetiyle), altta can/kalkan, yetenek çubuğu ve cephane; raunt ve öldürme afişleri; ölünce ölüm kamerası, sonra takım arkadaşını izleme.
+  - **Botlar**: takım planı (hedef bölge, lobide bekleme, giriş, kurma; savunmada bölge tutma, çekirdek kurulunca geri alma ve çözme), satın alma mantığı (tabanca raundu, eko, zorunlu alım, tam alım), durup ateş etme, takım bilgisi paylaşımı, ses ve vurulmaya tepki, rol tabanlı yetenek kullanımı.
+  - **Çevrimiçi**: 13 baytlık kayıt (silah ve çekirdek baytı eklendi). Katılan oyuncu insanı az olan takıma girer, takım doluysa bir botun yerini alır; ayrılanın yerine bot geçer. Raunt, evre, çekirdek ve skor host'tan; istemci olayları doğrulanır.
+  - Dokunmatik: çubuk (az itince yürüme), bakış, Ateş/Nişan/Zıpla/Çömel/R/Silah/F ve C/Q/E/X/satın alma düğmeleri.
+  - Çömelme Ctrl yerine Z: Ctrl+W sekmeyi kapatır ve sayfa engelleyemez.
+  - `?debug` testler için `window.VektorDebug` açar; `?signal=host:port` kendi PeerJS sunucusu.
+- `casual-profile.js`: `vektorRewardForMatch`, `awardVektorMatch` (öldürme + kazanılan raunt başına 1 CM, zafer +10, maç başına en fazla 40 CM, yeniden doğuş çarpanı). Sürüm `?v=15` (tüm sürümlü sayfalar).
+- `index.html`, `style.css`: 10. kart (Vektör); masaüstü ve tablet grid 5 sütun (2 satır). Wood Blocks kart çiziminin kareleri `.game-art`'ın `align-items: center` kuralı yüzünden 0 yükseklikteydi; `align-items: stretch` ile düzeldi. Stil `?v=17`.
+- Rekor `cp_vektor_best`, ayarlar `cp_vektor_prefs` çerezlerinde; istatistik `recordGameResult('Vektör', …)`.
+
+### Testler
+
+- `node --check` ve ESLint (`no-undef`, `no-unused-vars`) temiz.
+- Playwright (Chromium, SwiftShader): botların tam raunt oynaması (çatışma, taşıyıcı ölünce çekirdeğin düşmesi ve alınması, A'ya kurma, savunmanın çözmesi); satın alma, geri satma, kalkan ve yetenek alımı; satın alma evresinde duman; bota ateş edip öldürme (+200 kredi, +1 nihai puan); oyuncunun kurması (+300) ve savunmada çözmesi; ölüm sonrası müttefik izleme; dört ajanın tüm C/Q/E/X yetenekleri; tam maç (kayıp serisi ekonomisi, devre arası taraf değişimi ve kredi sıfırlama, 9000 tavanı, 5–4 zafer, +15 CM, yeni maç).
+- İki tarayıcılı gerçek WebRTC (yerel PeerJS): katılanın rakip takımda bir botun yerini alması, raunt ve ekonomi senkronu, istemcinin host'u öldürmesi, host botunun yeteneğinin istemcide görünmesi; konsolda hata yok.
+- iPhone 12 dokunmatik (yatay/dikey): taşma yok, çubukla hareket, satın alma menüsü. Dashboard 1440/1000/390/320 px taşma yok.
+
+### Bilinen bağlam ve riskler
+
+- Botlar basit kurallarla oynar; insan takım arkadaşı gibi iletişim kurmaz.
+- Çevrimiçi isabet ve kredi istemci tarafındadır; arkadaş oyunu içindir.
+- Duman ve görünürlük her istemcide yerel hesaplanır; küçük zaman farkları olabilir.
+
+## 2026-10-19 — Vektör: yeni haritalar ve ajanlar
+
+### Yapılanlar
+
+- `vektor/script.js`: Harita artık sabit değil; her harita 40×56 hücrelik bir karakter planı (`#` duvar, `.` zemin, `k`/`K` sandık, `M` konteyner, `h` alçak duvar, `o` sütun, `p` süs), bölge ve doğuş dikdörtgenleri, taktik noktaları ve görünümle (gökyüzü, sis, güneş, zemin/duvar dokusu, dış manzara) tanımlanır. `buildMap(id)` eski haritayı atıp yenisini kurar; çarpışma, gezinme ızgarası, mini harita, doğuş bariyerleri (doğuş dikdörtgeninin açık kenarlarından otomatik) ve bölge harfleri (en yakın duvar yüzüne otomatik) yeniden üretilir.
+- Haritalar: **Liman** (mevcut), **Kumsaray** (çöl kalesi; uzun A koridoru, kapılı B, ortada avlu), **Üçyol** (teknopark; A/B/C üç kurma bölgesi), **Buzul** (kutup üssü; A savunmaya, B saldırıya yakın, sütunlu kubbe salonu, kar yağışı). Yeni dokular: kumtaşı, taş döşeme, kar, panel zemin, cam cephe.
+- Menüde harita seçimi (önizlemeli plan çizimi) ve "Rastgele"; tercih `cp_vektor_prefs` çerezinde. Host haritayı anlık görüntüyle (`m.map`) gönderir, katılan aynı haritayı kurar. Botlar bölge listesini haritadan alır (üç bölgede savunma her bölgeye bir kişi koyar).
+- Tasarım denetimi: saldırgan/savunan doğuşundan bölgelere yürüme mesafesi Liman'a yakın tutuldu (saldırgan 43–52, savunan 14–28 hücre). Doğuştan doğuşa görüş hattı denetimi Liman'da da düz bir orta hat buldu; Liman, Kumsaray ve Buzul'un ortasına görüşü kesen birer blok kondu. Liman'da duvar içine gömülü 4 saksı kaldırıldı.
+- Yeni ajanlar: **Rüzgâr** (Düellocu: Yükseliş, Bulut, Süzülüş, nihai Fırtına Bıçakları — 5 isabetli bıçak, öldürünce dolar), **Ayaz** (Kontrolcü: Buz Duvarı, Kırağı, Kar Küresi, nihai Tipi — yavaşlatan ve yakan alan), **Fay** (Öncü: Sarsıntı Bombası, Fay Hattı — duvar ardına geçen şerit, Yer Dinleme, nihai Büyük Kırılma), **Nöbet** (Gözcü: Alarm, Kalkan Takviyesi, Taret — vurulunca bozulur, nihai Fener). Sarsılan oyuncu yavaşlar, dağılımı artar ve görüşü titrer; botlarda isabet düşer.
+- Ağ: yeni yetenekler mevcut `ab`/`abx` olaylarını kullanır; bozulan taret için `zd` olayı eklendi. Bıçaklar 9. silah sırası (4 bitlik silah alanına sığar).
+- Botlar yeni yetenekleri kullanır (savunmada taret/alarm, saldırıda duman/fay hattı/kalkan, hedefe göre atış açısı).
+- `?debug` ek kısayolları: `map`, `mapCheck`, `freeze`, `sim`, `setSim`, `revealed`, `zoneList`.
+
+### Testler
+
+- `node --check` ve ESLint temiz.
+- Dört haritada `mapCheck`: tüm doğuş/taktik noktaları serbest hücrede ve iki doğuştan da ulaşılabilir, kurma noktaları bölge içinde; kurulum 0–50 ms.
+- Playwright: her haritada oyun içi ekran görüntüsü; dört yeni ajanın tüm C/Q/E/X yetenekleri; donmuş bota karşı etkiler (Fay Hattı ve Sarsıntı Bombası botu sersemletti, Yer Dinleme ve Büyük Kırılma gösterdi, taret 100 → 52 can, Kalkan Takviyesi 0 → 25 kalkan, Tipi yavaşlattı ve yaktı, Fırtına Bıçakları iki atışta öldürüp şarjörü doldurdu); Üçyol, Buzul ve Kumsaray'da 5v5 bot maçı.
+
+## 2026-10-19 — Wood Turning, mobil torna oyunu tarzında
+
+### Yapılanlar
+
+- `wood-turning/`: Yeniden yazıldı (Play Store sayfası bu ortamdan açılamadığı için türün bilinen akışına göre). Işıklı, dönen 3B görünümlü kütük ve koddan üretilen ahşap damarı; parmağın biraz üstünde duran keski; Kaba/Oluk/İnce uçlar; kıvrılan talaşlar ve tezgâhta biriken yonga; derin kesimler kırmızı. Aşamalar Oy → Zımpara → Boya (her seviye 1–4 renk bandı ister) → yan yana karşılaştırma, puan ve 1–3 yıldız. "Seviye N" ilerlemesi, 20 şekil (sonrası sabit tohumla), her 5. seviye serbest tasarım (×1,5). Mağaza sekmeleri: Keski, Ahşap, Boya, Atölye; son 12 yıldızlı iş koleksiyon rafında. Dikey telefonda torna dik durur.
+- `casual-profile.js`: `logs` (Kayın ücretsiz; Meşe 120, Ceviz 260, Kiraz 420, Zebrano 700, Abanoz 1100 CM) ve `chisels` (Çelik ücretsiz; Karbür 150, Şam Çeliği 400, Elmas 900 CM; kesim hızı) katalogları, `ownedLogs/selectedLog/ownedChisels/selectedChisel`, `woodTurning.level/stars/shelf`, `buyLog`, `selectLog`, `buyChisel`, `selectChisel`, `turnStars`. `awardWoodTurning({ score, level, freeDesign })` eski çağrılarla uyumlu. Sürüm `?v=16` (tüm sürümlü sayfalar).
+
+### Testler
+
+- `node --check`, `git diff --check` temiz; aktif kodda localStorage yok.
+- Playwright 1440 px ve 390×844: gerçek sürüklemelerle beş seviye, ödül, seviye atlama, mağaza alımı ve yenileme sonrası kalıcılık; misafir oynayıp sonuçtan giriş yapınca ödülün alınması; hile önizlemesi kayıt yapmadan; 320/390/1000/1440 px ve yatay telefonda taşma ve konsol hatası yok.
+
+## 2026-10-19 — Hakkında sayfası
+
+- `about.html`: Tüm oyunların amacı, kontrolleri ve CM kazanımı; oyunlara hızlı bağlantılar ve her kartta "Oyna" düğmesi. Dashboard stilini (`style.css?v=18`) kullanır.
+- `index.html`, `style.css`: Üst çubuğa "Oyunlar" ve "Hakkında" bağlantıları. 720 px altında üst çubuk taşmasın diye logo yanındaki "CasualPass" yazısı gizlenir.
+- Test: Playwright 1440/390/320 px — dashboard'dan Hakkında'ya ve geri gidiş, 11 kart, yatay taşma ve sayfa hatası yok.
+
+## 2026-10-19 — Kendiliğinden güncelleme
+
+- Sitede service worker yok; ana ekrana eklenen uygulama ve GitHub Pages önbelleği (10 dk) eski HTML'i tutabiliyordu. `version.json` eklendi; `shared-settings.js` (`?v=8`, tüm sayfalar) açılışta ve uygulamaya dönülünce bu dosyayı önbelleksiz okur, sürüm çerezdekinden farklıysa sayfayı `?v=<sürüm>` ile yeniden yükler. **Her yayında `version.json` içindeki `v` değeri değiştirilmeli.**
+- Yanlışlıkla eklenen `shots/dash_top.png` silindi.
+
+## 2026-10-19 — PWA ve çevrimdışı oyun
+
+- `manifest.webmanifest`, `icons/` (192, 512, maskable 512, apple-touch 180, favicon): ana ekrana eklenince tam ekran uygulama olarak açılır. Tüm sayfalarda manifest/simge/`apple-mobile-web-app-*` etiketleri; dashboard ve Hakkında'da `<meta name="cp-page" content="hub">`.
+- `sw.js` (`tools/sw.template.js`'ten `tools/build-sw.py` ile üretilir): sitedeki tüm dosyaları ve sayfaların `?v=` ile istediği tam adresleri kurulumda önbelleğe alır. Sayfalar ağ öncelikli (çevrimiçiyken taze, değilse önbellek), diğer dosyalar o sürümün önbelleğinden; Google Fonts çalışma anında önbelleğe alınır. `version.json` aynı içerik özetini taşır.
+- **Her yayından önce `python3 tools/build-sw.py` çalıştırılmalı**; dosyalar değişince sürüm değişir, eski önbellek silinir.
+- `shared-settings.js` (`?v=9`): service worker'ı kaydeder; uygulamaya dönülünce `version.json`'ı önbelleksiz okuyup yeni sürüm varsa service worker'ı günceller. Yeni dosyalar hazır olunca dashboard/Hakkında hemen, oyun sayfaları yalnızca açılışın ilk 6 sn'sinde yenilenir (oyun ortasında sayfa yenilenmez; sonraki açılışta yeni sürüm gelir).
+- `chess-game/vendor/chess.js`: chess.js 0.10.3 npm paketinden (lisans yanında); Chess artık CDN'e bağlı değil.
+- Çevrimdışı çalışmayanlar: Arena FPS ve Vektör'ün çevrimiçi odaları (PeerJS sunucusu gerekir), freesound.org'dan gelen birkaç tıklama sesi (Snake, 2048, XOX, Wood Turning; sessiz kalır).
+
+### Testler
+
+- Playwright: ilk açılışta 81 adres önbelleğe alındı, sayfa service worker kontrolünde; internet kesikken 12 sayfanın hepsi açıldı (Chess motoru ve Three.js yüklü, sayfa hatası yok), Vektör'de tek oyunculu maç başladı.
+- Güncelleme: Hakkında sayfası değiştirilip `build-sw.py` çalıştırıldı, uygulamaya dönüş olayıyla sayfa yeni içerikle yenilendi ve eski önbellek silindi.
+
+## 2026-10-20 — Kayıt dosyası (dışa/içe aktarma, 7-3-1 doğrulama)
+
+- `casual-save.js` (`window.CasualSave`): `cp_*` ve `casualpass_*` çerezlerinin hepsini (`cp_site_version` hariç) ham değerleriyle JSON dosyasına yazar (`casualpass-kayit-YYYY-AA-GG.json`; telefonda paylaşım menüsü, masaüstünde indirme). Bütünlük: her çerez için bir 7-3-1 kontrol hanesi (karakter kodları 7, 3, 1 ağırlıklarıyla toplanır, mod 10), tüm yük için bir hane daha (`check731`, ör. `873-6`) ve tuz + yük + hanelerden SHA-256 mühür (`seal`). Tuz sayfada olduğu için bu yalnızca değiştirildiğini gösterir; kodu okuyan birini durduramaz.
+- İçe aktarma: dosya biçimi ve çerez adları/değerleri denetlenir (yalnızca bizim çerezler, `;`/satır sonu yok, ≤4000 karakter). Doğrulanırsa "Kaydı yükle" onayı; doğrulanamazsa "Bu dosya değiştirilmiş olabilir… Yine de bu kayıt dosyasıyla devam etmek istiyor musunuz?" uyarısı. Kabul edilirse mevcut çerezler silinip dosyadakiler yazılır, sayfa yenilenir; doğrulanmamış dosya `cp_save_unverified` çereziyle işaretlenir ve dashboard'da uyarı görünür.
+- `index.html` (dashboard'da "Kayıt dosyası" paneli ve `<dialog>`), `script.js?v=13`, `style.css?v=19`, `about.html` notu.
+
+### Testler
+
+- Playwright 390 px: günlük ödülle 35 CM → dışa aktarma (3 çerez, `873-6`) → çerezleri silme (0) → içe aktarma "doğrulandı", bakiye 35'e döndü; profildeki bakiye elle +9000 yapılınca "Kayıt doğrulanamadı" uyarısı (7-3-1 ve mühür tutmuyor), Vazgeç bakiyeyi değiştirmedi, kabul 9.035 yükleyip "doğrulanmamış" uyarısını gösterdi; CasualPass kaydı olmayan dosya reddedildi; sayfa hatası yok.
+
+## 2026-10-20 — CasualFish yeni motor
+
+### Yapılanlar
+
+- `chess-game/casualfish.js`: CasualPass'in kendi motoru (Stockfish değil). Eski CasualFish yalnızca taş sayan 2–3 yarım hamlelik bir minimax'tı ve chess.js'in hamle üretimini kullandığı için saniyede ~1.500 pozisyona bakabiliyordu (chess.js her hamleye SAN üretiyor). Yeni motorun kendi tahtası var: 0x88 dizi, Zobrist anahtarı, yap/geri al; ~250 bin pozisyon/sn. Arama: kademeli derinleşme ve süre sınırı, negamax + alfa-beta + PVS, dönüşüm tablosu, boş hamle budaması, geç hamle azaltması, şah çekince uzatma, katil/geçmiş sezgileri, taş almaları sonuna kadar izleyen sakinlik araması; tekrar ve 50 hamle beraberlik sayılır. Değerlendirme: taş değerleri, kare tabloları (şah için orta oyun/oyun sonu karışımı), fil çifti, geçer/ikili/yalnız piyon, açık hatta kale.
+- Seviyeler (`LEVELS`): Kolay (1 yarım hamle, sakinlik araması yok, ±220 gürültü, %30 rastgele hamle), Orta (3 yarım hamle, ±35 gürültü, 0,6 sn), Zor (1,5 sn), Usta (3 sn; başlangıç pozisyonunda ~8+ yarım hamle). Seçici 1–4 (`index.html`).
+- `chess-game/casualfish-worker.js`: arama Web Worker'da; sayfa donmaz. Ana iş parçacığı hamle listesini (`e2e4` biçiminde) yollar, motor tekrarları görür; ölümsüzlük hilesinde izinli hamleler listesi gider. Worker yoksa eski minimax yedek olarak kalır. `script.js?v=2`.
+
+### Testler
+
+- Perft (5 standart pozisyon, başlangıç derinlik 4 = 197.281, Kiwipete derinlik 3 = 97.862 dahil) chess.js ile birebir.
+- Tek hamlede mat (Rd8#) ve asılı vezir alma bulundu.
+- Node'da eski motora karşı 10'ar oyun: yeni Orta–eski Orta 10/10, yeni Orta–eski Zor 10/10, yeni Zor–eski Zor 10/10. Kolay yeni başlayanlara göre ayarlandı: eski Kolay'a (rastgele) 10/10, eski Orta'ya 1,5/10, eski Zor'a 0/10.
+- Playwright: Usta'ya karşı 4 hamle; her yanıt geldi, düşünürken ana iş parçacığı gecikmesi 0–11 ms, sayfa hatası yok.
+
+## 2026-10-20 — CasualFish v2 ve FailFish
+
+- Bot adı arayüzde "CasualFish v2". Lobide üç rakip: CasualFish v2, FailFish, Yerel (1'e 1); zorluk seçici yalnızca CasualFish v2'de.
+- `chess-game/casualfish.js` `failSearch` (`LEVELS.fail`, 0,9 sn, en çok 4 yarım hamle): her kök hamle normal aranır (rakibin iyi oynadığı varsayılır) ve FailFish için **en kötü** sonucu veren seçilir; mata yürür, taş verir. Rakibi mat eden ya da pat yapan hamleler hiç oynanmaz (başka hamle varsa), tekrar ve 50 hamle beraberliğinden de kaçınır. Worker yoksa yedek: oyunu bitirmeyen rastgele bir hamle.
+- `script.js?v=3`, `style.css?v=2` (üç sütunlu rakip seçici, FailFish notu), `about.html`.
+
+### Testler
+
+- Node: FailFish (siyah) CasualFish v2 Kolay'a 10/10, Orta'ya 10/10, Zor'a 6/6 kaybetti (Zor'a karşı 7 yarım hamlede mat); rastgele oynayan rakibe karşı 10 oyunda hiç kazanmadı (6 kayıp, 1 beraberlik, 3'ü 300 yarım hamlede bitmedi; rastgele rakip mat etmeye çalışmıyor).
+- Playwright 1280 px: e4, Qh5, Bc4, Qxf7# ile 4 hamlede kazanıldı, "Tebrikler, FailFish'i yendin!"; 390 px lobi ve taşma kontrolü, sayfa hatası yok.
+
+
+## 2026-10-20 — Kesilen arayüz çalışmasının devamı
+
+### Amaç
+
+Claude oturumundaki UI ve oyun geliştirme isteğini `3d16f73` kontrol kaydından sürdürmek; kaydedilmiş HTML ile eksik CSS/JavaScript entegrasyonunu tamamlamak. Önceki turda yenilenen Wood Turning bu çalışmanın dışında tutuldu.
+
+### Yapılanlar ve teknik kararlar
+
+- `index.html`, `script.js`, `style.css`: Kontrol kaydındaki tür filtreleri, kişisel oyun rekorları, ödül adımları ve kazanç çarpanı için responsive tasarım tamamlandı. Filtreleme yalnızca görünümü değiştirir.
+- `xox-game/`: Klasik, 4×4 ve Ultimate kuralları; ilk oyuncu seçimi, raunt geçmişi ve sonuçtan tahtayı inceleme tamamlandı. Zor bot klasikte minimax, büyük tahtalarda sınırlı taktiksel değerlendirme kullanır; arayüz bunu açıklar.
+- `chess-game/`: Hamle geçmişi, rakip özeti ve sonuç ekranını kapatıp bitmiş tahtayı inceleme eklendi; motorlar değiştirilmedi.
+- `snake-game/`: Klasik/Hızlanan/Engelli modları, engellerden kaçınan yem üretimi, altın yem/kombo ve sonuç istatistikleri tamamlandı.
+- `2048-game/`: `cp_2048_run` çereziyle otomatik devam, hamle/en büyük taş göstergesi ve eski animasyon çağrılarının yeni oyuna karışmasını önleyen nesil kontrolü eklendi. Başarılı yükleme kaydı hemen yeniden yazar; hamle yapmadan iki kez yenilemek oyunu kaybettirmez.
+- `owl-game/`, `wood-blocks/`: Erişilebilir duraklatma paneli ve dokunarak parça seçip yerleştirme eklendi; mevcut kontroller korundu.
+- `son-hat/`, `fps-game/`, `vektor/`: Kontrol/amaç rehberleri, klavyeyle menü sekmeleri, okunabilir HUD ve dikey telefon kontrol yerleşimi iyileştirildi. Ağ/ödül kuralları değiştirilmedi.
+- `about.html`, `README.md`: Güncel oyun davranışı ve mevcut yerel görselle AI Generated açıklaması belgelendi. Yeni bağımlılık eklenmedi.
+- `sw.js`, `version.json`: Yayın varlıkları için `python3 tools/build-sw.py` ile yeniden üretilir.
+
+### Hedef durumu
+
+- [x] Kaydedilmiş yarım HTML değişikliklerini tamamlamak ve oyun arayüzlerini geliştirmek.
+- [x] Sözdizimi, HTML bağlantıları ve hedefli oyun mantığı doğrulamaları.
+- [ ] Gerçek tarayıcıda tüm oyunların görsel/mobil dokunma doğrulaması: environment nedeniyle doğrulanamadı; otomatik devam görevi değildir.
+
+### Testler ve sınırlar
+
+- Değişen tüm JavaScript dosyalarında `node --check` ve `git diff --check`: başarılı.
+- Node VM: XOX klasik/4×4/Ultimate kazanma ve yönlendirme, bot/başlangıç/raunt/hile korumaları; gerçek chess.js ile hamle geçmişi; Snake yem/engel/hız/kombo/duraklatma; 2048 birleştirme/eski callback/yükleme/iki yenileme; Owl duraklatma ve Blocks dokunma/sürükleme/iptal: başarılı.
+- 12 HTML sayfasında benzersiz ID, yerel dosya bağlantıları ve ARIA hedefleri: başarılı.
+- Yerel Brave erişilebilirlik ağacında dashboard ödül/filtre/10 oyun ve Hakkında içeriği yüklendi. Ekran yakalama ScreenCaptureKit hatası verdi; sonraki tıklama/klavye etkileşimleri güvenilir çalışmadı. Görsel yerleşim ve gerçek dokunma davranışı doğrulanamadı. VM testleri gerçek DOM/CSS render doğrulaması değildir.
+
+
+## 2026-10-20 — Supabase hesabı ve isteğe bağlı bulut kaydı
+
+### Amaç ve kapsam
+
+E-posta ile giriş/kayıt, kalıcı oturum, çıkış ve kullanıcı tarafından başlatılan cihazlar arası ilerleme aktarımı. Yerel/çevrimdışı oyunlar korunur; otomatik birleştirme ve sunucuda hesaplanan ekonomi kapsam dışıdır.
+
+### Yapılanlar ve teknik kararlar
+
+- `cloud-config.js`: Yeni bağımsız `casualpass` projesinin açık URL/publishable anahtarı; secret/service_role yok. Varsayılan `loginMode: 'magiclink'`.
+- `casual-cloud.js`: Supabase Auth HTTP API’siyle e-posta bağlantısı/isteğe bağlı OTP, URL’den token temizleme ve `/user` doğrulaması, token yenileme, çıkış, oturum değişimi korumaları ve PostgREST kayıt aktarımı. npm metadata okuma izni verilmediğinden SDK indirilmedi; ek paket yok.
+- Kimlik doğrulama token’ları `sb-casualpass-…` localStorage anahtarında tutulur. Bu, eski yalnızca-çerez kuralına auth için sınırlı istisnadır; token’lar oyun yedeğine/buluta alınmaz. Depolama kapalıysa oturum sayfa ömrüyle sınırlıdır. Web Locks desteklendiğinde sekmeler arası yenileme sıraya alınır.
+- `account-ui.js`, `index.html`, `style.css`: E-posta girişi, hata/bekleme durumları, yeniden gönderim beklemesi, hesap bilgisi/çıkış ve açık kullanıcı eylemiyle bulut yükleme/indirme/önizleme. Üstteki eski yerel oturum düğmesi `Oyuncuyu başlat` olarak ayrıştırıldı.
+- `casual-save.js`: Mevcut tam oyun yedeği `build()` API’siyle yeniden kullanılır. Buluttan getirme mevcut dosya doğrulamasını kullanır; geçersiz kayıt otomatik uygulanmaz.
+- `supabase/schema.sql`: Mevcut RLS şeması kullanıldı. Kullanıcı yeni projeyi kendisi oluşturup şemayı çalıştırdı; canlı anonim SELECT isteği 401/42501 (permission denied) döndü. Canlı iki kullanıcı arasında RLS izolasyonu henüz test edilmedi.
+- `supabase/email-otp.html`: SMTP ile isteğe bağlı sayısal kod şablonu. Ücretsiz varsayılan e-posta hizmeti özel şablon düzenlemeyi engellediğinden varsayılan bağlantı akışı seçildi. Genel alıcılar için SMTP gerekir; bu bir yayın öncesi kurulum gereksinimidir.
+- `README.md`, `about.html`: Hesap/bulut/yerel kayıt farkı, ortak cihaz davranışı ve kurulum belgelendi. Bulut kaydı son yükleyen tarafından değiştirilir; otomatik birleştirme yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] Hesap arayüzü, auth yaşam döngüsü ve elle bulut aktarımı uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 12 test başarılı (auth, yenileme, çıkış, yarışlar, çevrimdışı, kayıt/token ayrımı, bağlantı dönüşü).
+- [x] Değişen JS dosyalarında `node --check`, HTML ID/ARIA/form bağları ve `git diff --check`: başarılı.
+- [x] Canlı `/auth/v1/settings`: e-posta giriş/yeni kayıt açık, e-posta doğrulaması gerekli. Anonim tablo okuma engellendi.
+- [x] Gerçek e-posta bağlantısı sonrası doğru hesapla giriş ve temiz sekmede kalıcı oturum doğrulandı. Kullanıcının açık yükleme/geri getirme onayıyla mevcut oyun kaydı Supabase’e yüklendi, 3 kayıt alanı doğrulanarak geri getirildi ve aynı yedek yerel oyuna uygulandı. Uygulama yenilemesinden sonra hesap açık, Snake rekoru 10, oynanan oyun 1 ve Liquid teması korundu.
+- [ ] İki ayrı kullanıcı arasında canlı RLS izolasyonu ve farklı fiziksel cihazda aktarım: bu testte çalıştırılmadı.
+- [x] Kullanıcının tekrar deneme isteğiyle Site URL `https://casualpass.github.io/` ve Redirect URL `http://127.0.0.1:4173/` panelde doğrulandı; sayfa yenilendikten sonra da değerler korundu. Yerel hesap formu Brave erişilebilirlik ağacında yüklendi; e-posta giriş testi ve aynı tarayıcıda bulut yükle/geri getir/uygula akışı başarılı (yukarıdaki kayıt).
+
+Tarayıcı otomasyonu pencere/ekran yakalama hataları verdi. Hatalı editör SQL’i çalıştırılmadı; kullanıcı doğru şemayı ayrı sorguyla çalıştırdı. Canlı SMTP yapılandırılmadı. Bu eksikler otomatik görev kuyruğu değildir.
+
+
+## 2026-10-20 — Kullanıcı adı ve şifreyle giriş
+
+### Amaç ve kararlar
+
+Kullanıcının güncel isteğiyle SMTP/e-posta bağlantısı yerine kullanıcı adı + şifre akışına geçildi. Bu kayıt, yukarıdaki e-posta girişinin güncel ürün davranışı olarak değerlendirilmesini geçersiz kılar.
+
+- `casual-cloud.js`: Supabase Auth `/signup`, parola grant’i ile yeni hesap oluşturma. Kullanıcı adı küçük harfe çevrilen 3–24 ASCII harf/rakam/alt çizgidir; dahili Auth kimliği `<ad>@accounts.casualpass.invalid` olur. Parola Supabase tarafından bcrypt hash olarak saklanır; kendi parola tablosu veya istemci hash deposu eklenmedi. Kullanıcının son düzeltmesiyle uygulama en az 6 karakter, en fazla 72 UTF-8 bayt kabul eder.
+- Canlı Auth loglarında eski hesabın `PUT /user` çağrısı sırasında `Mail.send` ve HTTP 400 görüldü. Supabase kalıcı hesaplarda e-posta değişimini yeni kayıt autoconfirm ayarından bağımsız doğrulatır. Bu hatalı geçiş kaldırıldı: eski hesap açıkken ayrı kullanıcı adı hesabı oluşturulur, yerel ilerleme korunur ve kullanıcı manuel bulut yüklemesiyle aktarır. Eski Auth ID/bulut kaydı değiştirilmez. Başarısız kayıt eski oturumu korur.
+- `account-ui.js`, `index.html`, `style.css`: Giriş/kayıt, şifre tekrarı ve eski hesap açıkken yeni kullanıcı adı hesabı oluşturma formu. E-postayla şifre sıfırlama yoktur; arayüzde açıklanır. Yeni parolayı kullanıcı kendisi girip gönderir.
+- `cloud-config.js`: `loginMode: 'password'`. Eski e-posta/OTP fonksiyonları yalnızca kod uyumluluğu için kaldı; yeni arayüzde sunulmaz.
+- Kullanıcının işlem anındaki açık onayıyla yalnızca CasualPass projesinde **Confirm email** kapatıldı. Canlı `/auth/v1/settings` sonucu `mailer_autoconfirm: true`, `disable_signup: false`; SMTP bu kullanıcı adı akışı için gerekli değil.
+- README/Hakkında ve PWA varlık sürümleri güncellendi. Şema ve oyun/ödül kuralları değişmedi.
+
+### Hedefler ve testler
+
+- [x] Kullanıcı adı/şifre kodu ve eski hesaptan yeni hesap oluşturma formu uygulandı.
+- [x] `node --test tools/test-cloud.cjs`: 17 test başarılı. Yeni testler kullanıcı adı eşleme, parola byte sınırı, parolanın saklanmaması, yeni hesap sahipliği, hatada eski oturumun korunması ve güvenli hata mesajlarını kapsar.
+- [x] `node --check`, HTML ID/ARIA/form bağları, `git diff --check`: başarılı; `build-sw.py` çalıştırıldı.
+- [x] E-posta onayının kapandığı canlı API’den doğrulandı.
+- [ ] Gerçek kullanıcı adı/şifre ile yeni hesap oluşturma ve yeniden giriş: henüz doğrulanmadı. Eski hesabı dönüştürme denemesi canlı loglarda başarısız; bu yol kaldırıldı.
+
+Kullanıcının son isteğiyle form ve istemci parola alt sınırı 6 karaktere indirildi; sunucunun varsayılan alt sınırı değiştirilmedi. 6 karakterin kayıt/giriş kabulü, 5 karakterin reddi hedefli testlerle doğrulandı. E-postasız hesaplarda e-posta üzerinden parola kurtarma yoktur.
+
+
+## 2026-10-20 — Açık sekmelerde otomatik güncelleme
+
+- Kullanıcı isteği: GitHub push durumunu doğrulamak ve otomatik güncellemeyi güçlendirmek. `18b4bc1` uzak PR dalında doğrulandı; PR #23 taslak ve main’e birleştirilmedi.
+- `shared-settings.js`: Görünür sekmede dakikada bir, çevrimiçi olunca ve sekmeye dönünce sürüm kontrolü. Worker kaydı beklenir, HTTP cache kullanılmadan worker güncellemesi denenir; sürüm çerezi daha önce yazılmış olsa da başarısız worker güncellemesi sonraki kontrolde yeniden denenir.
+- Hesap formunda odak/değer veya bekleyen hesap işlemi varsa hub yenilemesi ertelenir; uygun olduğunda 5 saniyelik kontrol uygular. Oyun ortasında otomatik yenileme yapılmaz. HTML betik sürümleri ve PWA varlıkları güncellendi.
+- `johnappleseed` kullanıcı adıyla gerçek kayıt ve oturum açılması Brave’de görüldü; yerel Snake rekoru 10 ve Liquid teması korundu. Yeni hesapla çıkış/yeniden giriş henüz test edilmedi.
+- Doğrulama: `node --test tools/test-updates.cjs` 5/5; periyodik kontrol/bağlantı dönüşü, başarısız güncellemeyi tekrar deneme, form sırasında erteleme, oyun ortasında yenilememe ve worker olmadan güncelleme. `node --check shared-settings.js` ve `git diff --check` başarılı. Gerçek tarayıcıda yeni bir uzak sürüm yayınlanarak güncelleme testi yapılmadı.
+
+
+## 2026-10-20 — Son Hat 3B köprü savaşı
+
+### Amaç ve kapsam
+
+Kullanıcının Last War Google Play bağlantısını referans alarak Son Hat’ın görünür savaş deneyimini geliştirmek. Resmî mağaza açıklaması ve köprü/sayı kapısı/sandık görseli incelendi; APK kurulmadı. Bu çalışma üs/hesap mimarisini veya diğer oyunları değiştirmez.
+
+### Yapılanlar ve kararlar
+
+- `son-hat/battle-view.js`: Depoda zaten bulunan Three.js r128 ile perspektif kamera, ışık/gölge, animasyonlu instanced asker/zombi parçaları, 3B kapı/konteyner/boss/helikopter, mermi/parçacıklar ve sayı etiketleri. Modeller özgün kod geometrisidir; referans oyunun varlıkları kopyalanmadı. Canvas 2D çizimi WebGL yokluğunda/bağlam kaybında yedek olarak korunur.
+- `son-hat/script.js`: İlk üç bölümde öğretici ve sabit asker/silah/helikopter seçimleri; başlangıç silahının hızı ve açılış sandığı dayanıklılığı dengelendi. Elle hava desteği (18 sn), boss’un kaçılabilir şerit saldırısı (1,35 sn uyarı), birlik/öldürme/kalkan/boss HUD’u eklendi. `cp_sonhat_v2` ve mevcut ödül/hile korumaları korunur.
+- `son-hat/index.html`, `style.css`: Masaüstünde 620 px savaş sahası, telefonda tam genişlik; destek düğmesi ve kontrol açıklamaları. README ve PWA listesi güncellendi.
+
+### Doğrulama
+
+- `node --test tools/test-son-hat.cjs`: 7 test başarılı; bölüm üretimi, asker kapıları, silah sandığını vurarak kazanma/çarpmada ödül almama, hava desteği beklemesi, boss saldırısından kaçma, hilede kayıt engeli ve yükseltmesiz Bölüm 1 kazanılabilirliği.
+- Brave’de gerçek WebGL savaş sahası açıldı; asker kapılarından geçerken birlik 1’den 7’ye yükseldi, 3B kapı/sandık/zombi ve mermiler çizildi.
+- Son kamera ayarı ve gölgeli 3B görünüm Brave ekran görüntüsünde doğrulandı. Klavyeyle sol şeride yönlendirme sonrası Makineli silahı, 11 kişilik birlik ve güncellenen HUD görüldü. Sonraki devam/hava desteği tıklamaları CUA’da duraklatma ekranını değiştirmedi; canlı hava desteği testi tamamlanamadı. Gerçek telefon dokunma/FPS ve WebGL bağlam kaybı testi çalıştırılmadı; bunlar VM testiyle doğrulanmış sayılmaz.
+- `node --check` (iki JS), HTML ID/label/yerel dosya ve script hedefleri, `git diff --check`: başarılı. Yeni PWA varlıkları `build-sw.py` ile üretildi.
+
+
+## 2026-10-20 — Nuts & Bolts renk bulmacası
+
+### Amaç ve kapsam
+
+Önce yayıncı mağaza açıklamalarından somun ayırma kurallarını araştırıp koleksiyona özgün bir oyun eklemek. Mevcut native kabuk PR’sinden bağımsız `codex/nuts-and-bolts` dalı main’den açıldı; diğer oyunlar ve hesap mimarisi değiştirilmedi.
+
+### Yapılanlar ve teknik kararlar
+
+- `nuts-bolts/engine.js`: Bağımsız saf motor. Tek üst somun, aynı renk/boş hedef, dört somun kapasitesi. Kazanmak için her dolu cıvata dört aynı renk somun içermeli. 30 sabit tohumlu bölüm, 3–8 renk ve iki ek cıvata yuvası. Çözülmüş düzenden ters hamlelerle üretilir; her bölümün ileri yönde geçerli çözüm tanığı vardır. Bölüm başında iki cıvatanın mutlaka tamamen boş olması şart değildir.
+- `nuts-bolts/index.html`, `style.css`, `script.js`: Özgün CSS metal cıvata/somun görünümü, renk simgeleri, uygun hedefler, dokunma/fare/klavye, geri alma, çift basışla yeniden başlatma, bölüm seçimi ve hamle sayacı. Süre veya ücretli yardım yok. Geri alma geçmişi bellekte en fazla 500 hamledir ve yenilemede sıfırlanır.
+- `cp_nuts_v1` çerezinde geçerli tahta, bölüm, hamle ve tamamlanan bölümler; ortak bulut/dosya yedeği bu öneki zaten kapsar. Bozuk kayıt reddedilir. Hileli oturum kaydedilmez. İlk tamamlama ortak istatistiğe eklenir; CM ödülü eklenmedi.
+- Dashboard kartı/zekâ filtresi, README ve PWA listesi güncellendi. Yalnızca bu web sürümü yayınlandıktan sonra native kabukta da görünür; yeni APK/IPA gerekmez. Bu görevde deploy yapılmadı.
+
+### Hedef durumu ve doğrulama
+
+- [x] Araştırma, oyun, dashboard bağlantısı ve PWA önbellek entegrasyonu.
+- [x] `node --test tools/test-nuts-bolts.cjs tools/test-nuts-ui.cjs`: 12 test başarılı; 30 bölümün çözümü, renk sayıları, geçersiz hamleler, kazanma koşulu, kayıt doğrulama, UI geri alma/sıfırlama/devam, tek tamamlama ve hile koruması.
+- [x] Brave’de gerçek oyun çizimi, somun seçimi, aynı renk üstüne taşıma (hamle 0→1) ve geri alma (1→0) doğrulandı.
+- [x] JS sözdizimi, yerel HTML dosya hedefleri ve `git diff --check`; `python3 tools/build-sw.py` başarılı.
+- Fiziksel telefon dokunma, native kabuk içi çalışma ve gerçek offline yeniden açılma bu görevde test edilmedi. UI VM testleri bu kontrollerin yerine geçmez.
+
+
+## 2026-10-20 — Maze Paint
+
+### Amaç ve kapsam
+
+Yayıncı kaynaklarından kaydırarak tüm kareleri boyama mekaniğini araştırıp yeni oyun eklemek. Diğer oyunların kuralları, hesaplar ve native kabuk kapsam dışı.
+
+### Yapılanlar ve teknik kararlar
+
+- `maze-paint/engine.js`: Bağımsız saf motor; tek yönde duvara/sınıra kadar kayma, yolun tamamını boyama, boyalı kareden tekrar geçme ve tüm açık karelerde kazanma. 24 sabit tohumlu 5×5–8×8 bölüm. Üretim durma noktalarının ulaşılabilirliğini ve açık karelerin kapsanmasını kontrol eder; yön dizisiyle tam çözüm üretir. Üretimde sınırlı 4000 aday, garanti çözülen kıvrımlı koridor yedeği vardır.
+- `maze-paint/index.html`, `style.css`, `script.js`: Özgün CSS labirent/top/renk izi, kaydırma, yön düğmeleri, oklar/WASD, ilerleme göstergesi, 300 hamlelik bellekte geri alma, çift basışla yeniden başlatma ve bölüm seçimi. Reduced-motion/efekt ayarına uyulur.
+- `cp_maze_v1`: Doğrulanmış konum/boyalı kareler/bölüm/hamle/tamamlanan bölümler. Mevcut dosya/bulut yedeği kapsar; bozuk kayıt başlangıca döner. İlk tamamlama istatistiği tek kez yazılır; hileli oturum kalıcı kayıt oluşturmaz. CM ödülü yok.
+- Dashboard zekâ kartı, README ve PWA listesi güncellendi. Native değişikliği veya deploy bu görevde yapılmadı.
+
+### Hedef durumu ve testler
+
+- [x] Araştırma ve temel mekanik, 24 çözülebilir bölüm, dashboard ve PWA entegrasyonu.
+- [x] `node --test tools/test-maze-paint.cjs tools/test-maze-ui.cjs`: 6 test başarılı; tüm çözüm dizileri, durma/boyama, bozuk kayıt, buton/kaydırma/klavye, kısa/iptal hareketler, geri alma/sıfırlama/devam, tek kazanma ve hile koruması.
+- [x] Brave: gerçek çizim ve sağ okla hareket; hamle 0→1, boyalı kare 1/18→2/18 doğrulandı.
+- [x] JS syntax, HTML yerel hedefleri, PWA üretimi ve `git diff --check`.
+- Fiziksel telefon kaydırma, native runtime ve gerçek offline açılış test edilmedi; VM testleri bu kontrollerin yerine geçmez.
+
+## 2026-10-20 — Titreşim (haptic) geri bildirimi
+
+### Amaç
+
+Oyunlara dokunsal geri bildirim eklemek ve dashboard'dan açılıp kapatılabilir yapmak. Son Hat, aynı anda başka bir agent tarafından düzenlendiği için kapsam dışı bırakıldı.
+
+### Yapılanlar
+
+- `shared-settings.js`: `cpSettings.vibration` (varsayılan açık, `casualpass_settings_v2` çerezinde), `playHaptic(desen)` ve `CasualSettings.vibrate` / `vibrationSupported` eklendi. Desenler: `tap`, `move`, `success`, `win`, `fail` veya ham Vibration API dizisi. `navigator.vibrate` yoksa (iOS Safari) dokunmatik cihazlarda gizli `<input type="checkbox" switch>` etiketine tıklanarak iOS 18+ Taptic tıkı tetiklenir; bu tıklama `stopPropagation` ile oyun dinleyicilerine ulaşmaz.
+- Oyunlar `typeof playHaptic === 'function'` korumasıyla çağırır: Snake (yem, oyun sonu), 2048 (hamle/birleşme, oyun sonu), Chess (oyuncu ve bot hamlesi, oyun sonu), Minerva Owl (kanat, çarpma), Wood Blocks (yerleştirme, silme/kombo, tıkanma), Wood Turning (`playSound` üzerinden; ses kapalıyken de titreşir).
+- `index.html`, `script.js`, `style.css`: Temalar panelinin başlığına, bakiye rozetinin yanına "Titreşim" düğmesi (`aria-pressed`); titreşimi desteklemeyen masaüstü tarayıcılarda gizli. Üst çubuk (Oyunlar, Hakkında, Hesabım, oturum) 375 px'te dolu olduğu için oraya konmadı.
+- İlk titreşim çalışmasında XOX/Arena FPS/Vektör/Nuts & Bolts/Maze Paint bağlı değildi; aşağıdaki remaster çalışmasında bağlandı.
+- Sürümler: `style.css?v=25`, dashboard `script.js?v=16`, Owl `script.js?v=3`, Wood Blocks `script.js?v=2`, Wood Turning `script.js?v=12`. `shared-settings.js` adresi `?v=10` olarak kaldı; service worker kurulumda dosyaları `cache: 'reload'` ile tazelediği için `build-sw.py` yeterli.
+- `sw.js`, `version.json`: `python3 tools/build-sw.py` ile yeniden üretildi.
+
+### Testler
+
+- `node --check` değişen betiklerde başarılı; `git diff --check` temiz.
+- Tarayıcı (375 px, `navigator.vibrate` kaydedici ile): düğme kapatınca titreşim durur, açınca `success` deseni çalar ve ayar çereze yazılır; 2048 hamleleri `tap`/`move`, Owl kanat `tap` ve çarpma `fail` üretti; konsol hatası yok, yatay taşma yok.
+- iOS yolu Vibration API kaldırılarak simüle edildi: switch toggle sayısı desen darbeleriyle eşleşti, tıklama `document`'a ulaşmadı. Gerçek iPhone/Android cihazda hissedilen titreşim: Doğrulanması gerekiyor.
+
+### Bilinen sorunlar
+
+- iOS'ta switch hilesi yalnızca kullanıcı etkileşimi sırasında güvenilir çalışır; zamanlayıcıyla gelen olaylar (ör. Snake'in çarpması, botun hamlesi) iOS'ta titremeyebilir.
+- Sürümsüz sayfalar (Snake, 2048, Chess, XOX) yeni betiği GitHub Pages önbelleği dolunca alır.
+
+
+## 2026-10-20 — Claude remaster çalışmasını devralma
+
+### Amaç ve kapsam
+
+Claude’daki kullanıcının “görsel + his + oynanış” isteğini, Son Hat dışındaki 11 oyunda tamamlamak. Asıl repo ve Claude worktree’leri değiştirilmedi; `codex/games-remaster`, mevcut `feat/haptics` PR #28 tabanından açıldı. Ayrı oyun sahipliğiyle üç ajan çalıştı, ortak dosyalar tek yerde birleştirildi. Yeni kopya PR oluşturmak yerine #28 güncellendi.
+
+### Yapılanlar ve teknik kararlar
+
+- `2048-game/`: Sayı atölyesi görünümü, hedef/boşluk/hamle geri bildirimi, son hamleyi geri alma (U). Sonuç kaydedildikten sonra geri alma kapalı; rekor korunur.
+- `xox-game/`: Taktik kulübü görünümü, son/kazanan hamle vurgusu; bot zamanlayıcısını iptal eden, bot cevabını da geri alan devam eden tur undo. Ultimate zorunlu tahta durumu geri gelir.
+- `chess-game/`: Satranç masası, alınan taşlar/taş değeri özeti; FEN’i değiştirmeden çevirme ve buna uygun klavye yönleri.
+- `snake-game/`: Bağlı yuvarlak gövde, altın elma/kombo sayaçları ve sıradaki yön vurgusu; mevcut mod ve ödül davranışı korunur.
+- `owl-game/`: Dört gökyüzü evresi; skor 12’den sonra işaretli hareketli sütunlar, yumuşatılmış başlangıç geçişleri. Duraklatmada hareket/zaman donar.
+- `wood-blocks/`: Atölye görünümü, yerleşim puan tahmini, oyun başına bir undo (Z), sona erme penceresinde de geri alma. Tahta/tepsi/skor/seri beraber geri gelir, sonuç kaydedilince kilitlenir.
+- `fps-game/`, `vektor/`: Ateş düğmesinde pointer capture ile sürükleyerek nişan; iptal/blur temizliği, titreşim frekans sınırı ve HUD yenilemesi. Vektör isabet/kafa vuruşu işareti; FPS çömelme doğruluğuna uygun reticle. Ağ protokolü değiştirilmedi.
+- `wood-turning/`: %28 hızda ince kesim, temas/fazla kesim/evre hazır geri bildirimi, gerçek zımpara yüzdesi; odak kaybında alet durur.
+- `nuts-bolts/`: Claude’un yarım solver’ı gözden geçirilerek bağlandı; her kaynak için boş hedef simetrisi düzeltildi, 3000 düğüm sınırı ile ipucu ve tamamlanan renk özeti. İpucu optimal çözüm iddiasında bulunmaz ve zor kullanıcı konumlarında sonuçsuz kalabilir.
+- `maze-paint/`: Claude’un yarım durak bölümü motoru entegre edildi; ilk 24 düzen aynı, 12 yeni halkalı durak bölümü, toplam 36. Başka boyanmamış kareye yönlendiren sınırlı durma noktası araması ipucu verir.
+- `shared-settings.js`: Titreşim kapatıldığında/gizlenince bekleyen iOS deneme darbeleri iptal edilir; tekrar eden desenler birikmez. Gerçek iOS haptic başarısı garanti edilmez. Kayıt anahtarları, CM formülleri ve tavanlar korunur.
+- README, sayfa varlık sürümleri ve PWA listesi güncellendi. Yeni runtime bağımlılığı yok.
+
+### Hedef durumu ve doğrulama
+
+- [x] 11 oyuna gerçek entrypoint entegrasyonu; kullanılmayan engine dosyaları eklenmedi.
+- [x] `node --test tools/*.cjs`: 66/66 başarılı (mevcut auth/yedek/update/Son Hat testleri dahil). Yeni VM testleri actual controller fonksiyonlarını çalıştırır; node test runner action test dosyasını tek başarılı test olarak sayar.
+- [x] 30 Nuts çözümü, 36 Maze çözümü ve tüm Maze ipuçları test edildi; yeni stop kareleri çalışıyor. İlk 24 düzen üretimi korunur.
+- [x] Değişen JS/CJS sözdizimi, 11 HTML’in yerel dosyaları/benzersiz ID’leri, `git diff --check`, PWA üretimi. `git diff main -- son-hat` boş.
+- [x] Kilit açıldıktan sonra Brave’de 11 giriş ekranı yüklendi. Maze/Nuts ipuçları gerçek düğmeyle hamle/yön önerdi; 2048’de 2+2 birleşmesi (skor 4) ve U ile eski tahta/skor 0’a dönüş, XOX’ta oyuncu+bot hamlesinin birlikte geri alınması, satrançta başlangıç tahtasının koordinatlarla çevrilmesi ve Wood Turning ince ayar toggle doğrulandı.
+- Snake oyun içi HUD, Owl gözlemevi menüsü ve Wood Blocks oyun içi araç çubuğu açıldı. Arena FPS bot maçı gerçek 3B saha/HUD çizdi, Vektör bot maçı satın alma evresine geçti; her ikisi duraklatıldı. Wood Blocks gerçek parça yerleştirme/undo akışı bu geçişte doğrulanmadı (VM kapsamındadır).
+- Fiziksel telefon/mobil viewport düzeni, hissedilen titreşim, uzun Owl uçuşunda hareketli sütunlar, yeni Maze duraklarının gerçek oyunu ve iki cihazlı multiplayer bu geçişte test edilmedi. Bunlar otomatik test veya giriş ekranı yüklenmesiyle doğrulanmış sayılmaz.
+- Bu çalışma PR hazırlığıdır; main’e birleştirme/deploy yapılmadı. Claude’daki eski oturumlar arşivlenmedi veya yeniden başlatılmadı.
+
+
+## 2026-10-20 — Android ve iOS web uygulaması kabukları
+
+### Amaç ve kapsam
+
+Kullanıcı Android APK ve iPhone/iPad kabuğunu seçti; oyun sürümleri webden gelsin, gelecekte gamepad eklenebilsin. Bu çalışma gerçek gamepad eşlemesi veya mağazaya yayınlamayı kapsamaz.
+
+### Teknik kararlar
+
+- `native/android`: Java 17 / AGP 8.9.2 / SDK 35, Android 8+ WebView kabuğu. Canlı HTTPS kökü açılır, depolama ve çerezler korunur. Origin sınırlı gezinme, dış bağlantılar, sistem geri, hata/yeniden dene ekranı, JS onayları, kullanıcı dosya seçicisi ve origin/main-frame sınırlı AndroidX WebMessageListener kayıt paylaşımı. Geniş dosya izni yok.
+- `native/ios`: iOS/iPadOS 16+ SwiftUI/WKWebView Xcode projesi; kalıcı veri deposu, app-bound domain, safe area, yatay/dikey ekran, JS onayları ve sınırlı JSON paylaşım köprüsü. Gerçek cihaz dağıtımı için Apple imzası gerekir; kullanıcı hesabı/sertifikası eklenmedi.
+- Native sürüm 1.0.0(1), web sürümü `version.json` ile ayrı. Oyunlar pakete gömülmez. İlk yükleme internet gerektirir; offline önbellek ve yeni web sürümleri mevcut SW tarafından yönetilir. Native API değişimi yeni APK/IPA gerektirir. Gamepad desteği henüz uygulanmadı.
+- `casual-save.js`: Sınırlı native köprü varsa dosya dışa aktarmayı sistem seçicisine yönlendirir; iptal/hata sonucu beklenir. Köprü yoksa mevcut web paylaşımı kalır.
+- `.github/workflows/android-app.yml`: Android değişikliği pushunda test debug APK üretir. Üretim imzası yok; geçici CI debug anahtarı build’ler arasında değişebilir. `tools/build-sw.py` native kaynak/build ürünlerini web önbelleğine almaz.
+- `native/README.md`: Kurulum/derleme, iki sürüm katmanı, PWA/kabuk veri depolarının ayrı oluşu ve gelecekte gamepad sınırları.
+
+### Doğrulama
+
+- Xcode Debug iOS Simulator build: başarılı. Simülatör çalıştırma ilk ortam kontrolünde CoreSimulator bağlantı/izin hatası verdi; gerçek cihaz ve native runtime akışları henüz doğrulanmadı.
+- iOS Release cihaz hedefi `CODE_SIGNING_ALLOWED=NO`: başarılı; bu imzasız çıktı iPhone’a doğrudan kurulamaz. Simülatör/cihaz build başarısı runtime doğrulaması değildir.
+- GitHub Actions Android build (39461367812, commit 1cbd700): build ve APK imza doğrulaması başarılı. 1.2 MB debug APK indirildi, ZIP bütünlüğü/manifest/classes.dex kontrol edildi. Gradle 8.11.1 wrapper resmi kaynaktan alındı, JAR SHA-256 doğrulandı ve dağıtım checksum’u sabitlendi. Android/iOS kaynak paketleri, iOS unsigned cihaz/simülatör paketleri ve SHA-256 listesi sohbet outputs dizinine hazırlandı.
+- `node --test tools/test-native-save.cjs tools/test-cloud.cjs`: 23/23 başarılı; native dosya sonucu/iptal/hata, çifte dışa aktarma engeli, web fallback ve auth/yedek ayrımı. Sözdizimi/diff kontrolleri başarılı.
+- Gerçek Android/iPhone/iPad kurulumu, offline yeniden açılış, native giriş ve dosya seçicisi etkileşimleri çalıştırılmadı. iOS imzalama ve mağaza yayını yapılmadı.
+
+
+## 2026-10-20 — Maze Paint zamanlama ve native titreşim düzeltmesi
+
+### Amaç ve kapsam
+
+Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone titreşiminin durumunu sordu. Önceki titreşim sadece web çağrılarıydı; mevcut kabukta native köprü yoktu. Bu çalışma Maze Paint senkron animasyonunu ve native köprüyü ekler, diğer oyun mekaniklerini değiştirmez.
+
+### Yapılanlar ve kararlar
+
+- `maze-paint/script.js`, `style.css`: Kalıcı kare/top DOM’u; boya ve konum tek RAF saatinde, kare ancak top merkezi ulaşınca boyanır. Hamle sırasında son yön en fazla bir giriş olarak kuyruklanır. Eski kare/CSS/WAAPI animasyonu yarışları kaldırıldı. Bitiş düğmesi/mesajı varışa kadar bekler. İptal, gizlenme ve bölüm değişimi eski RAF’ı geçersiz kılar. Kayıt, hareket başladığında geçerli son durumu korur; yeniden açılış yarım hamle bırakmaz.
+- Var olan PR #25’in native kaynakları güncel main ile birleştirildi; dosya paylaşımı köprüsü ve native önbellek dışlama kuralı korundu. Native sürüm 1.0.1 (2).
+- `native/ios/.../BrowserController.swift`: Yalnızca güvenilir HTTPS ana frame’den gelen sabit isimli `casualpassHaptic` mesajları; UIKit selection/impact/notification. Aktif uygulama/host kontrolü ve kısa darbe frekans sınırı.
+- `native/android/.../MainActivity.java`, manifest: Aynı origin/frame sınırlı ayrı `CasualPassHaptics` WebMessageListener; VIBRATE izni, sabit VibrationEffect desenleri, odak/arka plan/cancel koruması.
+- `shared-settings.js`: Köprü varsa native tercih, yoksa web fallback; ayar kapatma/gizlenme cancel mesajı. Eski kabuk yeniden derlenmeden native özellik kazanmaz; web animasyonu paket güncellemesi istemez.
+
+### Doğrulama
+
+- [x] `node --test tools/*.cjs`: 77/77 başarılı. Yeni RAF testleri boya/top sırası, DOM korunması, hızlı yön kuyruğu, iptal ve varışta bitişi doğrular; native dispatch/fallback/ayar kapatma testleri eklendi.
+- [x] iOS cihaz hedefi imzasız build ve mevcut Apple Development kimliğiyle imzalı build başarılı. `codesign --verify --deep --strict` başarılı; 1.0.1 development IPA outputs’a hazırlandı.
+- [x] Android Actions 39488669389 (76dd1db): assembleDebug ve APK imza kontrolü başarılı; 1.0.1 APK indirildi, ZIP bütünlüğü doğrulandı.
+- [x] `devicectl device install app`: kullanıcının bağladığı iPhone 16e’ye io.github.casualpass.app başarıyla kuruldu. Fiziksel olarak hissedilen titreşim henüz doğrulanmadı.
+- Yerel Brave’de yeni animasyon kodlu sayfa ve 4. bölüm açıldı; hamle kontrolü kullanıcı pencere değişimiyle kesildi. Tek kare zamanlaması otomatik RAF testinde doğrulandı, gerçek telefonda akıcılık henüz doğrulanmadı.
+
+
+## 2026-10-20 — iOS titreşim fallback odağı ve Owl duraklama
+
+- Kullanıcı 1.0.1 kurulumundan sonra titreşim hissetmediğini ve Owl’da “Uçuş duraklatıldı” gördüğünü bildirdi; fiziksel haptic başarısı doğrulanmış sayılmaz.
+- `shared-settings.js`: Gizli label/checkbox tıklaması tamamen kaldırıldı; iOS’ta native köprü veya desteklenen Vibration API dışında odak değiştiren fallback yok. `hapticBackend()` eklendi; destek algısı artık dokunmatik ekranı titreşim desteği sanmaz.
+- `owl-game/script.js`: Gizli yardımcıdan gelen odak olayı uçuşu durdurmaz; gerçek odak/sekme kaybında duraklama korunur. Regresyon testi bu iki durumu ayırır.
+- `script.js`: Dashboard native köprü algıladığında “Titreşim · Uygulama” gösterir. Tüm HTML ortak helper referansları `v=11`, Owl script `v=5`, dashboard script `v=17`; eski v10 dosyasının cache’den gelmesi engellenir. Son Hat’ta yalnızca ortak helper URL’si değişti, oyun kodu değişmedi.
+- `node --test tools/test-remaster-haptics.cjs tools/test-remaster-arcade.cjs`: 10/10 başarılı. Native önceliği, kapatma, gizli kontrol oluşturmama ve Owl gerçek/yardımcı odak ayrımı doğrulandı. Gerçek telefonda his ve uçuş kullanıcıyla yeniden doğrulanmalıdır. Native paket 1.0.1 değişmedi; bu düzeltme webden gelir.

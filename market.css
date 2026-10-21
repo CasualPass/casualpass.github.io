@@ -1,0 +1,48 @@
+.market-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.market-hero h1 { margin: 0; font-size: clamp(38px,6vw,64px); letter-spacing: -.06em; }
+.market-hero p:not(.eyebrow) { max-width: 560px; color: var(--dashboard-muted); line-height: 1.7; font-size: 14px; }
+.market-tools { padding: 18px; display: grid; grid-template-columns: minmax(180px,2fr) 1fr 1fr auto; align-items: end; gap: 12px; margin-bottom: 28px; }
+.market-tools label, .market-dialog label { display: grid; gap: 7px; color: var(--dashboard-muted); font-size: 12px; }
+.market-tools input, .market-tools select, .market-dialog input, .market-dialog textarea, .market-dialog select { width: 100%; min-width: 0; min-height: 44px; padding: 11px; color: var(--cp-text); background: var(--cp-bg); border: 1px solid var(--dashboard-border); border-radius: 10px; font: inherit; }
+.market-section { margin: 26px 0; }
+.market-section .game-grid { grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); }
+.market-section .game-card { min-height: 218px; }
+.market-section .game-card:last-child { grid-column: auto; }
+.market-count { color: var(--dashboard-muted); font-size: 12px; }
+.community-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 14px; }
+.community-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--dashboard-border); border-radius: 16px; background: var(--dashboard-surface); overflow: hidden; }
+.community-card > a { display: flex; flex-direction: column; flex: 1; padding: 20px; color: var(--cp-text); text-decoration: none; }
+.community-card:hover { border-color: var(--dashboard-accent); }
+.community-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 24px; border-radius: 13px; background: color-mix(in srgb,var(--dashboard-accent) 15%,transparent); color: var(--dashboard-accent); }
+.community-icon > svg { display: block; width: 26px; height: 26px; }
+.community-card small { color: var(--dashboard-accent); font-size: 10px; letter-spacing: .06em; }
+.community-card h3 { margin: 10px 0 0; font-size: 22px; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.community-card p { color: var(--dashboard-muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.community-author { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--dashboard-border); color: var(--dashboard-muted); font-size: 11px; overflow-wrap: anywhere; }
+.community-card > button { align-self: flex-start; margin: 0 20px 18px; }
+.market-status { color: var(--dashboard-muted); font-size: 13px; line-height: 1.7; }
+.market-empty { padding: 36px; text-align: center; color: var(--dashboard-muted); }
+.market-dialog { width: min(540px,calc(100% - 28px)); max-height: calc(100dvh - 32px); padding: 26px; color: var(--cp-text); background: var(--cp-bg); border: 1px solid var(--dashboard-border); border-radius: 20px; }
+.market-dialog::backdrop { background: rgba(0,0,0,.7); }
+.market-dialog h2 { margin-top: 0; }
+.market-dialog form { display: grid; gap: 14px; }
+.market-dialog p { color: var(--dashboard-muted); font-size: 13px; line-height: 1.7; }
+.market-dialog textarea { min-height: 100px; resize: vertical; }
+.market-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.market-dialog button:disabled { opacity: .5; cursor: default; }
+.market-section[hidden], .market-empty[hidden], .game-card[hidden], #market-more[hidden] { display: none; }
+@media(max-width:720px) { .market-hero { align-items: flex-start; flex-direction: column; gap: 4px; } .market-tools { grid-template-columns: 1fr 1fr; padding: 14px; } .market-tools label:first-child { grid-column: 1/-1; } .market-tools button { grid-column: 1/-1; } .market-section .game-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .market-section .game-card { padding: 12px; min-height: 196px; } .community-grid { grid-template-columns: 1fr; } .market-dialog { padding: 20px; } }
+
+.market-game { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.market-game .game-card { flex: 1; }
+.market-game[hidden], .market-admin[hidden] { display: none; }
+.home-pin-button { min-height: 42px; padding: 10px; border: 1px solid var(--dashboard-border); border-radius: 10px; color: var(--cp-text); background: var(--dashboard-surface); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.home-pin-button[aria-pressed="true"] { color: var(--dashboard-accent); border-color: var(--dashboard-accent); }
+.review-state { margin: 0 20px 12px; color: var(--dashboard-muted); font-size: 12px; }
+.community-card > .home-pin-button { align-self: stretch; }
+.market-admin { margin-top: 28px; padding: 22px; }
+.market-admin select, .review-card textarea { padding: 10px; border: 1px solid var(--dashboard-border); border-radius: 8px; background: var(--cp-bg); color: var(--cp-text); font: inherit; }
+.review-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 14px; }
+.review-card { min-width: 0; padding: 16px; border: 1px solid var(--dashboard-border); border-radius: 14px; }
+.review-card p, .review-card a, .review-card label { display: block; color: var(--dashboard-muted); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.review-card textarea { display: block; width: 100%; min-height: 80px; margin: 8px 0 14px; resize: vertical; }
