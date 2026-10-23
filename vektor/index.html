@@ -14,7 +14,7 @@
     <meta name="description" content="Vektör — 5'e 5 taktik kahraman nişancı: çekirdeği kur ya da çöz, ekonomini yönet, ajan yeteneklerini kullan.">
     <title>Vektör — CasualPass</title>
     <link rel="stylesheet" href="../shared-settings.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
             <div id="dark" aria-hidden="true"></div>
             <div id="dmgflash" aria-hidden="true"></div>
             <div id="dmgdir" aria-hidden="true"></div>
-            <div id="crosshair" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+            <div id="crosshair" class="ch" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
 
             <header class="topbar">
                 <div class="team-chips" id="team-ally"></div>
@@ -41,7 +41,7 @@
                     <span class="clock">
                         <small id="round-label">RAUNT 1</small>
                         <b id="timer">0:00</b>
-                        <b id="spike-timer" class="hidden" aria-label="Çekirdek kuruldu">◆</b>
+                        <span id="spike-timer" class="hidden" role="img" aria-label="Çekirdek kuruldu"><i></i></span>
                         <small id="side-label"></small>
                     </span>
                     <span class="score enemy" id="score-enemy">0</span>
@@ -66,8 +66,13 @@
             <div id="spectating"></div>
 
             <div id="action" class="hidden">
+                <svg class="action-ring" viewBox="0 0 100 100" aria-hidden="true">
+                    <circle class="track" cx="50" cy="50" r="44"></circle>
+                    <circle class="fill" id="action-ring" cx="50" cy="50" r="44" pathLength="100"></circle>
+                    <line class="half" id="action-half" x1="50" y1="94" x2="50" y2="86"></line>
+                </svg>
                 <span id="action-label">ÇEKİRDEK KURULUYOR</span>
-                <div class="bar"><div id="action-fill"></div></div>
+                <small id="action-time"></small>
             </div>
 
             <div id="death" class="hidden" role="status">
@@ -81,10 +86,10 @@
                     <div class="hp"><span id="hp-num">100</span><div class="hp-bar"><div id="hp-fill"></div></div></div>
                 </div>
                 <div class="abilities" id="abilities">
-                    <div class="ability" data-slot="c"><kbd>C</kbd><span class="ab-name"></span><span class="ab-pips"></span></div>
-                    <div class="ability" data-slot="q"><kbd>Q</kbd><span class="ab-name"></span><span class="ab-pips"></span></div>
-                    <div class="ability" data-slot="e"><kbd>E</kbd><span class="ab-name"></span><span class="ab-pips"></span></div>
-                    <div class="ability ult" data-slot="x"><kbd>X</kbd><span class="ab-name"></span><span class="ab-pips"></span></div>
+                    <div class="ability" data-slot="c"><span class="ab-icon" aria-hidden="true"></span><span class="ab-pips"></span><kbd>C</kbd><span class="ab-name"></span></div>
+                    <div class="ability" data-slot="q"><span class="ab-icon" aria-hidden="true"></span><span class="ab-pips"></span><kbd>Q</kbd><span class="ab-name"></span></div>
+                    <div class="ability" data-slot="e"><span class="ab-icon" aria-hidden="true"></span><span class="ab-pips"></span><kbd>E</kbd><span class="ab-name"></span></div>
+                    <div class="ability ult" data-slot="x"><span class="ult-orb"><svg class="orb-ring" viewBox="0 0 60 60" aria-hidden="true"></svg><span class="ab-icon" aria-hidden="true"></span></span><kbd>X</kbd><span class="ab-name"></span></div>
                 </div>
                 <div class="weapon">
                     <span id="credits" class="hidden">¤ 800</span>
@@ -94,7 +99,18 @@
                 </div>
             </footer>
 
-            <div id="scoreboard" class="hidden" role="dialog" aria-label="Skor tablosu"><div id="score-tables" class="score-tables"></div></div>
+            <div id="scoreboard" class="hidden" role="dialog" aria-label="Skor tablosu"><div class="sb-head"><b id="sb-map"></b><span id="sb-round"></span></div><div id="score-tables" class="score-tables"></div></div>
+
+            <div id="practice-panel" class="hidden" aria-live="off">
+                <p class="eyebrow">POLİGON</p>
+                <div class="pr-stats">
+                    <span><small>Öldürme</small><b id="pr-kills">0</b></span>
+                    <span><small>İsabet</small><b id="pr-acc">–</b></span>
+                    <span><small>Kafadan</small><b id="pr-hs">–</b></span>
+                    <span><small>Ort. süre</small><b id="pr-ttk">–</b></span>
+                </div>
+                <small class="pr-hint" id="pr-hint">B: cephanelik · yetenekler sınırsız · Esc: menü</small>
+            </div>
 
             <div id="touch" class="hidden">
                 <div id="stick" aria-hidden="true"><i id="stick-knob"></i></div>
@@ -124,7 +140,10 @@
                 <button class="ghost small" id="buy-close" type="button">Kapat · B</button>
             </header>
             <p class="buy-hint" id="buy-hint"></p>
-            <div class="buy-grid" id="buy-grid"></div>
+            <div class="buy-body">
+                <div class="buy-grid" id="buy-grid"></div>
+                <aside class="buy-stats" id="buy-stats" aria-live="polite"></aside>
+            </div>
         </section>
 
         <section class="overlay menu" id="menu" aria-labelledby="menu-title">
@@ -138,12 +157,18 @@
 
                     <div class="tabs" role="tablist" aria-label="Oyun türü">
                         <button class="tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-solo" data-tab="solo">Botlara karşı</button>
+                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-range" data-tab="range">Poligon</button>
                         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-host" data-tab="host">Oda aç</button>
                         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="tab-join" data-tab="join">Katıl</button>
                     </div>
                     <div class="tab-panel" id="tab-solo" role="tabpanel">
                         <div class="match-options" data-scope="solo"></div>
-                        <button class="primary" id="solo-btn" type="button">MAÇA BAŞLA</button>
+                        <button class="primary" id="solo-btn" type="button">KİLİTLE VE BAŞLA</button>
+                    </div>
+                    <div class="tab-panel hidden" id="tab-range" role="tabpanel">
+                        <p class="small-note">Bot yok, süre yok: sınırsız kredi ve yetenekle hedeflere ateş et, isabetini ölç. CM kazandırmaz.</p>
+                        <div class="match-options" data-scope="range"></div>
+                        <button class="primary" id="range-btn" type="button">POLİGONA GİR</button>
                     </div>
                     <div class="tab-panel hidden" id="tab-host" role="tabpanel">
                         <div class="match-options" data-scope="host"></div>
@@ -165,7 +190,7 @@
                             <li>Sol tık ateş · sağ tık nişan (Yayla'da dürbün) · <kbd>R</kbd> şarjör</li>
                             <li><kbd>1</kbd> ana · <kbd>2</kbd> tabanca · <kbd>3</kbd> bıçak · <kbd>4</kbd> çekirdek</li>
                             <li><kbd>C</kbd> <kbd>Q</kbd> <kbd>E</kbd> yetenekler · <kbd>X</kbd> nihai · <kbd>F</kbd> basılı: çekirdeği kur/çöz</li>
-                            <li><kbd>B</kbd> satın alma · <kbd>Tab</kbd> skor · <kbd>Esc</kbd> menü</li>
+                            <li><kbd>B</kbd> satın alma (içinde <kbd>1</kbd>–<kbd>9</kbd> silah/kalkan, <kbd>C</kbd> <kbd>Q</kbd> <kbd>E</kbd> yetenek) · <kbd>Tab</kbd> skor · <kbd>Esc</kbd> menü</li>
                             <li>Durarak ateş et: koşarken mermiler dağılır. Uzun taramada namlu önce yukarı, sonra sağa sola kayar.</li>
                         </ul>
                     </details>
@@ -177,10 +202,14 @@
                     <button class="ghost" id="menu-settings-btn" type="button">Ayarlar</button>
                 </div>
                 <aside class="menu-agents" aria-labelledby="agents-title">
-                    <p class="eyebrow">AJANINI SEÇ</p>
-                    <h2 id="agents-title">Ajanlar</h2>
-                    <div class="agent-grid" id="agent-grid"></div>
-                    <div class="agent-detail" id="agent-detail"></div>
+                    <div class="agent-hero" id="agent-hero"></div>
+                    <div class="agent-pick">
+                        <div class="agent-pick-head">
+                            <h2 id="agents-title">AJANINI SEÇ</h2>
+                            <div class="role-filter" id="role-filter" role="radiogroup" aria-label="Role göre süz"></div>
+                        </div>
+                        <div class="agent-grid" id="agent-grid"></div>
+                    </div>
                 </aside>
             </div>
         </section>
@@ -210,12 +239,26 @@
                 <label class="range"><span>Fare hassasiyeti <b id="sens-val"></b></span><input type="range" id="sens" min="0.2" max="3" step="0.05"></label>
                 <label class="range"><span>Dikey görüş açısı <b id="fov-val"></b></span><input type="range" id="fov" min="60" max="85" step="1"></label>
                 <label class="range"><span>Ses <b id="vol-val"></b></span><input type="range" id="vol" min="0" max="100" step="5"></label>
-                <div class="field-label">Nişangâh rengi</div>
-                <div class="segmented" id="cross-colors" role="radiogroup" aria-label="Nişangâh rengi">
-                    <button type="button" role="radio" data-c="cyan">Camgöbeği</button>
-                    <button type="button" role="radio" data-c="green">Yeşil</button>
-                    <button type="button" role="radio" data-c="yellow">Sarı</button>
-                    <button type="button" role="radio" data-c="white">Beyaz</button>
+                <div class="field-label">Nişangâh</div>
+                <div class="cross-editor">
+                    <div class="cross-preview" id="cross-preview" aria-hidden="true"><div class="ch"><i></i><i></i><i></i><i></i><b></b></div></div>
+                    <div class="cross-controls">
+                        <div class="segmented swatches" id="cross-colors" role="radiogroup" aria-label="Nişangâh rengi">
+                            <button type="button" role="radio" data-c="cyan" aria-label="Camgöbeği"><i></i></button>
+                            <button type="button" role="radio" data-c="green" aria-label="Yeşil"><i></i></button>
+                            <button type="button" role="radio" data-c="yellow" aria-label="Sarı"><i></i></button>
+                            <button type="button" role="radio" data-c="white" aria-label="Beyaz"><i></i></button>
+                            <button type="button" role="radio" data-c="pink" aria-label="Pembe"><i></i></button>
+                        </div>
+                        <label class="range"><span>Çizgi uzunluğu <b id="ch-len-val"></b></span><input type="range" id="ch-len" min="0" max="14" step="1"></label>
+                        <label class="range"><span>Merkez boşluğu <b id="ch-gap-val"></b></span><input type="range" id="ch-gap" min="0" max="12" step="1"></label>
+                        <label class="range"><span>Kalınlık <b id="ch-w-val"></b></span><input type="range" id="ch-w" min="1" max="4" step="1"></label>
+                    </div>
+                </div>
+                <div class="toggles">
+                    <label class="toggle"><input type="checkbox" id="ch-outline"><span>Dış çizgi</span></label>
+                    <label class="toggle"><input type="checkbox" id="ch-dot"><span>Merkez nokta</span></label>
+                    <label class="toggle"><input type="checkbox" id="ch-dyn"><span>Hareket hatasını göster</span></label>
                 </div>
                 <div class="field-label">Grafik kalitesi</div>
                 <div class="segmented" id="quality" role="radiogroup" aria-label="Grafik kalitesi">
@@ -228,15 +271,24 @@
         </section>
 
         <section class="overlay hidden" id="over" aria-labelledby="over-title">
-            <div class="sheet wide">
-                <p class="eyebrow">MAÇ SONU</p>
-                <h2 id="over-title">ZAFER</h2>
-                <p class="final-score" id="over-score">7 – 3</p>
-                <div class="result-row">
-                    <span><small>Öldürme</small><b id="over-kills">0</b></span>
-                    <span><small>Ölüm</small><b id="over-deaths">0</b></span>
-                    <span><small>Rekor</small><b id="over-best">0</b></span>
-                    <span><small>Kazanç</small><b id="over-reward">0 CM</b></span>
+            <div class="sheet wide over-sheet">
+                <header class="over-head">
+                    <div>
+                        <p class="eyebrow" id="over-eyebrow">MAÇ SONU</p>
+                        <h2 id="over-title">ZAFER</h2>
+                    </div>
+                    <p class="final-score" id="over-score">7 – 3</p>
+                </header>
+                <div class="over-grid">
+                    <div class="mvp-card" id="over-mvp"></div>
+                    <div class="result-row">
+                        <span><small>Ort. savaş puanı</small><b id="over-acs">0</b></span>
+                        <span><small>Öld · Ölüm · Asist</small><b id="over-kda">0 · 0 · 0</b></span>
+                        <span><small>İlk kan</small><b id="over-fb">0</b></span>
+                        <span><small>Hasar / raunt</small><b id="over-adr">0</b></span>
+                        <span><small>Rekor öldürme</small><b id="over-best">0</b></span>
+                        <span><small>Kazanç</small><b id="over-reward">0 CM</b></span>
+                    </div>
                 </div>
                 <div class="score-tables" id="over-tables"></div>
                 <p class="small-note" id="over-note"></p>
@@ -247,12 +299,19 @@
             </div>
         </section>
 
+        <div class="lockin hidden" id="lockin" aria-hidden="true">
+            <div class="lockin-band">
+                <img id="lockin-art" alt="">
+                <div class="lockin-text"><small>AJAN KİLİTLENDİ</small><b id="lockin-name"></b><span id="lockin-role"></span></div>
+            </div>
+        </div>
+
         <p class="boot-error hidden" id="boot-error">3B motoru yüklenemedi. Sayfayı yenilemeyi dene.</p>
     </main>
 
     <div class="vk-toast" id="toast" role="status" aria-live="polite"></div>
     <script src="../fps-game/vendor/three.min.js"></script>
     <script src="../fps-game/vendor/peerjs.min.js"></script>
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -120,3 +120,49 @@ body.theme-paper .primary, body.theme-paper .session-line button, body.theme-pap
     .owl-card canvas { width: 48px; height: 48px; }
 }
 @media (prefers-reduced-motion: reduce) { .stage-hint { animation: none; } .owl-toast { transition: none; } }
+
+/* ---------- Medals, live region ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.medal-ladder { margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; list-style: none; }
+.medal-chip { min-height: 28px; padding: 3px 10px 3px 6px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; justify-content: center; color: var(--cp-text-muted); border: 1px dashed var(--cp-glass-border); border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.medal-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; background: var(--cp-glass-border); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .18); }
+.medal-chip.earned { color: var(--cp-text); border-style: solid; background: var(--cp-glass-bg); }
+.medal-chip.earned.bronze .medal-dot { background: radial-gradient(circle at 35% 35%, #f6c69a, #d38a4e 60%, #8a4f22); }
+.medal-chip.earned.silver .medal-dot { background: radial-gradient(circle at 35% 35%, #fff, #d9dee4 60%, #8a929c); }
+.medal-chip.earned.gold .medal-dot { background: radial-gradient(circle at 35% 35%, #fff4b0, #ffd84a 60%, #b8860b); }
+.medal-chip.earned.platinum .medal-dot { background: radial-gradient(circle at 35% 35%, #fff, #e9f3fb 60%, #9fb4c8); }
+
+.medal-box { margin: 12px auto 0; padding: 8px 12px 8px 6px; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: left; border: 1px solid var(--cp-glass-border); border-radius: 14px; background: var(--cp-glass-bg); }
+.medal-box canvas { width: 72px; height: 72px; flex: none; }
+.medal-box div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.medal-box strong { font-size: 17px; letter-spacing: -.02em; }
+.medal-box small { color: var(--cp-text-muted); font-size: 12.5px; line-height: 1.35; }
+.medal-box.none canvas { display: none; }
+.medal-box.none { padding-left: 12px; }
+.medal-box.gold strong { color: #e0b100; }
+.medal-box.platinum strong { color: #8fb7da; }
+body.theme-paper .medal-box.gold strong { color: #9a6f00; }
+.medal-box:not(.none) canvas { animation: medal-in .6s cubic-bezier(.2, 1.6, .4, 1) both; }
+.medal-box.record { border-color: var(--cp-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cp-accent) 30%, transparent); }
+@keyframes medal-in { from { opacity: 0; transform: scale(.4) rotate(-25deg); } to { opacity: 1; transform: none; } }
+
+/* Neon and retro dress the stage frame too. */
+body.theme-neon .stage { border-color: #00f2fe; box-shadow: 0 0 0 1px #00f2fe, 0 0 28px rgba(0, 242, 254, .35); }
+body.theme-retro .stage { border-width: 3px; box-shadow: 6px 6px 0 rgba(0, 0, 0, .45); }
+body.theme-retro .sheet { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 4px 4px 0 rgba(0, 0, 0, .4); }
+body.theme-retro .medal-chip, body.theme-retro .medal-dot { border-radius: 2px !important; }
+
+@media (max-width: 420px) {
+    .medal-ladder { gap: 4px; margin-bottom: 10px; }
+    .medal-chip { min-height: 26px; padding: 2px 4px; font-size: 11px; gap: 4px; }
+    .medal-chip span:last-child { overflow: hidden; text-overflow: ellipsis; }
+    .medal-dot { width: 12px; height: 12px; }
+    .medal-box canvas { width: 60px; height: 60px; }
+}
+@media (max-width: 359px) { .medal-dot { display: none; } }
+@media (orientation: landscape) and (max-height: 520px) {
+    .medal-ladder { margin-bottom: 8px; }
+    .medal-box { margin-top: 6px; padding-top: 4px; padding-bottom: 4px; }
+    .medal-box canvas { width: 52px; height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) { .medal-box:not(.none) canvas { animation: none; } }

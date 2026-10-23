@@ -162,6 +162,136 @@
     const AGENT_IDS = Object.keys(AGENTS);
     const SLOTS = ['c', 'q', 'e', 'x'];
 
+    // Ability and role icons: 24×24 line art, drawn in currentColor (fixed strings, never user input).
+    const ICONS = {
+        molotov: '<path d="M10 3h4v4l2 3v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10l2-3z"/><path d="M12 12c-2 2-2 4 0 5.5 2-1.5 2-3.5 0-5.5z" fill="currentColor"/>',
+        flash: '<circle cx="12" cy="12" r="3.6" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>',
+        dash: '<path d="M3 8h8M1.5 12h9.5M3 16h8"/><path d="M13 5.5l8 6.5-8 6.5z" fill="currentColor"/>',
+        blaze: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z" fill="currentColor"/>',
+        slow: '<ellipse cx="12" cy="17" rx="9" ry="3.6"/><path d="M8.5 17c0-1.8 1.6-3 3.5-3s3.5 1.2 3.5 3"/><path d="M12 3v7M9 7.5l3 3 3-3"/>',
+        dark: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="currentColor"/>',
+        smoke: '<path d="M7 18.5a4 4 0 0 1-.6-8 5.6 5.6 0 0 1 10.8-1.6 4.6 4.6 0 0 1 .3 9.6z" fill="currentColor"/>',
+        smokewall: '<path d="M2 19V10a3 3 0 0 1 6-.8 3 3 0 0 1 6-.4 3 3 0 0 1 6 .6V19z" fill="currentColor"/><path d="M2 21.5h20"/>',
+        shock: '<path d="M13.5 2L4 14h7l-2 8 9.5-12.5h-7z" fill="currentColor"/>',
+        recon: '<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/>',
+        hunt: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
+        trip: '<path d="M4 5v14M20 5v14"/><path d="M4 12h16" stroke-dasharray="3 2.2"/><circle cx="4" cy="12" r="2.2" fill="currentColor"/><circle cx="20" cy="12" r="2.2" fill="currentColor"/>',
+        wall: '<rect x="3" y="5.5" width="18" height="14" rx=".5"/><path d="M3 10.2h18M3 14.8h18M9 5.5v4.7M15 5.5v4.7M12 10.2v4.6M6.5 14.8v4.7M17.5 14.8v4.7"/>',
+        heal: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/>',
+        lock: '<rect x="4.5" y="10.5" width="15" height="11" rx="1.5" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+        updraft: '<path d="M12 20V4M6 10l6-6 6 6"/><path d="M4 21.5h16M7 17.5h10"/>',
+        cloud: '<path d="M8 17.5a3.6 3.6 0 0 1-.4-7.2 4.6 4.6 0 0 1 8.9-1 3.9 3.9 0 0 1 .1 8.2z"/><path d="M9.5 21h5"/>',
+        blades: '<path d="M12 1.5l2.2 8.5L12 12l-2.2-2z" fill="currentColor"/><path d="M3 19.5l6.8-5.6 1.4 2.4z" fill="currentColor"/><path d="M21 19.5l-6.8-5.6-1.4 2.4z" fill="currentColor"/>',
+        icewall: '<path d="M2 20.5L6 8l4 12.5zM8 20.5l4-17 4 17zM14 20.5L18 8l4 12.5z" fill="currentColor"/>',
+        frost: '<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9 3.8l3 2.2 3-2.2M9 20.2l3-2.2 3 2.2"/>',
+        icesmoke: '<circle cx="12" cy="10.5" r="7.5" fill="currentColor" fill-opacity=".35"/><circle cx="12" cy="10.5" r="7.5"/><path d="M7.5 21.5h9M12 18v3.5"/>',
+        blizzard: '<path d="M2.5 8h11a3 3 0 1 0-3-3M2.5 13h15a3 3 0 1 1-3 3M2.5 18h7"/>',
+        stun: '<circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M5 4.5a10.5 10.5 0 0 0 0 15M19 4.5a10.5 10.5 0 0 1 0 15M8.3 8a5.6 5.6 0 0 0 0 8M15.7 8a5.6 5.6 0 0 1 0 8"/>',
+        quake: '<path d="M1.5 14h4l2.2-5.5 3.2 10 3.2-13 3 8.5h5.4"/>',
+        pulse: '<path d="M2 20.5h20"/><path d="M3 20.5a9 9 0 0 1 18 0M6.5 20.5a5.5 5.5 0 0 1 11 0M10 20.5a2 2 0 0 1 4 0"/>',
+        rupture: '<path d="M12.5 1.5l-2.5 6 4 3.2-3.2 5 2.2 6.3" stroke-width="2.6"/><path d="M2 22h20M4.5 9.5l4.5 2M19.5 8.5l-5 3"/>',
+        alarm: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l2 2H4z" fill="currentColor"/><path d="M10 21.5h4"/>',
+        shieldup: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M12 8v8M8 12h8"/>',
+        turret: '<path d="M5.5 21.5l3.3-7.5h6.4l3.3 7.5"/><rect x="6.5" y="7.5" width="11" height="6.5" rx="1" fill="currentColor"/><path d="M17.5 10.7h5"/>',
+        beacon: '<path d="M9 21.5l1.2-10h3.6l1.2 10z" fill="currentColor"/><path d="M7.5 11.5h9M12 7.5V2.5M4.5 5l3.2 3.2M19.5 5l-3.2 3.2"/>',
+        // Roles
+        'role-Düellocu': '<path d="M3.5 20.5L15 9l1-5 4.5-1.5L19 7l-5 1L2.5 19.5z" fill="currentColor"/><path d="M6 15l3 3"/>',
+        'role-Kontrolcü': '<path d="M7 18.5a4 4 0 0 1-.6-8 5.6 5.6 0 0 1 10.8-1.6 4.6 4.6 0 0 1 .3 9.6z" fill="currentColor"/>',
+        'role-Öncü': '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
+        'role-Gözcü': '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="currentColor"/>',
+        all: '<rect x="3" y="3" width="7.5" height="7.5" fill="currentColor"/><rect x="13.5" y="3" width="7.5" height="7.5" fill="currentColor"/><rect x="3" y="13.5" width="7.5" height="7.5" fill="currentColor"/><rect x="13.5" y="13.5" width="7.5" height="7.5" fill="currentColor"/>'
+    };
+    const ROLES = ['Düellocu', 'Kontrolcü', 'Öncü', 'Gözcü'];
+    function icon(kind, cls = 'ico') {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[kind] || ICONS.hunt}</svg>`;
+    }
+
+    function mixHex(a, b, t) {
+        const pa = parseInt(a.slice(1), 16);
+        const pb = parseInt(b.slice(1), 16);
+        const ch = (shift) => Math.round(lerp((pa >> shift) & 255, (pb >> shift) & 255, t));
+        return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
+    }
+    // Procedural agent portrait: a lit bust on the agent's colour, with the same headgear the 3D model wears.
+    const portraitCache = new Map();
+    function agentPortrait(id, w, h) {
+        const key = `${id}:${w}x${h}`;
+        if (portraitCache.has(key)) return portraitCache.get(key);
+        const ag = AGENTS[id] || AGENTS.kor;
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        const g = c.getContext('2d');
+        const col = ag.color;
+        const bg = g.createLinearGradient(0, 0, w * 0.4, h);
+        bg.addColorStop(0, col);
+        bg.addColorStop(0.55, mixHex(col, '#0f1923', 0.55));
+        bg.addColorStop(1, '#0f1923');
+        g.fillStyle = bg;
+        g.fillRect(0, 0, w, h);
+        // Diagonal stripes and a big letter behind the figure.
+        g.save();
+        g.globalAlpha = 0.12;
+        g.strokeStyle = '#ffffff';
+        g.lineWidth = Math.max(2, w * 0.018);
+        for (let x = -h; x < w; x += w * 0.09) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h * 0.7, 0); g.stroke(); }
+        g.restore();
+        g.save();
+        g.globalAlpha = 0.16;
+        g.fillStyle = '#0f1923';
+        g.font = `600 ${Math.round(h * 0.95)}px Teko, Impact, sans-serif`;
+        g.textAlign = 'right';
+        g.textBaseline = 'alphabetic';
+        g.fillText(ag.name[0], w * 1.02, h * 0.86);
+        g.restore();
+        // Figure geometry (unit = width).
+        const u = Math.min(w, h * 0.78);
+        const cx = w * 0.5;
+        const headY = h * 0.42;
+        const headR = u * 0.15;
+        const body = '#141d27';
+        const rim = col;
+        const accent = mixHex(col, '#000000', 0.25);
+        const path = (draw, fill, stroke, lw) => { g.beginPath(); draw(); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw || u * 0.012; g.stroke(); } };
+        // Shoulders and torso.
+        path(() => {
+            g.moveTo(cx - u * 0.5, h);
+            g.bezierCurveTo(cx - u * 0.48, h * 0.78, cx - u * 0.36, h * 0.66, cx - u * 0.13, h * 0.62);
+            g.lineTo(cx + u * 0.13, h * 0.62);
+            g.bezierCurveTo(cx + u * 0.36, h * 0.66, cx + u * 0.48, h * 0.78, cx + u * 0.5, h);
+            g.closePath();
+        }, body, rim, u * 0.014);
+        // Collar plate in the agent colour.
+        path(() => { g.moveTo(cx - u * 0.16, h * 0.64); g.lineTo(cx, h * 0.76); g.lineTo(cx + u * 0.16, h * 0.64); g.lineTo(cx + u * 0.1, h * 0.62); g.lineTo(cx, h * 0.69); g.lineTo(cx - u * 0.1, h * 0.62); g.closePath(); }, accent);
+        path(() => { g.rect(cx - u * 0.42, h * 0.84, u * 0.84, u * 0.03); }, 'rgba(236,232,225,.14)');
+        // Neck and head.
+        path(() => g.rect(cx - u * 0.06, headY + headR * 0.6, u * 0.12, h * 0.62 - headY - headR * 0.5), '#1b2632');
+        path(() => g.ellipse(cx, headY, headR * 0.92, headR * 1.08, 0, 0, TAU), '#1d2834', rim, u * 0.012);
+        // Visor / eyes glow.
+        const glow = (draw) => { g.save(); g.shadowColor = col; g.shadowBlur = u * 0.06; path(draw, col); g.restore(); };
+        const hg = {
+            kor() { for (let i = -1; i <= 1; i++) path(() => { g.moveTo(cx + i * headR * 0.55 - headR * 0.32, headY - headR * 0.75); g.lineTo(cx + i * headR * 0.9, headY - headR * 2.1 + Math.abs(i) * headR * 0.4); g.lineTo(cx + i * headR * 0.55 + headR * 0.32, headY - headR * 0.75); g.closePath(); }, col); glow(() => g.rect(cx - headR * 0.6, headY - headR * 0.05, headR * 1.2, headR * 0.16)); },
+            sis() { path(() => { g.ellipse(cx, headY - headR * 0.1, headR * 1.25, headR * 1.35, 0, Math.PI * 0.96, Math.PI * 2.04); g.lineTo(cx + headR * 1.2, headY + headR * 1.4); g.lineTo(cx - headR * 1.2, headY + headR * 1.4); g.closePath(); }, accent); path(() => g.ellipse(cx, headY + headR * 0.1, headR * 0.72, headR * 0.85, 0, 0, TAU), '#0b1118'); glow(() => { g.arc(cx - headR * 0.3, headY + headR * 0.05, headR * 0.1, 0, TAU); g.arc(cx + headR * 0.3, headY + headR * 0.05, headR * 0.1, 0, TAU); }); },
+            ok() { path(() => g.rect(cx - headR * 0.98, headY - headR * 0.55, headR * 1.96, headR * 0.3), col); path(() => { g.moveTo(cx + headR * 0.9, headY - headR * 0.45); g.lineTo(cx + headR * 1.9, headY - headR * 0.1); g.lineTo(cx + headR * 1.7, headY - headR * 0.6); g.closePath(); }, col); path(() => { g.moveTo(cx + u * 0.3, h * 0.98); g.lineTo(cx + u * 0.12, h * 0.55); }, null, '#8a6a44', u * 0.03); glow(() => g.rect(cx - headR * 0.55, headY + headR * 0.02, headR * 1.1, headR * 0.12)); },
+            kale() { path(() => { g.ellipse(cx, headY - headR * 0.05, headR * 1.08, headR * 1.15, 0, Math.PI, TAU); g.closePath(); }, accent, rim); path(() => g.rect(cx - headR * 1.1, headY - headR * 0.08, headR * 2.2, headR * 0.22), col); glow(() => g.rect(cx - headR * 0.7, headY + headR * 0.22, headR * 1.4, headR * 0.12)); },
+            ruzgar() { path(() => { g.moveTo(cx - headR * 1.1, headY + headR * 0.85); g.quadraticCurveTo(cx, headY + headR * 1.4, cx + headR * 1.1, headY + headR * 0.85); g.lineTo(cx + headR * 1.2, headY + headR * 1.35); g.bezierCurveTo(cx + u * 0.3, headY + headR * 1.6, cx + u * 0.42, headY + headR * 0.6, cx + u * 0.5, headY + headR * 0.9); g.bezierCurveTo(cx + u * 0.38, headY + headR * 2.2, cx + u * 0.1, headY + headR * 2.2, cx - headR * 1.2, headY + headR * 1.5); g.closePath(); }, col); glow(() => { g.arc(cx - headR * 0.32, headY - headR * 0.05, headR * 0.1, 0, TAU); g.arc(cx + headR * 0.32, headY - headR * 0.05, headR * 0.1, 0, TAU); }); },
+            ayaz() { for (let i = -2; i <= 2; i++) path(() => { const bx = cx + i * headR * 0.42; g.moveTo(bx - headR * 0.2, headY - headR * 0.85); g.lineTo(bx, headY - headR * (1.6 + (2 - Math.abs(i)) * 0.35)); g.lineTo(bx + headR * 0.2, headY - headR * 0.85); g.closePath(); }, col); glow(() => g.rect(cx - headR * 0.6, headY - headR * 0.02, headR * 1.2, headR * 0.12)); },
+            fay() { path(() => g.ellipse(cx, headY - headR * 0.62, headR * 1.9, headR * 0.28, 0, 0, TAU), accent, rim); path(() => { g.ellipse(cx, headY - headR * 0.68, headR * 0.95, headR * 0.75, 0, Math.PI, TAU); g.closePath(); }, accent); glow(() => { g.arc(cx - headR * 0.32, headY + headR * 0.05, headR * 0.09, 0, TAU); g.arc(cx + headR * 0.32, headY + headR * 0.05, headR * 0.09, 0, TAU); }); },
+            nobet() { path(() => { g.ellipse(cx, headY - headR * 0.08, headR * 1.0, headR * 1.08, 0, Math.PI * 1.05, Math.PI * 1.95); g.closePath(); }, '#2a3542'); glow(() => g.rect(cx - headR * 0.95, headY - headR * 0.18, headR * 1.9, headR * 0.34)); }
+        };
+        (hg[id] || hg.kor)();
+        // Floor light and vignette.
+        const vg = g.createLinearGradient(0, h * 0.7, 0, h);
+        vg.addColorStop(0, 'rgba(15,25,35,0)');
+        vg.addColorStop(1, 'rgba(15,25,35,.85)');
+        g.fillStyle = vg;
+        g.fillRect(0, h * 0.7, w, h * 0.3);
+        let url = '';
+        try { url = c.toDataURL('image/png'); } catch { url = ''; }
+        portraitCache.set(key, url);
+        return url;
+    }
+
     // Weapon camos are the shared CasualPass catalogue (bought in Arena FPS).
     const CAMO_PATTERNS = {
         desert: ['#c9b48a', '#b59a6a', '#8a7350', '#6b5a3e'],
@@ -200,10 +330,14 @@
     const SIZE_CHOICES = [3, 5];
     const MAP_NAMES = ['liman', 'kumsaray', 'ucyol', 'buzul']; // MAPS anahtarları; tercihler haritalardan önce okunur
     const CROSS_COLORS = { cyan: '#5ff5e1', green: '#7dff6b', yellow: '#ffe14d', white: '#ffffff', pink: '#ff6bd6' };
+    const RANGE_MODES = { static: 'Sabit', moving: 'Hareketli', mixed: 'Karışık' };
     const prefs = loadPrefs();
 
     function loadPrefs() {
-        const base = { sens: 1, fov: 71, vol: 80, q: touchDevice ? 'low' : 'mid', cross: 'cyan', agent: 'kor', rounds: 7, size: 5, diff: 'normal', fill: true, map: 'random' };
+        const base = {
+            sens: 1, fov: 71, vol: 80, q: touchDevice ? 'low' : 'mid', cross: 'cyan', agent: 'kor', rounds: 7, size: 5, diff: 'normal', fill: true, map: 'random',
+            range: 'mixed', chLen: 6, chGap: 3, chW: 2, chOutline: true, chDot: true, chDyn: true
+        };
         let saved = {};
         try { saved = JSON.parse(getCookieValue(PREFS_COOKIE) || '{}') || {}; } catch { saved = {}; }
         const num = (v, d) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : d);
@@ -218,7 +352,14 @@
             size: SIZE_CHOICES.includes(saved.size) ? saved.size : base.size,
             diff: DIFFICULTY[saved.diff] ? saved.diff : base.diff,
             fill: saved.fill === undefined ? base.fill : Boolean(saved.fill),
-            map: saved.map === 'random' || MAP_NAMES.includes(saved.map) ? saved.map : base.map
+            map: saved.map === 'random' || MAP_NAMES.includes(saved.map) ? saved.map : base.map,
+            range: RANGE_MODES[saved.range] ? saved.range : base.range,
+            chLen: Math.round(clamp(num(saved.chLen, base.chLen), 0, 14)),
+            chGap: Math.round(clamp(num(saved.chGap, base.chGap), 0, 12)),
+            chW: Math.round(clamp(num(saved.chW, base.chW), 1, 4)),
+            chOutline: saved.chOutline === undefined ? base.chOutline : Boolean(saved.chOutline),
+            chDot: saved.chDot === undefined ? base.chDot : Boolean(saved.chDot),
+            chDyn: saved.chDyn === undefined ? base.chDyn : Boolean(saved.chDyn)
         };
     }
     function savePrefs() { setCookieValue(PREFS_COOKIE, JSON.stringify(prefs)); }
@@ -2214,9 +2355,39 @@
 
     const match = {
         phase: 'menu', mode: 'solo', paused: false, timer: 0, round: 0, half: 0, score: [0, 0], winTarget: 7,
-        lossStreak: [0, 0], diff: 'normal', size: 5, fill: true, rewarded: false, syncAt: 0, roundStats: null, mvp: 0
+        lossStreak: [0, 0], diff: 'normal', size: 5, fill: true, rewarded: false, syncAt: 0, roundStats: null, mvp: 0, practice: false
     };
-    const roster = new Map(); // nid -> { name, team, agent, camo, bot, kills, deaths, assists }
+    const roster = new Map(); // nid -> { name, team, agent, camo, bot, ...blankStats() }
+    // Match statistics. Kills, deaths, first bloods, plants and defuses everyone counts from events;
+    // damage and assists are exact only where the hit is applied, so the host's numbers win (round end, snapshot).
+    const blankStats = () => ({ kills: 0, deaths: 0, assists: 0, dmg: 0, fb: 0, plants: 0, defuses: 0, rounds: 0 });
+    const combatScore = (r) => Math.round((r.dmg || 0) + 150 * r.kills + 25 * (r.assists || 0) + 50 * (r.fb || 0) + 40 * ((r.plants || 0) + (r.defuses || 0)));
+    const avgScore = (r) => Math.round(combatScore(r) / Math.max(1, r.rounds || 0));
+    const roundDmg = new Map(); // victim -> Map(attacker -> damage this round)
+    function recordDamage(from, to, amount) {
+        if (!(amount > 0) || from === to || match.practice) return;
+        const ft = teamOf(from);
+        if (ft < 0 || ft === teamOf(to)) return;
+        let m = roundDmg.get(to);
+        if (!m) roundDmg.set(to, m = new Map());
+        const prev = m.get(from) || 0;
+        const add = Math.min(amount, 150 - prev); // 100 can + 50 kalkan: tahmini isabetler şişmesin
+        if (!(add > 0)) return;
+        m.set(from, prev + add);
+        const r = roster.get(from);
+        if (r) r.dmg = (r.dmg || 0) + add;
+    }
+    const statRows = () => [...roster].map(([nid, r]) => [nid, Math.round(r.dmg || 0), r.assists || 0]);
+    function applyStatRows(rows) {
+        if (!Array.isArray(rows)) return;
+        for (const row of rows) {
+            if (!Array.isArray(row)) continue;
+            const r = roster.get(Math.floor(num(row[0])));
+            if (!r) continue;
+            r.dmg = clamp(num(row[1]) || 0, 0, 1e6);
+            r.assists = clamp(Math.floor(num(row[2]) || 0), 0, 9999);
+        }
+    }
     const actors = new Map(); // uzak oyuncular ve botlar
     const spike = { state: 'none', carrier: 0, x: 0, y: 0, z: 0, site: '', timer: 0, defuser: 0, beepAt: 0 };
     let roomCode = '';
@@ -3441,7 +3612,7 @@
         if (a && a.sim) { botDamage(a, d, from, w, hs, now); return; }
         const msg = { t: 'h', f: from, to, d, w, hs: hs ? 1 : 0 };
         if (match.mode === 'client') sendTo(conns[0], msg);
-        else if (match.mode === 'host') sendTo(conns.find((c) => c.nid === to), msg);
+        else if (match.mode === 'host') { if (combatPhase()) recordDamage(from, to, d); sendTo(conns.find((c) => c.nid === to), msg); }
     }
 
     function absorb(target, d) {
@@ -3453,7 +3624,9 @@
     function takeDamage(d, from, w, hs, now, sx, sz, silent) {
         if (!player.alive || !combatPhase() || d <= 0) return;
         if (teamOf(from) === player.team && from !== player.nid) return;
+        const before = player.hp + player.armor;
         absorb(player, d);
+        recordDamage(from, player.nid, before - Math.max(0, player.hp) - player.armor);
         if (player.hp <= 0 && match.mode === 'solo' && cheatOn('immortal')) player.hp = 1;
         player.hp = Math.max(0, player.hp);
         player.lastHurt = now;
@@ -3513,7 +3686,9 @@
     function botDamage(a, d, from, w, hs, now) {
         const s = a.sim;
         if (!s.alive || !combatPhase() || d <= 0 || teamOf(from) === a.team) return;
+        const before = s.hp + s.armor;
         absorb(s, d);
+        recordDamage(from, a.nid, before - Math.max(0, s.hp) - s.armor);
         s.hurtBy = from;
         s.hurtAt = now;
         s.tagUntil = now + 260;
@@ -3531,7 +3706,14 @@
         const ks = roster.get(k);
         const vs = roster.get(v);
         if (vs) vs.deaths++;
-        if (ks && k !== v && ks.team !== vs?.team) ks.kills++;
+        const realKill = ks && k !== v && ks.team !== vs?.team;
+        if (realKill) {
+            ks.kills++;
+            const dm = roundDmg.get(v);
+            if (dm) for (const [att, amt] of dm) { const r = roster.get(att); if (att !== k && amt > 0 && r && r.team === ks.team) r.assists = (r.assists || 0) + 1; }
+            if (match.roundStats && !match.roundStats.first && !match.practice) { match.roundStats.first = k; ks.fb = (ks.fb || 0) + 1; }
+        }
+        roundDmg.delete(v);
         const a = actors.get(v);
         if (a) { setAlive(a, false, now); a.deadLock = now + 1500; }
         if (match.roundStats) match.roundStats.kills[k] = (match.roundStats.kills[k] || 0) + 1;
@@ -3587,9 +3769,14 @@
         }
         const total = player.action === 'plant' ? TIMES.plant : TIMES.defuse;
         const done = now - player.actionStart;
-        $('action').classList.remove('hidden');
-        $('action-label').textContent = player.action === 'plant' ? 'ÇEKİRDEK KURULUYOR' : 'ÇEKİRDEK ÇÖZÜLÜYOR';
-        $('action-fill').style.width = `${clamp(done / total, 0, 1) * 100}%`;
+        const box = $('action');
+        box.classList.remove('hidden');
+        box.classList.toggle('defuse', player.action === 'defuse');
+        setText('action-label', player.action === 'plant' ? 'ÇEKİRDEK KURULUYOR' : 'ÇEKİRDEK ÇÖZÜLÜYOR');
+        setText('action-time', `${(Math.max(0, total - done) / 1000).toFixed(1)} sn`);
+        setStyle('action-ring', 'stroke-dashoffset', String(100 - clamp(done / total, 0, 1) * 100));
+        // The half-way mark only matters for defusing (progress is kept from 3.5 s on).
+        $('action-half').style.display = player.action === 'defuse' ? '' : 'none';
         if (player.action === 'defuse' && done >= TIMES.defuseHalf) { spike.halfBy = spike.halfBy || {}; spike.halfBy[player.nid] = true; }
         if (done < total) return;
         const what = player.action;
@@ -3637,7 +3824,8 @@
         match.score = d.sc.slice();
         match.phase = 'buy';
         match.timer = d.tm;
-        match.roundStats = { kills: {}, plantedBy: 0 };
+        match.roundStats = { kills: {}, plantedBy: 0, first: 0, deaths: {} };
+        roundDmg.clear();
         if (d.rn === 1 || swapped) {
             resetLoadout(true);
             match.lossStreak = [0, 0];
@@ -3731,7 +3919,7 @@
     function endRound(winnerTeam, why, now) {
         if (!combatPhase() && match.phase !== 'buy') return;
         match.score[winnerTeam]++;
-        const d = { t: 're', w: winnerTeam, why, sc: match.score };
+        const d = { t: 're', w: winnerTeam, why, sc: match.score, st: statRows() };
         if (match.mode === 'host') broadcast(d);
         applyRoundEnd(d, now);
         match.phase = 'post';
@@ -3752,9 +3940,19 @@
         const gains = [reward(0), reward(1)];
         player.credits = Math.min(ECON.max, player.credits + gains[player.team]);
         if (isAuthority()) for (const a of actors.values()) if (a.sim) a.sim.credits = Math.min(ECON.max, a.sim.credits + gains[a.team]);
+        applyStatRows(d.st);
+        for (const r of roster.values()) r.rounds = (r.rounds || 0) + 1;
         const won = d.w === player.team;
         const why = { elim: won ? 'Düşman takım temizlendi' : 'Takımın temizlendi', boom: 'Çekirdek patladı', defuse: 'Çekirdek çözüldü', time: 'Süre doldu' }[d.why] || '';
-        showRoundBanner(won ? 'RAUNT KAZANILDI' : 'RAUNT KAYBEDİLDİ', why, won ? 'win' : 'loss');
+        const whyIcon = { elim: 'hunt', boom: 'blaze', defuse: 'heal', time: 'pulse' }[d.why] || 'hunt';
+        // Flawless: the winners lost nobody. Clean sweep: one player took all five.
+        const winners = teamList(d.w);
+        let tag = '';
+        if (winners.length > 1 && winners.every((r) => isAlive(r.nid))) tag = 'KUSURSUZ';
+        const kills = match.roundStats?.kills || {};
+        const ace = winners.find((r) => (kills[r.nid] || 0) >= Math.max(3, teamList(1 - d.w).length));
+        if (ace) tag = `${ace.nid === player.nid ? 'SEN' : ace.name.toLocaleUpperCase('tr')} · TEK BAŞINA`;
+        showRoundBanner(won ? 'RAUNT KAZANILDI' : 'RAUNT KAYBEDİLDİ', why, won ? 'win' : 'loss', { icon: whyIcon, score: [match.score[player.team], match.score[1 - player.team]], tag });
         if (won) chord([523, 659, 784, 1046], 0.35, 'triangle', 0.07); else chord([392, 330, 262], 0.4, 'triangle', 0.06);
         if (d.why === 'boom') { burstFx(spike.x, spike.y + 1, spike.z, 0xff8a3c, 18, 7); shake = Math.max(shake, clamp(1 - spatial(spike.x, spike.z).dist / 60, 0, 1)); noise(1.6, 300, 1.2 * spatial(spike.x, spike.z, 160).vol); }
         updateTeamHud();
@@ -3796,8 +3994,13 @@
     }
 
     // Everyone: new spike state.
-    function applySpike(d, now) {
+    function applySpike(d, now, quiet) {
         const was = spike.state;
+        if (!quiet && d.st !== was) {
+            const r = roster.get(d.c);
+            if (r && d.st === 'planted') r.plants = (r.plants || 0) + 1;
+            if (r && d.st === 'defused') r.defuses = (r.defuses || 0) + 1;
+        }
         spike.state = d.st;
         spike.carrier = d.c || 0;
         [spike.x, spike.y, spike.z] = d.p;
@@ -3923,7 +4126,7 @@
                 const agent = free.length ? pick(free) : pick(AGENT_IDS);
                 usedAgents[team].add(agent);
                 const name = `${BOT_NAMES[n % BOT_NAMES.length]}`;
-                roster.set(nid, { name, team, agent, camo: pick(['standard', 'desert', 'forest', 'arctic', 'crimson']), bot: true, kills: 0, deaths: 0 });
+                roster.set(nid, { name, team, agent, camo: pick(['standard', 'desert', 'forest', 'arctic', 'crimson']), bot: true, ...blankStats() });
                 const a = ensureActor(nid);
                 setActorInfo(a, { ...roster.get(nid) });
                 a.sim = { alive: false, hp: 100, armor: 0, credits: ECON.start, primary: -1, secondary: W.pim, slot: W.pim, ammo: {}, charges: { c: 0, q: 0, e: 0 }, ult: 0, agent };
@@ -4511,7 +4714,7 @@
     function snapshot() {
         return {
             t: 's',
-            p: [...roster].map(([nid, r]) => [nid, r.name, r.team, r.agent, r.camo, r.bot ? 1 : 0, r.kills, r.deaths]),
+            p: [...roster].map(([nid, r]) => [nid, r.name, r.team, r.agent, r.camo, r.bot ? 1 : 0, r.kills, r.deaths, Math.round(r.dmg || 0), r.assists || 0, r.fb || 0, r.plants || 0, r.defuses || 0, r.rounds || 0]),
             m: { ph: match.phase, tm: Math.round(match.timer), rn: match.round, half: match.half, sc: match.score, wt: match.winTarget, size: match.size, diff: match.diff, map: mapId },
             sp: { st: spike.state, c: spike.carrier, p: [spike.x, spike.y, spike.z], site: spike.site, tm: Math.round(match.timer) }
         };
@@ -4526,6 +4729,7 @@
             if (!(nid > 0 && nid < 65536)) continue;
             seen.add(nid);
             const info = { name: cleanName(row[1]), team: row[2] === 1 ? 1 : 0, agent: AGENTS[row[3]] ? row[3] : 'kor', camo: CamoValid(row[4]) ? row[4] : 'standard', bot: Boolean(row[5]), kills: Math.max(0, Math.floor(num(row[6]) || 0)), deaths: Math.max(0, Math.floor(num(row[7]) || 0)) };
+            ['dmg', 'assists', 'fb', 'plants', 'defuses', 'rounds'].forEach((k, i) => { info[k] = clamp(Math.floor(num(row[8 + i]) || 0), 0, 1e6); });
             if (nid === player.nid) {
                 player.team = info.team;
                 roster.set(nid, { ...info, name: myName(), agent: player.agent });
@@ -4563,7 +4767,7 @@
         }
         conn.nid = nid;
         const agent = AGENTS[d.ag] ? d.ag : 'kor';
-        const info = { name: cleanName(d.nm), team, agent, camo: CamoValid(d.c) ? d.c : 'standard', bot: false, kills: 0, deaths: 0 };
+        const info = { name: cleanName(d.nm), team, agent, camo: CamoValid(d.c) ? d.c : 'standard', bot: false, ...blankStats() };
         roster.set(nid, info);
         const a = ensureActor(nid);
         setActorInfo(a, info);
@@ -4605,7 +4809,7 @@
             }
             case 're':
                 if (host || (d.w !== 0 && d.w !== 1) || !Array.isArray(d.sc)) return;
-                applyRoundEnd({ w: d.w, why: String(d.why), sc: d.sc }, now);
+                applyRoundEnd({ w: d.w, why: String(d.why), sc: d.sc, st: d.st }, now);
                 return;
             case 'sp': {
                 if (host) return;
@@ -4623,7 +4827,7 @@
                 if (!host) return;
                 const a = actors.get(to);
                 if (a && a.sim) botDamage(a, dmg, f, w, Boolean(d.hs), now);
-                else sendTo(conns.find((c) => c.nid === to), { t: 'h', f, to, d: dmg, w, hs: d.hs ? 1 : 0 });
+                else { if (combatPhase()) recordDamage(f, to, dmg); sendTo(conns.find((c) => c.nid === to), { t: 'h', f, to, d: dmg, w, hs: d.hs ? 1 : 0 }); }
                 return;
             }
             case 'k': {
@@ -4717,7 +4921,7 @@
                         let n = BOT_BASE;
                         while (used.has(n)) n++;
                         const agent = pick(AGENT_IDS);
-                        roster.set(n, { name: BOT_NAMES[(n - BOT_BASE) % BOT_NAMES.length], team: r.team, agent, camo: 'standard', bot: true, kills: 0, deaths: 0 });
+                        roster.set(n, { name: BOT_NAMES[(n - BOT_BASE) % BOT_NAMES.length], team: r.team, agent, camo: 'standard', bot: true, ...blankStats() });
                         const a = ensureActor(n);
                         setActorInfo(a, roster.get(n));
                         a.sim = { alive: false, hp: 100, armor: 0, credits: ECON.start, primary: -1, secondary: W.pim, slot: W.pim, ammo: {}, charges: { c: 0, q: 0, e: 0 }, ult: 0, agent };
@@ -4902,7 +5106,7 @@
         player.agent = prefs.agent;
         player.alive = false;
         buildViewmodels(myCamo(), player.agent);
-        roster.set(player.nid, { name: myName(), team: 0, agent: player.agent, camo: myCamo(), bot: false, kills: 0, deaths: 0 });
+        roster.set(player.nid, { name: myName(), team: 0, agent: player.agent, camo: myCamo(), bot: false, ...blankStats() });
         if (mode === 'client') {
             roomCode = code || '';
             buildMap(MAPS[snap.m?.map] ? snap.m.map : 'liman');
@@ -4911,7 +5115,7 @@
             match.phase = ['buy', 'round', 'planted', 'post'].includes(m.ph) ? m.ph : 'post';
             match.timer = clamp(num(m.tm) || 0, 0, 200000);
             resetLoadout(true);
-            if (snap.sp && vec(snap.sp.p, 3)) applySpike({ st: snap.sp.st === 'none' ? 'carried' : snap.sp.st, c: snap.sp.c || 0, p: vec(snap.sp.p, 3), site: snap.sp.site || '', tm: snap.sp.tm || 0 }, now);
+            if (snap.sp && vec(snap.sp.p, 3)) applySpike({ st: snap.sp.st === 'none' ? 'carried' : snap.sp.st, c: snap.sp.c || 0, p: vec(snap.sp.p, 3), site: snap.sp.site || '', tm: snap.sp.tm || 0 }, now, true);
             setBarriers(match.phase === 'buy');
             if (match.phase === 'buy') respawnLocal(Math.floor(Math.random() * 5));
             else { player.alive = false; spectateNext(); }
@@ -4938,7 +5142,7 @@
     function restartMatch() {
         if (!isAuthority()) return;
         const now = performance.now();
-        for (const r of roster.values()) { r.kills = 0; r.deaths = 0; }
+        for (const r of roster.values()) Object.assign(r, blankStats());
         match.round = 0;
         match.half = 0;
         match.score = [0, 0];
@@ -4957,7 +5161,7 @@
         touch.fire = false;
         showScoreboard(false);
         unlockPointer();
-        const mine = roster.get(player.nid) || { kills: 0, deaths: 0 };
+        const mine = roster.get(player.nid) || blankStats();
         const myScore = match.score[player.team];
         const theirs = match.score[1 - player.team];
         const won = myScore > theirs;
@@ -4978,19 +5182,45 @@
         }
         $('over-title').textContent = won ? 'ZAFER' : myScore === theirs ? 'BERABERE' : 'YENİLGİ';
         $('over-title').className = won ? 'win' : 'loss';
-        $('over-score').textContent = `${myScore} – ${theirs}`;
-        $('over-kills').textContent = String(mine.kills);
-        $('over-deaths').textContent = String(mine.deaths);
+        $('over').classList.toggle('won', won);
+        $('over-eyebrow').textContent = `MAÇ SONU · ${MAPS[mapId]?.name || ''} · ${match.round} RAUNT`;
+        $('over-score').replaceChildren(el('b', 'ally', String(myScore)), el('i', '', '–'), el('b', 'enemy', String(theirs)));
+        $('over-acs').textContent = String(avgScore(mine));
+        $('over-kda').textContent = `${mine.kills} · ${mine.deaths} · ${mine.assists || 0}`;
+        $('over-fb').textContent = String(mine.fb || 0);
+        $('over-adr').textContent = String(Math.round((mine.dmg || 0) / Math.max(1, mine.rounds || 0)));
         $('over-best').textContent = String(best);
         $('over-reward').textContent = !cheating && CasualProfile.current() ? `+${CasualProfile.formatMoney(reward)} CM` : '—';
         $('over-note').textContent = `${note}${match.mode === 'client' ? ' Yeni maçı host başlatır.' : ''}`.trim();
-        renderScoreTables($('over-tables'));
+        const mvp = renderScoreTables($('over-tables'), true);
+        renderMvp(mvp);
         const again = $('again-btn');
         again.disabled = match.mode === 'client';
         again.textContent = match.mode === 'client' ? 'Host bekleniyor' : 'Yeni maç';
         $('over').classList.remove('hidden');
         if (won) chord([523, 659, 784, 1046, 1318], 0.5, 'triangle', 0.07, 0.12);
         void now;
+    }
+
+    function renderMvp(r) {
+        const box = $('over-mvp');
+        box.replaceChildren();
+        if (!r) return;
+        const ag = AGENTS[r.agent] || AGENTS.kor;
+        box.style.setProperty('--agent', ag.color);
+        const img = el('img', 'mvp-art');
+        img.src = agentPortrait(r.agent, 240, 300);
+        img.alt = ag.name;
+        const info = el('div', 'mvp-info');
+        info.append(el('small', '', 'MAÇIN EN İYİSİ'), el('b', '', r.nid === player.nid ? `${r.name} (sen)` : r.name), el('span', 'mvp-agent', `${ag.name} · ${ag.role}`));
+        const nums = el('div', 'mvp-nums');
+        for (const [label, value] of [['SP', avgScore(r)], ['ÖLD', r.kills], ['ÖLM', r.deaths], ['AST', r.assists || 0]]) {
+            const sp = el('span');
+            sp.append(el('b', '', String(value)), el('small', '', label));
+            nums.append(sp);
+        }
+        info.append(nums);
+        box.append(img, info);
     }
 
     function leaveMatch(reason) {
@@ -5069,12 +5299,23 @@
         window.clearTimeout(banner.t);
         banner.t = window.setTimeout(() => { b.className = ''; }, 2400);
     }
-    function showRoundBanner(title, sub, kind) {
+    function showRoundBanner(title, sub, kind, extra = {}) {
         const b = $('roundbanner');
-        b.replaceChildren(el('strong', '', title), el('span', '', sub || ''));
-        b.className = `show ${kind}`;
+        const top = el('small', 'rb-round', extra.score ? `RAUNT ${match.round}` : '');
+        const strong = el('strong', '', title);
+        const line = el('span', 'rb-why');
+        if (extra.icon) line.insertAdjacentHTML('afterbegin', icon(extra.icon));
+        line.append(sub || '');
+        b.replaceChildren(top, strong, line);
+        if (extra.score) {
+            const sc = el('div', 'rb-score');
+            sc.append(el('b', 'ally', String(extra.score[0])), el('i', '', '–'), el('b', 'enemy', String(extra.score[1])));
+            b.append(sc);
+        }
+        if (extra.tag) b.append(el('em', 'rb-tag', extra.tag));
+        b.className = `show ${kind}${extra.score ? ' result' : ''}`;
         window.clearTimeout(showRoundBanner.t);
-        showRoundBanner.t = window.setTimeout(() => { b.className = ''; }, 2800);
+        showRoundBanner.t = window.setTimeout(() => { b.className = ''; }, extra.score ? 3600 : 2800);
     }
     function killBanner(n, hs) {
         const b = $('killbanner');
@@ -5108,23 +5349,49 @@
         updateBuyMenu();
     }
 
+    // Ult orb: ULT_COST arc segments around the ultimate's icon.
+    function orbSegments(filled) {
+        const parts = [];
+        const gap = 0.12;
+        for (let i = 0; i < ULT_COST; i++) {
+            const a0 = (i / ULT_COST) * TAU - Math.PI / 2 + gap / 2;
+            const a1 = ((i + 1) / ULT_COST) * TAU - Math.PI / 2 - gap / 2;
+            const p = (a) => `${(30 + Math.cos(a) * 26).toFixed(2)} ${(30 + Math.sin(a) * 26).toFixed(2)}`;
+            parts.push(`<path class="${i < filled ? 'on' : ''}" d="M${p(a0)} A26 26 0 0 1 ${p(a1)}"/>`);
+        }
+        return parts.join('');
+    }
+    let abilityIconsFor = '';
     function updateAbilityHud() {
-        const ab = AGENTS[player.agent].abilities;
+        const ag = AGENTS[player.agent];
+        const ab = ag.abilities;
+        const fresh = abilityIconsFor !== player.agent;
+        abilityIconsFor = player.agent;
         for (const slot of SLOTS) {
             const box = document.querySelector(`.ability[data-slot="${slot}"]`);
+            const tb = document.querySelector(`.tbtn.ab[data-act="${slot}"]`);
+            if (fresh) {
+                if (box) { box.querySelector('.ab-icon').innerHTML = icon(ab[slot].kind); box.title = `${ab[slot].name} · ${ab[slot].desc}`; }
+                if (tb) { tb.innerHTML = `${icon(ab[slot].kind)}<b>${slot.toUpperCase()}</b>`; tb.setAttribute('aria-label', `${slot.toUpperCase()}: ${ab[slot].name}`); }
+            }
             if (!box) continue;
             box.querySelector('.ab-name').textContent = ab[slot].name;
-            const pips = box.querySelector('.ab-pips');
-            pips.replaceChildren();
+            let empty;
             if (slot === 'x') {
-                for (let i = 0; i < ULT_COST; i++) pips.append(el('i', i < player.ult ? 'on' : ''));
-                box.classList.toggle('ready', player.ult >= ULT_COST);
-                box.classList.toggle('empty', player.ult < ULT_COST);
+                box.querySelector('.orb-ring').innerHTML = orbSegments(player.ult);
+                const ready = player.ult >= ULT_COST;
+                box.classList.toggle('ready', ready);
+                empty = !ready;
             } else {
+                const pips = box.querySelector('.ab-pips');
+                pips.replaceChildren();
                 for (let i = 0; i < ab[slot].max; i++) pips.append(el('i', i < player.charges[slot] ? 'on' : ''));
-                box.classList.toggle('empty', player.charges[slot] <= 0);
+                empty = player.charges[slot] <= 0;
             }
-            box.style.setProperty('--agent', AGENTS[player.agent].color);
+            box.classList.toggle('empty', empty);
+            if (tb) { tb.classList.toggle('empty', empty); tb.classList.toggle('ready', slot === 'x' && !empty); }
+            box.style.setProperty('--agent', ag.color);
+            if (tb) tb.style.setProperty('--agent', ag.color);
         }
     }
 
@@ -5157,42 +5424,62 @@
         const planted = match.phase === 'planted';
         $('spike-timer').classList.toggle('hidden', !planted);
         $('timer').classList.toggle('hidden', planted);
+        if (planted) setStyle('spike-timer', '--p', clamp(match.timer / TIMES.spike, 0, 1).toFixed(3));
         const sec = Math.max(0, Math.ceil(match.timer / 1000));
         setText('timer', `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`);
         $('timer').classList.toggle('urgent', sec <= 10 && match.phase === 'round');
         $('timer').classList.toggle('buy', match.phase === 'buy');
     }
 
-    function renderScoreTables(box) {
+    // Best average combat score: on the winning team for the match MVP, else per team.
+    function bestOf(list) { return list.slice().sort((a, b) => avgScore(b) - avgScore(a) || b.kills - a.kills)[0] || null; }
+    function renderScoreTables(box, final) {
         box.replaceChildren();
+        const all = [0, 1].map((t) => teamList(t));
+        const winTeam = match.score[0] === match.score[1] ? -1 : match.score[0] > match.score[1] ? 0 : 1;
+        const mvp = final ? bestOf(winTeam >= 0 ? all[winTeam] : all[0].concat(all[1])) : null;
         for (const team of [player.team, 1 - player.team]) {
-            const table = el('table', team === player.team ? 'ally' : 'enemy');
+            const ally = team === player.team;
+            const wrap = el('div', 'table-wrap');
+            const table = el('table', ally ? 'ally' : 'enemy');
             const head = el('tr');
-            ['', team === player.team ? 'TAKIMIN' : 'RAKİP', 'Ö', 'Ö', team === player.team ? 'KREDİ' : ''].forEach((t, i) => {
-                const th = el('th', '', i === 2 ? 'Öldürme' : i === 3 ? 'Ölüm' : t);
-                head.append(th);
-            });
+            const cols = [['', ''], [ally ? 'TAKIMIN' : 'RAKİP', 'name'], ['SP', 'num', 'Ortalama savaş puanı'], ['ÖLD · ÖLM · AST', 'num kda', 'Öldürme · ölüm · asist'], ['İLK KAN', 'num opt'], ['HSR/R', 'num opt', 'Raunt başına hasar'], [!final && ally ? 'KREDİ' : '', 'num opt2']];
+            for (const [t, cls, title] of cols) { const th = el('th', cls, t); if (title) th.title = title; head.append(th); }
             const thead = el('thead');
             thead.append(head);
             const tbody = el('tbody');
-            teamList(team).sort((a, b) => b.kills - a.kills || a.deaths - b.deaths).forEach((r) => {
-                const tr = el('tr', `${r.nid === player.nid ? 'me' : ''}${isAlive(r.nid) ? '' : ' dead'}`);
-                const chip = el('span', 'chip', AGENTS[r.agent]?.name[0] || '?');
-                chip.style.setProperty('--agent', AGENTS[r.agent]?.color || '#888');
-                const c0 = el('td');
-                c0.append(chip);
-                const c1 = el('td', '', r.nid === player.nid ? `${r.name} (sen)` : r.name);
+            const teamBest = final ? bestOf(all[team]) : null;
+            all[team].sort((a, b) => avgScore(b) - avgScore(a) || b.kills - a.kills || a.deaths - b.deaths).forEach((r) => {
+                const tr = el('tr', `${r.nid === player.nid ? 'me' : ''}${!final && !isAlive(r.nid) ? ' dead' : ''}`);
+                const c0 = el('td', 'agent-cell');
+                const img = el('img', 'mini-portrait');
+                img.src = agentPortrait(r.agent, 64, 64);
+                img.alt = AGENTS[r.agent]?.name || '';
+                img.style.setProperty('--agent', AGENTS[r.agent]?.color || '#888');
+                c0.append(img);
+                const c1 = el('td', 'name', r.nid === player.nid ? `${r.name} (sen)` : r.name);
                 if (r.bot) c1.append(el('span', 'bot-tag', 'BOT'));
-                const credits = r.nid === player.nid ? player.credits : r.bot && isAuthority() && team === player.team ? actors.get(r.nid)?.sim?.credits ?? '' : '';
-                tr.append(c0, c1, el('td', '', String(r.kills)), el('td', '', String(r.deaths)), el('td', '', team === player.team ? String(credits) : ''));
+                if (mvp && r.nid === mvp.nid) c1.append(el('span', 'mvp-tag', 'MAÇIN EN İYİSİ'));
+                else if (teamBest && r.nid === teamBest.nid && r.kills > 0) c1.append(el('span', 'mvp-tag team', 'TAKIMIN EN İYİSİ'));
+                const credits = !final && ally ? (r.nid === player.nid ? player.credits : r.bot && isAuthority() ? actors.get(r.nid)?.sim?.credits ?? '' : '') : '';
+                tr.append(c0, c1,
+                    el('td', 'num', String(avgScore(r))),
+                    el('td', 'num kda', `${r.kills} · ${r.deaths} · ${r.assists || 0}`),
+                    el('td', 'num opt', String(r.fb || 0)),
+                    el('td', 'num opt', String(Math.round((r.dmg || 0) / Math.max(1, r.rounds || 0)))),
+                    el('td', 'num opt2', credits === '' ? '' : `¤ ${credits}`));
                 tbody.append(tr);
             });
             table.append(thead, tbody);
-            box.append(table);
+            wrap.append(table);
+            box.append(wrap);
         }
+        return mvp;
     }
     function showScoreboard(open) {
+        if (match.practice) open = false;
         scoreboardOpen = open;
+        if (open) { setText('sb-map', MAPS[mapId]?.name || ''); setText('sb-round', `RAUNT ${match.round} · ${match.score[player.team]} – ${match.score[1 - player.team]} · ${match.winTarget} raunt kazanır`); }
         $('scoreboard').classList.toggle('hidden', !open);
         if (open) renderScoreTables($('score-tables'));
     }
@@ -5565,8 +5852,22 @@
         $('fov-val').textContent = `${prefs.fov}°`;
         $('vol-val').textContent = `%${prefs.vol}`;
         document.querySelectorAll('#quality button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.q === prefs.q)));
-        document.querySelectorAll('#cross-colors button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.c === prefs.cross)));
-        document.documentElement.style.setProperty('--cross', CROSS_COLORS[prefs.cross]);
+        document.querySelectorAll('#cross-colors button').forEach((b) => { b.setAttribute('aria-checked', String(b.dataset.c === prefs.cross)); b.style.setProperty('--sw', CROSS_COLORS[b.dataset.c]); });
+        for (const [id, key] of [['ch-len', 'chLen'], ['ch-gap', 'chGap'], ['ch-w', 'chW']]) { $(id).value = String(prefs[key]); $(`${id}-val`).textContent = `${prefs[key]} px`; }
+        $('ch-outline').checked = prefs.chOutline;
+        $('ch-dot').checked = prefs.chDot;
+        $('ch-dyn').checked = prefs.chDyn;
+        applyCrosshair();
+    }
+    function applyCrosshair() {
+        const root = document.documentElement.style;
+        root.setProperty('--cross', CROSS_COLORS[prefs.cross]);
+        root.setProperty('--ch-len', `${prefs.chLen}px`);
+        root.setProperty('--ch-w', `${prefs.chW}px`);
+        root.setProperty('--ch-ol', prefs.chOutline ? '0 0 0 1px rgba(0, 0, 0, .75)' : 'none');
+        root.setProperty('--ch-dot', prefs.chDot ? 'block' : 'none');
+        root.setProperty('--ch-lines', prefs.chLen ? 'block' : 'none');
+        $('cross-preview').querySelector('.ch').style.setProperty('--gap', `${prefs.chGap}px`);
     }
     function copyCode(code) {
         if (!code) return;
@@ -5787,6 +6088,12 @@
     $('vol').addEventListener('input', (e) => { prefs.vol = clamp(Number(e.target.value), 0, 100); renderSettings(); savePrefs(); if (master) master.gain.value = prefs.vol / 100; });
     document.querySelectorAll('#quality button').forEach((b) => b.addEventListener('click', () => { prefs.q = b.dataset.q; savePrefs(); applyQuality(); renderSettings(); }));
     document.querySelectorAll('#cross-colors button').forEach((b) => b.addEventListener('click', () => { prefs.cross = b.dataset.c; savePrefs(); renderSettings(); }));
+    for (const [id, key, lo, hi] of [['ch-len', 'chLen', 0, 14], ['ch-gap', 'chGap', 0, 12], ['ch-w', 'chW', 1, 4]]) {
+        $(id).addEventListener('input', (e) => { prefs[key] = Math.round(clamp(Number(e.target.value), lo, hi)); savePrefs(); renderSettings(); });
+    }
+    for (const [id, key] of [['ch-outline', 'chOutline'], ['ch-dot', 'chDot'], ['ch-dyn', 'chDyn']]) {
+        $(id).addEventListener('change', (e) => { prefs[key] = e.target.checked; savePrefs(); renderSettings(); });
+    }
     window.addEventListener('casualprofilechange', () => { if (!cheatOn('features')) previewCamo = null; renderSession(CasualProfile.current()); });
     window.addEventListener('casual-cheat', () => renderSession(CasualProfile.current()));
     document.addEventListener('visibilitychange', () => {
@@ -5976,7 +6283,7 @@
             setStyle('scope', 'display', scoped ? 'block' : 'none');
             setStyle('crosshair', 'display', scoped || !player.alive || !inMatch() ? 'none' : 'block');
             const spread = currentSpread(w);
-            setStyle('crosshair', '--gap', `${Math.round(3 + spread * 300)}px`);
+            setStyle('crosshair', '--gap', `${Math.round(prefs.chGap + (prefs.chDyn ? spread * 300 : 0))}px`);
             muzzleLight.position.copy(camera.position);
             let reloadP = 0;
             if (player.reloading) reloadP = (now - player.reloadStart) / w.reload;
