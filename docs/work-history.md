@@ -590,5 +590,6 @@ Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone tit
 ## 2026-10-24 — Kısıtlı ülkeler için erişim uyarısı
 
 - `casual-region-notice.js` (16 sayfada `?v=1`, defer): cihaz saat dilimi Türkiye, Rusya, Azerbaycan, İran, Çin, Belarus, Türkmenistan, Kuzey Kore, Myanmar, Vietnam, Özbekistan, Tacikistan, Suudi Arabistan, BAE, Pakistan, Mısır, Eritre, Etiyopya, Suriye, Küba veya Venezuela ise üstte kapatılabilir uyarı gösterir; Surfshark rehberine yeni sekmede bağlanır. Ağ isteği veya geo-IP yok; yalnızca `Intl` saat dilimi. Kapatma `localStorage` `cp_region_notice_dismissed_v1` ile 30 gün saklanır; depolama engelliyse sadece o sayfada kapanır.
+- Takip: mesaja "Halihazırda bu yöntemleri kullanıyorsanız bu uyarıyı önemsemeyin." eklendi, script `?v=2`.
 - Sınırlama: saat dilimi tahmindir; yurt dışındaki kullanıcı görmez, VPN kullanan ama telefonu Türkiye saatinde olan kullanıcı görür.
 - Validation: `node --test tools/*.cjs` 128/128 (3 yeni). Playwright: Istanbul saat diliminde ana sayfa ve Snake'te uyarı göründü, kapatıp yenileyince gizli kaldı; Berlin'de görünmedi; sayfa hatası yok. Service-worker yeniden üretildi (147 URL).
