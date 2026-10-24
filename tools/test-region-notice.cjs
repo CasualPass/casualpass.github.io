@@ -21,3 +21,14 @@ test('Region notice survives blocked storage and links to the help page',()=>{
  assert.match(notice.MESSAGE,/VPN, PROXY, GoodbyeDPI veya farklı bir DNS/);
  assert.match(notice.MESSAGE,/Halihazırda bu yöntemleri kullanıyorsanız bu uyarıyı önemsemeyin\.$/);
 });
+const fs=require('node:fs'),path=require('node:path');
+test('About page carries a hidden region help block with the issues link, revealed only by the script',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..','about.html'),'utf8');
+ const block=html.match(/<article[^>]*data-region-help[^>]*>[\s\S]*?<\/article>/);
+ assert.ok(block,'help block exists');
+ assert.match(block[0],/\shidden>/);
+ assert.match(block[0],/Bir Sorun Mu Yaşıyorsunuz\?/);
+ assert.match(block[0],/href="https:\/\/github\.com\/CasualPass\/casualpass\.github\.io\/issues"/);
+ assert.match(block[0],/href="https:\/\/surfshark\.com\/blog\/unblock-websites"/);
+ assert.match(block[0],/data-region-help-message/);
+});

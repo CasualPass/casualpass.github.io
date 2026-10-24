@@ -91,10 +91,11 @@ footer { padding: 19px 0 96px; display: flex; align-items: center; gap: 18px; co
 .about-card .tag { color: var(--dashboard-accent); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .about-card p { margin: 10px 0; color: var(--dashboard-muted); line-height: 1.55; }
 .about-card h3 { margin: 14px 0 6px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
-.about-card ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.about-card ul, .about-card ol { margin: 0; padding-left: 18px; line-height: 1.6; }
 .about-card kbd { padding: 1px 6px; border: 1px solid var(--dashboard-border); border-radius: 6px; font: inherit; font-size: 12px; font-weight: 700; }
 .about-card .play { display: inline-flex; min-height: 42px; align-items: center; margin-top: 14px; padding: 0 16px; color: #111510; border-radius: 12px; background: var(--dashboard-accent); font-weight: 800; text-decoration: none; }
 .about-card.wide { grid-column: 1 / -1; }
+.about-card[hidden] { display: none; }
 @media (max-width: 860px) { .about-grid { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .brand > span:last-child { display: none; }.topnav { margin-left: 10px; }.topnav a { padding: 0 10px; font-size: 13px; } }
 @media (max-width: 400px) { .topnav a { padding: 0 8px; } }
