@@ -82,10 +82,22 @@
         let storage = null;
         try { storage = win.localStorage; } catch { storage = null; }
         const safeStorage = storage || { getItem: () => null, setItem: () => {} };
-        if (!shouldShow(detectTimeZone(win.Intl || Intl), safeStorage, Date.now())) return;
+        const timeZone = detectTimeZone(win.Intl || Intl);
+        if (!countryForTimeZone(timeZone)) return;
+        const showBanner = shouldShow(timeZone, safeStorage, Date.now());
+
+        // Pages may hold a hidden help block (About page) that only these visitors see, even after dismissing the banner.
+        const revealHelp = () => {
+            for (const el of doc.querySelectorAll('[data-region-help]')) {
+                const text = el.querySelector('[data-region-help-message]');
+                if (text) text.textContent = MESSAGE;
+                el.hidden = false;
+            }
+        };
 
         const render = () => {
-            if (doc.querySelector('.cp-region-notice')) return;
+            revealHelp();
+            if (!showBanner || doc.querySelector('.cp-region-notice')) return;
             const style = doc.createElement('style');
             style.textContent = CSS;
             doc.head.appendChild(style);
