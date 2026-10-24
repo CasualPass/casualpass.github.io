@@ -19,4 +19,5 @@ test('Region notice survives blocked storage and links to the help page',()=>{
  assert.doesNotThrow(()=>notice.dismiss(broken,Date.now()));
  assert.equal(notice.HELP_URL,'https://surfshark.com/blog/unblock-websites');
  assert.match(notice.MESSAGE,/VPN, PROXY, GoodbyeDPI veya farklı bir DNS/);
+ assert.match(notice.MESSAGE,/Halihazırda bu yöntemleri kullanıyorsanız bu uyarıyı önemsemeyin\.$/);
 });

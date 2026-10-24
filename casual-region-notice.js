@@ -10,7 +10,7 @@
     const HELP_URL = 'https://surfshark.com/blog/unblock-websites';
     const DISMISS_KEY = 'cp_region_notice_dismissed_v1';
     const DISMISS_MS = 30 * 24 * 60 * 60 * 1000;
-    const MESSAGE = 'Sistemlerimiz ülkenizde kısıtlı olan bir hizmeti kullanıyor olabilir. VPN, PROXY, GoodbyeDPI veya farklı bir DNS kullanmanız sistemimizdeki aksaklıkları çözümleyebilir.';
+    const MESSAGE = 'Sistemlerimiz ülkenizde kısıtlı olan bir hizmeti kullanıyor olabilir. VPN, PROXY, GoodbyeDPI veya farklı bir DNS kullanmanız sistemimizdeki aksaklıkları çözümleyebilir. Halihazırda bu yöntemleri kullanıyorsanız bu uyarıyı önemsemeyin.';
 
     // IANA timezone -> ISO country, limited to countries with heavy, documented internet blocking.
     const ZONES = Object.freeze({
