@@ -585,3 +585,10 @@ Kullanıcı boya dokularının toptan önce görünmesini bildirdi ve iPhone tit
 - `owl-game/script.js`: Gizli yardımcıdan gelen odak olayı uçuşu durdurmaz; gerçek odak/sekme kaybında duraklama korunur. Regresyon testi bu iki durumu ayırır.
 - `script.js`: Dashboard native köprü algıladığında “Titreşim · Uygulama” gösterir. Tüm HTML ortak helper referansları `v=11`, Owl script `v=5`, dashboard script `v=17`; eski v10 dosyasının cache’den gelmesi engellenir. Son Hat’ta yalnızca ortak helper URL’si değişti, oyun kodu değişmedi.
 - `node --test tools/test-remaster-haptics.cjs tools/test-remaster-arcade.cjs`: 10/10 başarılı. Native önceliği, kapatma, gizli kontrol oluşturmama ve Owl gerçek/yardımcı odak ayrımı doğrulandı. Gerçek telefonda his ve uçuş kullanıcıyla yeniden doğrulanmalıdır. Native paket 1.0.1 değişmedi; bu düzeltme webden gelir.
+
+
+## 2026-10-24 — Kısıtlı ülkeler için erişim uyarısı
+
+- `casual-region-notice.js` (16 sayfada `?v=1`, defer): cihaz saat dilimi Türkiye, Rusya, Azerbaycan, İran, Çin, Belarus, Türkmenistan, Kuzey Kore, Myanmar, Vietnam, Özbekistan, Tacikistan, Suudi Arabistan, BAE, Pakistan, Mısır, Eritre, Etiyopya, Suriye, Küba veya Venezuela ise üstte kapatılabilir uyarı gösterir; Surfshark rehberine yeni sekmede bağlanır. Ağ isteği veya geo-IP yok; yalnızca `Intl` saat dilimi. Kapatma `localStorage` `cp_region_notice_dismissed_v1` ile 30 gün saklanır; depolama engelliyse sadece o sayfada kapanır.
+- Sınırlama: saat dilimi tahmindir; yurt dışındaki kullanıcı görmez, VPN kullanan ama telefonu Türkiye saatinde olan kullanıcı görür.
+- Validation: `node --test tools/*.cjs` 128/128 (3 yeni). Playwright: Istanbul saat diliminde ana sayfa ve Snake'te uyarı göründü, kapatıp yenileyince gizli kaldı; Berlin'de görünmedi; sayfa hatası yok. Service-worker yeniden üretildi (147 URL).
